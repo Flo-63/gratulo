@@ -1,0 +1,22 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+env/
+venv/
+
+# --- Environment ---
+.env
+*.env.local
+
+# --- SQLite DB ---
+app/data/instance/*.db
+app/data/instance/*.sqlite3
+app/data/instance/*.db-journal
+
+# --- Uploads ---
+app/data/uploads/
+

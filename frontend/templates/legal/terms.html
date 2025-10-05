@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-16 bg-white p-8 rounded-lg shadow">
+  <h1 class="text-2xl font-bold text-gray-800 mb-4">Nutzungsbedingungen – Gratula</h1>
+
+  <p class="text-gray-600 mb-6">
+    Diese Nutzungsbedingungen regeln die Nutzung der Anwendung <strong>Gratula</strong>.
+    Mit dem Zugriff auf die Anwendung oder der Nutzung ihrer Funktionen erklärst du dich mit diesen Bedingungen einverstanden.
+  </p>
+
+  <div class="space-y-6 text-gray-700 text-sm leading-relaxed">
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">1. Geltungsbereich</h2>
+      <p>
+        Diese Bedingungen gelten für alle Benutzer:innen der Anwendung <strong>Gratula</strong>.
+        Abweichende Vereinbarungen bedürfen der ausdrücklichen schriftlichen Zustimmung des Betreibers.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">2. Zweck der Anwendung</h2>
+      <p>
+        <strong>Gratula</strong> dient der Organisation und Verwaltung von Mitgliedern, Gruppen und Terminen
+        in Vereinen oder Organisationen. Die Nutzung ist ausschließlich zu <em>nichtkommerziellen Zwecken</em> gestattet.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">3. Registrierung und Benutzerkonten</h2>
+      <p>
+        Für bestimmte Funktionen ist ein Benutzerkonto erforderlich. Die Registrierung erfolgt freiwillig.
+        Benutzer:innen sind verpflichtet, bei der Registrierung korrekte Angaben zu machen und ihre Zugangsdaten
+        vertraulich zu behandeln.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">4. Verantwortlichkeiten der Benutzer:innen</h2>
+      <ul class="list-disc pl-6 space-y-1">
+        <li>Es dürfen keine rechtswidrigen, diskriminierenden oder beleidigenden Inhalte gespeichert oder übermittelt werden.</li>
+        <li>Die Anwendung darf nicht zur Verbreitung von Werbung, Spam oder Schadsoftware genutzt werden.</li>
+        <li>Es ist untersagt, technische Sicherheitsmechanismen zu umgehen oder unbefugten Zugriff zu versuchen.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">5. Geistiges Eigentum</h2>
+      <p>
+        Die Inhalte und der Quellcode von <strong>Gratula</strong> sind urheberrechtlich geschützt.
+        Eine kommerzielle Nutzung, Vervielfältigung oder Weitergabe bedarf der vorherigen Zustimmung des Rechteinhabers.
+      </p>
+      <p class="mt-2">
+        Die Software steht unter der
+        <a href="{{ url_for('show_license') }}" class="underline text-blue-600 hover:text-blue-800">
+          PolyForm Noncommercial License 1.0.0
+        </a>.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">6. Haftungsausschluss</h2>
+      <p>
+        Die Nutzung von <strong>Gratula</strong> erfolgt auf eigenes Risiko.
+        Der Betreiber übernimmt keine Gewähr für die Verfügbarkeit, Fehlerfreiheit oder Eignung der Anwendung für einen bestimmten Zweck.
+        Eine Haftung für Datenverluste oder Folgeschäden ist ausgeschlossen, soweit gesetzlich zulässig.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">7. Änderungen der Nutzungsbedingungen</h2>
+      <p>
+        Der Betreiber behält sich vor, diese Nutzungsbedingungen bei Bedarf zu ändern.
+        Über wesentliche Änderungen wirst du rechtzeitig in der Anwendung informiert.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold mb-2">8. Geltendes Recht</h2>
+      <p>
+        Es gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand ist der Sitz des Betreibers, soweit gesetzlich zulässig.
+      </p>
+    </section>
+
+  </div>
+
+  <div class="mt-8 text-center">
+    <a href="/login" class="btn btn-gray text-xs">← Zurück zur Anmeldung</a>
+  </div>
+</div>
+{% endblock %}

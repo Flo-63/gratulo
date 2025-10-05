@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}RCB Mailer{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind CSS über CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome für Icons -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <!-- Logo / App-Name -->
+      <a href="/" class="flex items-center space-x-2 text-2xl font-bold text-blue-600 hover:text-blue-700">
+        <img src="{{ url_for('static', path='images/RCB-Logo-tailwindblue.gif') }}"
+             alt="RCB Logo"
+             class="h-10 w-15">
+        <span class="text-blue-600 font-bold">Mailer</span>
+      </a>
+
+      <!-- Navigation -->
+      <nav class="space-x-6 hidden md:flex items-center">
+        {% if request.url.path not in ["/", "/admin"] %}
+          <a href="/admin" class="text-gray-700 hover:text-blue-600 font-medium">Dashboard</a>
+        {% endif %}
+        {% if request.url.path in ["/mailer-config"] %}
+          <a href="/docs" class="text-gray-700 hover:text-blue-600 font-medium">API Docs</a>
+        {% endif %}
+        <a href="/mailer-config" class="text-gray-700 hover:bg-gray-100">⚙️</a>
+
+        {% if request.session.get("user") %}
+          <!-- Logout Icon -->
+          <a href="/logout"
+             class="text-gray-600 hover:text-red-600"
+             title="Logout">
+            <i class="fa-solid fa-right-from-bracket fa-lg"></i>
+          </a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+
+  <!-- Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    {% block content %}{% endblock %}
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t mt-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500">
+      © {{ year|default("2025") }} Florian Mösch
+    </div>
+  </footer>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+  <!-- Notification Popup (zentriert) -->
+  <div id="notification"
+       class="hidden fixed inset-0 flex items-center justify-center z-50">
+    <div id="notification-box"
+         class="max-w-md w-full mx-4 px-6 py-4 rounded shadow-lg text-white text-center">
+      <span id="notification-message"></span>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script>
+    function showNotification(message, type = "error") {
+      const notif = document.getElementById("notification");
+      const box = document.getElementById("notification-box");
+      const msg = document.getElementById("notification-message");
+
+      msg.textContent = message;
+
+      // Farben je nach Typ
+      if (type === "error") {
+        box.className = "max-w-md w-full mx-4 px-6 py-4 rounded shadow-lg text-white text-center bg-red-600";
+      } else if (type === "success") {
+        box.className = "max-w-md w-full mx-4 px-6 py-4 rounded shadow-lg text-white text-center bg-green-600";
+      } else {
+        box.className = "max-w-md w-full mx-4 px-6 py-4 rounded shadow-lg text-white text-center bg-gray-800";
+      }
+
+      notif.classList.remove("hidden");
+
+      // Nach 4 Sekunden wieder ausblenden
+      setTimeout(() => {
+        notif.classList.add("hidden");
+      }, 4000);
+    }
+
+    // Globale htmx Fehlerbehandlung
+    document.body.addEventListener("htmx:responseError", function(evt) {
+      let msg = "Unbekannter Fehler";
+      try {
+        const data = JSON.parse(evt.detail.xhr.responseText);
+        msg = data.detail || JSON.stringify(data);
+      } catch {
+        msg = evt.detail.xhr.responseText;
+      }
+      showNotification(msg, "error");
+    });
+
+    // Erfolgsmeldungen
+    document.body.addEventListener("htmx:afterRequest", function(evt) {
+      if (evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {
+        if (evt.detail.elt.getAttribute("hx-show-success") !== null) {
+          showNotification("Aktion erfolgreich!", "success");
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

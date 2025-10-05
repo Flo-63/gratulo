@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-20 bg-white p-6 rounded-lg shadow-md">
+  <h1 class="text-xl font-bold text-gray-800 mb-6">Login</h1>
+
+  {% if auth_method == "email" %}
+    {% if using_env_login %}
+      <div class="mb-4 p-3 bg-yellow-100 border border-yellow-300 text-yellow-800 rounded">
+        Hinweis: Anmeldung erfolgt mit den in der <code>.env</code> hinterlegten
+        <strong>INITIAL_ADMIN_USER</strong> und <strong>INITIAL_PASSWORD</strong>.
+      </div>
+    {% endif %}
+
+    {% if error_message %}
+      <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded">
+        {{ error_message }}
+      </div>
+    {% endif %}
+
+    <form action="/login" method="post" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">E-Mail</label>
+        <input type="email" name="email" required
+               class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
+                      shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Passwort</label>
+        <input type="password" name="password" required
+               class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2
+                      shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+      </div>
+
+      <button type="submit" class="btn btn-blue w-full mt-3">
+        Anmelden
+      </button>
+    </form>
+
+  {% elif auth_method == "oauth" %}
+    <div class="text-center">
+      <a href="/oauth/start" class="btn btn-blue">
+        Mit OAuth anmelden
+      </a>
+    </div>
+  {% else %}
+    <p class="text-red-600">❌ Keine Authentifizierungsmethode konfiguriert.</p>
+  {% endif %}
+
+  <!-- Rechtliche Hinweise -->
+  <div class="mt-8 border-t border-gray-200 pt-4 text-center text-xs text-gray-500 leading-relaxed">
+    <p>
+      Mit der Anmeldung stimmst du unseren
+      <a href="{{ url_for('show_terms') }}" class="underline hover:text-blue-700">Nutzungsbedingungen</a>,
+      der <a href="{{ url_for('show_privacy') }}" class="underline hover:text-blue-700">Datenschutzerklärung</a>
+      und den <a href="{{ url_for('show_license') }}" class="underline hover:text-blue-700">Lizenzbedingungen</a> zu.
+    </p>
+  </div>
+
+</div>
+{% endblock %}

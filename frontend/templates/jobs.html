@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto mt-10 space-y-6">
+    <!-- Kopfbereich -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-800">📬 Mailer Jobs</h1>
+        <div class="flex gap-2">
+            <a href="/jobs/new"
+               class="btn btn-green">
+                ➕ Neuen Job anlegen
+            </a>
+        </div>
+    </div>
+
+    <!-- Jobs-Liste -->
+    <div id="jobs-list"
+         hx-get="/htmx/jobs/list"
+         hx-trigger="load"
+         hx-target="#jobs-list"
+         hx-swap="innerHTML"
+         class="bg-white shadow rounded-lg p-4">
+        <!-- Initialer Platzhalter -->
+        <p class="text-gray-500">Jobs werden geladen...</p>
+    </div>
+</div>
+{% endblock %}

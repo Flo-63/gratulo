@@ -1,0 +1,32 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# --- Logs ---
+*.log
+
+# --- venv / Pipenv ---
+.venv/
+env/
+venv/
+Pipfile.lock
+poetry.lock
+
+# --- Local settings ---
+.env
+
+# --- IDE/Editor ---
+.vscode/
+.idea/
+*.swp
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Project Data (DB + Uploads) ---
+app/data/*
+!app/data/.gitkeep

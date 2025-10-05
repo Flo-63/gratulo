@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard – Mailer{% endblock %}
+
+{% block content %}
+<div class="text-center mb-10">
+  <h2 class="text-3xl font-extrabold text-gray-800">Dashboard</h2>
+  <p class="text-gray-600 mt-2">Verwalte Vorlagen, Adressaten und Einstellungen</p>
+</div>
+
+<!-- Karten-Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+  <!-- Templates -->
+  <a href="/templates"
+     class="block p-6 bg-white rounded-xl shadow hover:shadow-lg transition">
+    <h3 class="text-xl font-semibold text-blue-600 mb-2">✍️ Templates</h3>
+    <p class="text-gray-600 text-sm">WYSIWYG Editor für Mailvorlagen</p>
+  </a>
+
+  <!-- Mitglieder -->
+  <a href="/members"
+     class="block p-6 bg-white rounded-xl shadow hover:shadow-lg transition">
+    <h3 class="text-xl font-semibold text-blue-600 mb-2">👥 Adressaten</h3>
+    <p class="text-gray-600 text-sm">Adressaten importieren, bearbeiten und löschen</p>
+  </a>
+
+  <!-- Jobs -->
+  <a href="/jobs"
+     class="block p-6 bg-white rounded-xl shadow hover:shadow-lg transition">
+    <h3 class="text-xl font-semibold text-blue-600 mb-2">📬 Mailer Jobs</h3>
+    <p class="text-gray-600 text-sm">Geplante Mail-Jobs verwalten</p>
+  </a>
+
+
+</div>
+{% endblock %}

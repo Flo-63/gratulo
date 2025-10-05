@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10" x-data="{ method: '{{ config.auth_method if config and config.auth_method else "email" }}' }">
+  <div class="bg-white shadow rounded-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">⚙️ Konfiguration</h1>
+
+    <form action="/mailer-config" method="post" class="space-y-8">
+
+      <!-- 🟦 Mailer Karte -->
+      <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Mailer</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Zeile 1: Host -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">SMTP Host</label>
+            <input type="text" name="smtp_host" value="{{ config.smtp_host or '' }}"
+                   required
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          </div>
+
+          <!-- Zeile 1: Port + TLS -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Port</label>
+            <div class="flex items-center gap-3">
+              <select name="smtp_port"
+                      class="mt-1 block rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm w-20">
+                {% set ports = [25, 465, 587] %}
+                {% for port in ports %}
+                  <option value="{{ port }}" {% if config and config.smtp_port == port %}selected{% endif %}>
+                    {{ port }}
+                  </option>
+                {% endfor %}
+              </select>
+              <label class="flex items-center gap-2 mt-1">
+                <input type="checkbox" name="use_tls" value="true" {% if config and config.use_tls %}checked{% endif %}>
+                <span class="text-sm font-medium text-gray-700">TLS</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Zeile 2: Benutzer -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">SMTP Benutzer</label>
+            <input type="text" name="smtp_user" value="{{ config.smtp_user or '' }}"
+                   required
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          </div>
+
+          <!-- Zeile 2: Passwort -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">SMTP Passwort</label>
+            <input type="password" name="smtp_password" placeholder="••••••••"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            {% if config %}
+              <p class="text-xs text-gray-500 mt-1">Leer lassen, um das aktuelle Passwort zu behalten.</p>
+            {% endif %}
+          </div>
+
+          <!-- Zeile 3: Absenderadresse -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700">Absenderadresse</label>
+            <input type="email" name="from_address" value="{{ config.from_address or '' }}"
+                   required
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          </div>
+        </div>
+      </div>
+
+      <!-- Authentifizierung -->
+      <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Authentifizierung</h2>
+
+        <!-- Auswahl Methode -->
+        <div class="flex gap-6 mb-6">
+          <label class="flex items-center gap-2">
+            <input type="radio" name="auth_method" value="email"
+                   x-model="method"
+                   {% if not config or config.auth_method == 'email' %}checked{% endif %}>
+            <span>E-Mail & Passwort</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input type="radio" name="auth_method" value="oauth"
+                   x-model="method"
+                   {% if config and config.auth_method == 'oauth' %}checked{% endif %}>
+            <span>OAuth</span>
+          </label>
+        </div>
+
+        <!-- Email Login -->
+        <div x-show="method === 'email'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Login E-Mail</label>
+            <input type="email" name="login_email" value="{{ config.login_email or '' }}"
+                   :disabled="method !== 'email'" :required="method === 'email'"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+          </div>
+          <!-- Login Passwort -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Login Passwort</label>
+              <input type="password" name="login_password" placeholder="••••••••"
+                     :disabled="method !== 'email'"
+                     :required="method === 'email' && {{ (not config or not config.login_password) | string | lower}}"
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            {% if config and config.login_password %}
+              <p class="text-xs text-gray-500 mt-1">Leer lassen, um das aktuelle Passwort zu behalten.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- OAuth -->
+        <div x-show="method === 'oauth'" class="space-y-4 bg-white p-4 mt-6 rounded border">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Client ID</label>
+              <input type="text" name="oauth_client_id" value="{{ config.oauth_client_id or '' }}"
+                     :disabled="method !== 'oauth'" :required="method === 'oauth'"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Client Secret</label>
+              <input type="password" name="oauth_client_secret" placeholder="••••••••"
+                     :disabled="method !== 'oauth'" :required="method === 'oauth'"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Provider URL</label>
+              <input type="url" name="oauth_provider_url" value="{{ config.oauth_provider_url or '' }}"
+                     :disabled="method !== 'oauth'" :required="method === 'oauth'"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Redirect URI</label>
+              <input type="url" name="oauth_redirect_uri" value="{{ config.oauth_redirect_uri or '' }}"
+                     :disabled="method !== 'oauth'"
+                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Admins (E-Mail Adressen)</label>
+            <textarea name="admin_emails" rows="2"
+                      :disabled="method !== 'oauth'"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      placeholder="admin1@example.com, admin2@example.com">{{ config.admin_emails or '' }}</textarea>
+            <p class="text-xs text-gray-500">Kommagetrennte Liste der E-Mail Adressen mit Adminrechten.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aktionen -->
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-blue">
+          Speichern
+        </button>
+        <a href="/jobs" class="btn btn-gray">
+          Abbrechen
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://unpkg.com/alpinejs" defer></script>
+{% endblock %}

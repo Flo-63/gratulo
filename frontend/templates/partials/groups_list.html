@@ -1,0 +1,27 @@
+<div id="groups-container">
+  <h3 class="text-lg font-semibold mb-2">Gruppen</h3>
+
+  <form hx-post="/htmx/members/groups"
+        hx-target="#groups-container"
+        hx-swap="outerHTML"
+        class="flex space-x-2 mb-3">
+    <input type="text" name="name" placeholder="Neue Gruppe"
+           class="border rounded px-2 py-1 flex-grow"/>
+    <button class="btn btn-green">➕ Neue Gruppe anlegen</button>
+  </form>
+
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead>
+      <tr>
+        <th class="px-4 py-2 text-left">Name</th>
+        <th class="px-4 py-2 text-left">Standard</th>
+        <th class="px-4 py-2 text-left">Aktionen</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in groups %}
+        {% include "partials/group_row.html" %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

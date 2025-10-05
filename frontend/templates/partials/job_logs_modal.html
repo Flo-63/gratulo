@@ -1,0 +1,83 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+     id="job-logs-modal">
+  <div class="bg-white rounded-lg shadow-lg max-w-3xl w-full p-6 relative">
+    <h2 class="text-xl font-semibold mb-4">Logs für Job: {{ job.name }}</h2>
+    <div class="max-h-96 overflow-y-auto border rounded p-3 bg-gray-50 text-sm font-mono">
+      {% if logs %}
+        <ul class="space-y-2">
+          {% for log in logs %}
+            <li>
+              <!-- Zeit: UTC -> lokale Zeitzone -->
+              <span class="text-gray-500">
+                {{ log.executed_at.strftime('%d.%m.%Y %H:%M:%S') }}
+              </span> –
+
+              <!-- Status + Ergebnis -->
+              {% if log.status == 'ok' %}
+                <span class="text-green-600 font-semibold">
+                  ✅ {{ log.mails_sent }} Mails erfolgreich verschickt
+                </span>
+              {% elif log.status == 'partial_error' %}
+                <span class="text-yellow-600 font-semibold">
+                  ⚠️ Teilweise erfolgreich – {{ log.mails_sent }} gesendet, {{ log.errors_count }} Fehler
+                </span>
+              {% elif log.status == 'error' %}
+                <span class="text-red-600 font-semibold">
+                  ❌ Keine Mails verschickt ({{ log.errors_count }} Fehler)
+                </span>
+              {% elif log.status == 'no_recipients' %}
+                <span class="text-gray-600 italic">
+                  📭 Keine Empfänger gefunden
+                </span>
+              {% elif log.status == 'no_config' %}
+                <span class="text-red-600 font-semibold">
+                  ⚠️ Mailer-Konfiguration fehlt
+                </span>
+              {% elif log.status == 'no_template' %}
+                <span class="text-red-600 font-semibold">
+                  ⚠️ Kein Template hinterlegt
+                </span>
+              {% elif log.status == 'job_not_found' %}
+                <span class="text-red-600 font-semibold">
+                  ⚠️ Job nicht gefunden
+                </span>
+              {% else %}
+                <span class="text-gray-600 italic">
+                  (Unbekannter Status: {{ log.status }})
+                </span>
+              {% endif %}
+
+              <!-- Zusatzdetails -->
+              {% if log.details and not (
+                    (log.status == 'no_recipients' and log.details == 'Keine Empfänger gefunden') or
+                    (log.status == 'no_template' and log.details == 'Kein Template vorhanden') or
+                    (log.status == 'no_config' and log.details == 'Keine Mailer-Konfiguration gefunden') or
+                    (log.status == 'job_not_found' and log.details == 'Job nicht gefunden')
+                  ) %}
+                <span class="text-gray-700">({{ log.details }})</span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-gray-500 italic">Keine Logs vorhanden</p>
+      {% endif %}
+    </div>
+    <div class="flex justify-between mt-4">
+      <button type="button"
+              onclick="document.getElementById('job-logs-modal').remove()"
+              class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+        Schließen
+      </button>
+
+      <button type="button"
+              hx-delete="/htmx/jobs/{{ job.id }}/logs"
+              hx-target="#job-logs-modal"
+              hx-swap="outerHTML"
+              hx-confirm="Willst du wirklich alle Logs dieses Jobs löschen?"
+              class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+        Alle Logs löschen
+      </button>
+    </div>
+  </div>
+</div>

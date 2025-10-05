@@ -1,0 +1,47 @@
+<div class="flex justify-between items-center mb-6">
+  <h2 class="text-xl font-bold text-gray-800">Vorlagen</h2>
+  <a href="/templates/new"
+     class="btn btn-green">
+    ➕ Neues Template anlegen
+  </a>
+</div>
+
+<div class="overflow-hidden bg-white shadow rounded-lg">
+  {% if templates %}
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aktionen</th>
+      </tr>
+    </thead>
+    <tbody id="templates-list" class="divide-y divide-gray-200 text-sm text-gray-700">
+      {% for t in templates %}
+      <tr class="hover:bg-gray-50">
+        <td class="px-6 py-4 font-medium text-gray-900">{{ t.name }}</td>
+        <td class="px-6 py-4 text-right">
+          <div class="flex justify-end gap-2">
+            <a href="/templates/{{ t.id }}/edit"
+               class="inline-flex items-center px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium">
+              Bearbeiten
+            </a>
+            <button type="button"
+                    hx-confirm="Willst du dieses Template wirklich löschen?"
+                    hx-delete="/htmx/templates/{{ t.id }}"
+                    hx-target="#templates-list"
+                    hx-swap="innerHTML"
+                    class="inline-flex items-center px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs font-medium">
+              Löschen
+            </button>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="text-center py-10 text-gray-500">
+    Noch keine Templates vorhanden.
+  </div>
+  {% endif %}
+</div>

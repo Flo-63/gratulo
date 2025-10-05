@@ -1,0 +1,43 @@
+<tr id="group-{{ g.id }}">
+  <td class="px-2 py-1">
+    <span id="group-name-{{ g.id }}">
+      {{ g.name }}
+    </span>
+    <form hx-post="/htmx/members/groups/{{ g.id }}"
+          hx-target="#groups-container"
+          hx-swap="outerHTML"
+          class="hidden"
+          id="edit-form-{{ g.id }}">
+      <input type="text" name="name" value="{{ g.name }}" class="border rounded p-1"/>
+      <button class="btn btn-blue">Speichern</button>
+    </form>
+  </td>
+
+  <td class="px-2 py-1">
+    {% if g.is_default %}
+      <span class="text-green-600 font-semibold">✔</span>
+    {% else %}
+      <form hx-post="/htmx/members/groups/{{ g.id }}"
+            hx-target="#groups-container"
+            hx-swap="outerHTML">
+        <input type="hidden" name="name" value="{{ g.name }}">
+        <input type="hidden" name="is_default" value="true">
+        <button class="btn btn-blue">Als Standard setzen</button>
+      </form>
+    {% endif %}
+  </td>
+
+  <td class="px-2 py-1 text-right">
+    <button class="btn btn-blue"
+            onclick="document.getElementById('group-name-{{ g.id }}').classList.add('hidden');
+                     document.getElementById('edit-form-{{ g.id }}').classList.remove('hidden');">
+      Bearbeiten
+    </button>
+    <button class="btn btn-red"
+            hx-delete="/htmx/members/groups/{{ g.id }}"
+            hx-target="#groups-container"
+            hx-swap="outerHTML">
+      Löschen
+    </button>
+  </td>
+</tr>

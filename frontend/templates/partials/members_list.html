@@ -1,0 +1,118 @@
+<div class="flex justify-between items-center mb-6">
+  <h2 class="text-xl font-bold text-gray-800">Mitglieder</h2>
+  <a href="/members/new"
+     class="btn btn-green">
+    ➕ Neues Mitglied anlegen
+  </a>
+</div>
+
+<!-- Filterbereich -->
+<div class="flex items-center justify-between mb-4">
+  <div class="flex items-center gap-3">
+    <label for="filter-deleted" class="text-sm text-gray-700 font-medium">Anzeigen:</label>
+        <select id="filter-deleted"
+                name="deleted"
+                class="border rounded px-2 py-1 text-sm"
+                hx-get="/htmx/members/list"
+                hx-target="#members-list"
+                hx-swap="innerHTML">
+          <option value="false" {% if deleted == "false" %}selected{% endif %}>Aktive Mitglieder</option>
+          <option value="true" {% if deleted == "true" %}selected{% endif %}>Deaktivierte Mitglieder</option>
+          <option value="all" {% if deleted == "all" %}selected{% endif %}>Alle Mitglieder</option>
+        </select>
+  </div>
+  <p class="text-xs text-gray-500 italic">Soft-Delete-Status kann über Aktionen geändert werden</p>
+</div>
+
+<!-- Mitgliederliste -->
+<div class="overflow-hidden bg-white shadow rounded-lg">
+  {% if members %}
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Vorname</th>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nachname</th>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Geschlecht</th>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">E-Mail</th>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Geburtsdatum</th>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mitglied seit</th>
+        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Gruppe</th>
+        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Aktionen</th>
+      </tr>
+    </thead>
+
+    <tbody id="members-list" class="divide-y divide-gray-200 text-sm text-gray-700">
+      {% for member in members %}
+      <tr class="{% if member.is_deleted %}bg-gray-100 text-gray-400 italic{% else %}hover:bg-gray-50{% endif %}">
+        <td class="px-6 py-4 font-medium text-gray-900">{{ member.firstname }}</td>
+        <td class="px-6 py-4">{{ member.lastname }}</td>
+        <td class="px-6 py-4">
+          {% if member.gender == 'm' %}
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs">Männlich</span>
+          {% elif member.gender == 'w' %}
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-pink-100 text-pink-800 text-xs">Weiblich</span>
+          {% else %}
+            <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">Divers</span>
+          {% endif %}
+        </td>
+        <td class="px-6 py-4">{{ member.email }}</td>
+        <td class="px-6 py-4">
+          {% if member.birthdate %}
+            {{ member.birthdate.strftime('%d.%m.%Y') }}
+          {% endif %}
+        </td>
+        <td class="px-6 py-4">{{ member.member_since.year if member.member_since else '' }}</td>
+        <td class="px-6 py-4">{{ member.group.name if member.group else '—' }}</td>
+
+        <!-- Aktionen -->
+        <td class="px-6 py-4 text-right">
+          <div class="flex justify-end gap-2">
+
+            {% if member.is_deleted %}
+              <button type="button"
+                      hx-post="/htmx/members/{{ member.id }}/restore"
+                      hx-confirm="Soll dieses Mitglied wiederhergestellt werden?"
+                      hx-target="#members-list"
+                      hx-swap="innerHTML"
+                      class="btn btn-green">
+                Wiederherstellen
+              </button>
+
+              <button type="button"
+                      hx-delete="/htmx/members/{{ member.id }}/wipe?force=true"
+                      hx-confirm="Dieses Mitglied wird dauerhaft gelöscht!! Fortfahren?"
+                      hx-target="#members-list"
+                      hx-swap="innerHTML"
+                      class="btn btn-black">
+                Endgültig löschen
+              </button>
+
+            {% else %}
+              <!--  Bearbeiten -->
+              <a href="/members/{{ member.id }}/edit"
+                 class="btn btn-blue">
+                Bearbeiten
+              </a>
+
+              <button type="button"
+                      hx-delete="/htmx/members/{{ member.id }}"
+                      hx-confirm="Mitglied deaktivieren?"
+                      hx-target="#members-list"
+                      hx-swap="innerHTML"
+                      class="btn btn-red">
+                Deaktivieren
+              </button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% else %}
+  <div class="text-center py-10 text-gray-500">
+    Noch keine Mitglieder vorhanden.
+  </div>
+  {% endif %}
+</div>
