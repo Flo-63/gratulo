@@ -51,10 +51,11 @@ Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der kostenfreien Ver
 ## Installation
 
 1. Repository klonen:
-   ```bash
-   git clone https://github.com/<ihr-benutzername>/gratulo.git
-   cd gratulo
-````
+
+    ```bash
+       git clone https://github.com/<ihr-benutzername>/gratulo.git
+       cd gratulo
+    ```
 
 2. Virtuelle Umgebung erstellen und aktivieren:
 
@@ -70,29 +71,64 @@ Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der kostenfreien Ver
    pip install -r requirements.txt
    ```
 
-4. Umgebungsdatei `.env` anlegen (Beispiel):
+4. ### .env-Datei anlegen
 
-   ```env
-   APP_NAME=gratulo
-   SECRET_KEY=geheimes_schluesselwort
-   ALGORITHM=HS256
-   ACCESS_TOKEN_EXPIRE_MINUTES=60
+Beispielkonfiguration für `.env`:
 
-   # Datenbank
-   DATABASE_URL=sqlite:///./gratulo.db
-   # oder (optional)
-   # DATABASE_URL=postgresql+psycopg2://benutzer:passwort@localhost/gratulo
+```env
+# ---------------------------------------------------------------------
+# Anwendung
+# ---------------------------------------------------------------------
+APP_SECRET=<FERNET KEY>          # Schlüssel zur Verschlüsselung gespeicherter Daten
+CLUB_FOUNDATION_DATE=            # Optional: Gründungsdatum des Vereins
+INITIAL_ADMIN_USER=""            # Erstes Admin-Benutzerkonto
+INITIAL_PASSWORD=""              # Startpasswort für den Admin
+SESSION_LIFETIME=480             # Lebensdauer einer Sitzung (in Minuten)
+HTTPS_ONLY=false                 # HTTPS erzwingen (Produktionsmodus)
 
-   # E-Mail
-   SMTP_HOST=smtp.server.de
-   SMTP_PORT=587
-   SMTP_USERNAME=absender@mail.de
-   SMTP_PASSWORD=passwort
-   EMAIL_FROM=absender@mail.de
+# ---------------------------------------------------------------------
+# Redis (Rate Limiting / Brute-Force-Schutz)
+# ---------------------------------------------------------------------
 
-   # Redis (Rate Limiting / Brute-Force-Schutz)
-   REDIS_URL=redis://localhost:6379/0
-   ```
+# Für lokale Entwicklung (Redis läuft direkt auf dem Hostsystem)
+# REDIS_URL=redis://localhost:6379/0
+
+# Für Docker / Docker Compose (Redis als Service im Container-Netzwerk)
+REDIS_URL=redis://redis:6379/0
+
+# ---------------------------------------------------------------------
+# Service-Authentifizierung
+# ---------------------------------------------------------------------
+SERVICE_USER_NAME=service_api
+SERVICE_USER_PASSWORD=supersecret123
+
+# ---------------------------------------------------------------------
+# JWT-Konfiguration
+# ---------------------------------------------------------------------
+JWT_SECRET_KEY=topsecretjwtkey
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=60
+
+# ---------------------------------------------------------------------
+# Basis-URL (z. B. für Links in Vorlagen und Weiterleitungen)
+# ---------------------------------------------------------------------
+BASE_URL=http://localhost:8000
+```
+
+Diese Konfiguration enthält:
+- Verschlüsselungs-Token (APP_SECRET) für gespeicherte Daten
+- Sitzungsparameter und HTTPS-Optionen
+- Redis-Verbindung für Rate Limiting und Anmelde-Schutz
+- JWT-Einstellungen für API-Authentifizierung
+- Admin-Standardkonto für den Erststart 
+- Basis-URL, z.B. zur Erzeugung von Links in E-Mail-Vorlagen
+
+Die Konfiguration des SMTP Servers sowie des Admin Accounts erfolgt in der Ui.
+
+**Nach dem Anlegen des Admin-Users sind die entsprechenden Einträge in der .env zu löschen!**
+
+Bei Nutzung von Docker Compose wird automatisch der interne Redis-Service
+unter redis angesprochen (REDIS_URL=redis://redis:6379/0).
 
 ---
 
@@ -112,12 +148,42 @@ Zugriff unter: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
 
+## Installation und Betrieb mit Docker
+
+### Manuelles Erstellen und Starten
+
+```bash
+docker build -t gratulo .
+docker run -d -p 8000:8000 --env-file .env gratulo
+```
+Damit wird die Anwendung in einem Container gestartet, der Port 8000 nach außen bereitstellt.
+Die Konfiguration erfolgt über die Datei .env im Projektverzeichnis.
+
+### Start mit Docker Compose
+```bash
+docker-compose up -d
+```
+Die mitgelieferte Datei docker-compose.yml startet automatisch:
+- den gratulo-Container (FastAPI-Anwendung),
+- eine Redis-Instanz (Rate Limiting, Brute-Force-Schutz),
+- optional eine PostgreSQL-Datenbank.
+
+### Docker Logs anzeigen:
+```bash
+docker-compose logs -f
+```
+### Container beenden:
+
+```bash
+    docker-compose down
+ ```
+
 ---
 
 ## API-Dokumentation
 
-* Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-* ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+* Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/swagger)
+* ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/doc)
 
 ---
 
@@ -128,7 +194,7 @@ gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
 * Dashboard mit Versandstatistiken und Fehleranalyse
 * Zentrale Benachrichtigungsübersicht für anstehende Ereignisse
 * Unterstützung mehrsprachiger Vorlagen
-* Erweiterte Personalisierung (z. B. Platzhalter für Vorname, Alter, Mitgliedsjahre)
+
 
 ---
 
@@ -143,6 +209,7 @@ Die Nutzung und Weitergabe ist ausschließlich zu **nicht-kommerziellen Zwecken*
 ## Autor
 
 **Florian Mösch**
+
 © 2025 Florian Mösch. Alle Rechte vorbehalten.
 
 ```

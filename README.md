@@ -99,19 +99,58 @@ pip install -r requirements.txt
 Example `.env`:
 
 ```env
-APP_NAME=gratulo
-SECRET_KEY=your_secret_key_here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
+# ---------------------------------------------------------------------
+# Application
+# ---------------------------------------------------------------------
+APP_SECRET=<FERNET KEY>          # Used for encryption of stored data
+CLUB_FOUNDATION_DATE=            # Optional: used for anniversary calculation
+INITIAL_ADMIN_USER=""            # Automatically created admin account
+INITIAL_PASSWORD=""              # Initial password for first admin
+SESSION_LIFETIME=480             # Session lifetime in minutes
+HTTPS_ONLY=false                 # Enforce HTTPS cookies in production
 
-# Database (SQLite by default, fixed location in project path)
+# ---------------------------------------------------------------------
+# Redis (Rate Limiting / Brute Force Protection)
+# ---------------------------------------------------------------------
 
-# Optional PostgreSQL setup
-# DATABASE_URL=postgresql+psycopg2://username:password@localhost/gratulo
+# Use this for local development (Redis running directly on host)
+# REDIS_URL=redis://localhost:6379/0
 
-# Redis for rate limiting
-REDIS_URL=redis://localhost:6379/0
+# Use this for Docker / Docker Compose (Redis as service)
+REDIS_URL=redis://redis:6379/0
+
+# ---------------------------------------------------------------------
+# Service Authentication
+# ---------------------------------------------------------------------
+SERVICE_USER_NAME=service_api
+SERVICE_USER_PASSWORD=supersecret123
+
+# ---------------------------------------------------------------------
+# JWT Configuration
+# ---------------------------------------------------------------------
+JWT_SECRET_KEY=topsecretjwtkey
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=60
+
+# ---------------------------------------------------------------------
+# Base URL (used for template links and redirects)
+# ---------------------------------------------------------------------
+BASE_URL=http://localhost:8000
 ```
+
+This configuration defines:
+
+- Encryption key (APP_SECRET) for Fernet-based field encryption.
+- Session and HTTPS settings for cookie management.
+- Redis connection for rate limiting and brute-force protection.
+- JWT security tokens for API authentication.
+- Admin bootstrap credentials for first-time setup.
+- Base URL for link generation inside email templates and redirects.
+
+When running via Docker Compose, the app automatically connects to the Redis service
+using the internal hostname redis (REDIS_URL=redis://redis:6379/0).
+
+**After using the bootstrap admim credentials to configure the Admin-User, delete these settings from the .env !**
 
 ---
 
@@ -131,6 +170,32 @@ Visit: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
 
+---
+
+## Running with Docker
+
+### Build and run the container manually
+
+```bash
+docker build -t gratulo .
+docker run -d -p 8000:8000 --env-file .env gratulo
+This starts the application inside a container on port 8000.
+The .env file from your project root provides configuration (e.g., database, SMTP, Redis).
+```
+## Run with Docker Compose
+```bash
+docker-compose up -d
+```
+This uses the included docker-compose.yml file, which provides all required services.
+You can view logs with:
+
+```bash
+docker-compose logs -f
+```
+And stop all containers with:
+```bash
+docker-compose down
+```
 ---
 
 ## API Overview
