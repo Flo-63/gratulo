@@ -1,3 +1,18 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/services/scheduler.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides functionality for scheduling and executing jobs.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 import logging
 from datetime import datetime
 from typing import Optional
@@ -14,15 +29,14 @@ _scheduler: Optional[BackgroundScheduler] = None
 
 def _get_scheduler() -> BackgroundScheduler:
     """
-    Retrieves the global instance of the background scheduler.
+    Initializes and returns a global `BackgroundScheduler` instance.
 
-    This function ensures that a singleton instance of `BackgroundScheduler`
-    is created and initialized with a job event listener. The listener is
-    added to capture job execution and error events.
+    This function ensures that there is a single instance of a `BackgroundScheduler`
+    shared globally. If the scheduler has not been initialized yet, it creates a new
+    instance, sets up necessary listeners, and assigns it to the global variable.
 
-    :raises NoneType: Does not explicitly raise an exception.
-    :returns: The global `BackgroundScheduler` instance.
-    :rtype: BackgroundScheduler
+    Returns:
+        BackgroundScheduler: The single instance of the global background scheduler.
     """
     global _scheduler
     if _scheduler is None:
@@ -33,13 +47,14 @@ def _get_scheduler() -> BackgroundScheduler:
 
 def _on_job_event(event) -> None:
     """
-    Handles job events triggered during the scheduler's operation. Logs the result
-    of a job, whether it ended successfully or failed.
+    Handles job events during the scheduler's runtime.
 
-    :param event: Event object containing information about the job that triggered
-        the event.
-    :type event: Any
-    :return: None
+    This function is used as a callback for job events, logging the outcome of each
+    job based on whether it completed successfully or encountered an exception.
+
+    Args:
+        event: The event object containing details about the job execution, such
+            as job ID and exception details.
     """
     if event.exception:
         logger.error(f"[Scheduler] Job {event.job_id} fehlgeschlagen.")
@@ -49,15 +64,17 @@ def _on_job_event(event) -> None:
 
 def start_scheduler() -> None:
     """
-    Starts the scheduler if it is not already running.
+    Starts the task scheduler.
 
-    This function retrieves the scheduler instance and checks if it is currently
-    running. If the scheduler is not active, it will be started, and a log entry
-    will be created to indicate the scheduler has started.
+    This function retrieves the scheduler instance and starts it if it is not
+    already running. Upon starting the scheduler, an informational log message
+    is generated.
 
-    :raises RuntimeError: If the scheduler could not be retrieved or initialized.
+    Raises:
+        None
 
-    :return: None
+    Returns:
+        None
     """
     sched = _get_scheduler()
     if not sched.running:
@@ -67,14 +84,15 @@ def start_scheduler() -> None:
 
 def stop_scheduler() -> None:
     """
-    Stops the currently running scheduler if it is active.
+    Stops the currently running scheduler, if active, without waiting for tasks to complete.
 
-    This function retrieves the scheduler instance and checks if it is currently
-    running. If the scheduler is running, it shuts it down without waiting for
-    currently executing jobs to finish. A log entry is then recorded indicating
-    that the scheduler has been stopped.
+    This function retrieves the scheduler using an internal method and checks if it
+    is currently running. If the scheduler is running, it is shutdown without
+    waiting for currently scheduled tasks to complete. After shutdown, a log
+    message is recorded to indicate that the scheduler has been stopped.
 
-    :return: None
+    Raises:
+        Exception: If there are internal issues during scheduler shutdown.
     """
     sched = _get_scheduler()
     if sched.running:
@@ -84,27 +102,30 @@ def stop_scheduler() -> None:
 
 def _job_id(job_id: int) -> str:
     """
-    Generates a formatted string representing a job identifier.
+    Constructs a string identifier for a job using the provided job ID.
 
-    This function constructs a string by prefixing the provided `job_id` with
-    the string 'job_'.
+    Args:
+        job_id (int): The ID of the job.
 
-    :param job_id: The unique identifier for a job
-    :type job_id: int
-    :return: A formatted job identifier string prefixed with 'job_'
-    :rtype: str
+    Returns:
+        str: The constructed job identifier string in the format "job_{job_id}".
     """
     return f"job_{job_id}"
 
 
 def unschedule(job_id: int) -> None:
     """
-    Unschedules a job identified by its job_id from the scheduler. If the job exists
-    in the scheduler, it will be removed and appropriate log information is recorded.
+    Unschedules a job that matches the given job ID.
 
-    :param job_id: The unique identifier of the job to be unscheduled.
-    :type job_id: int
-    :return: None
+    This function removes a job from the scheduler if it exists. The job is identified
+    based on the provided job ID. After removal, a log entry is created to confirm
+    the job has been removed.
+
+    Args:
+        job_id (int): The ID of the job to be removed from the scheduler.
+
+    Returns:
+        None
     """
     sched = _get_scheduler()
     job = sched.get_job(_job_id(job_id))
@@ -115,16 +136,17 @@ def unschedule(job_id: int) -> None:
 
 def register_job(job: models.MailerJob) -> None:
     """
-    Registers a job in the scheduler. Depending on the job configuration, it will either schedule
-    a cron job or a one-time job. If the job's configuration does not include either a cron definition
-    or a specific execution time (`once_at`), the job will not be scheduled. Existing definitions
-    for the provided job ID will first be unscheduled before re-registering.
+    Registers a job in the scheduler using specified job attributes. This function handles jobs
+    with either a cron schedule or a specific one-time execution schedule. If a cron string or
+    execution date is invalid, the job will not be scheduled.
 
-    :param job: The job instance to be scheduled. It must include a unique identifier (`id`)
-                and either a cron string (`cron`) or single execution time (`once_at`) to
-                determine the job's scheduling configuration.
-    :type job: models.MailerJob
-    :return: None
+    Args:
+        job: The MailerJob instance representing the job to be scheduled.
+            It must include an ID and definitions for its execution schedule
+            (either as a cron string or a specific execution time).
+
+    Raises:
+        ValueError: Raised internally if the provided cron string is invalid or malformed.
     """
     sched = _get_scheduler()
     # Zuerst ggf. vorhandene Definition entfernen
@@ -175,14 +197,14 @@ def register_job(job: models.MailerJob) -> None:
 
 def resync_all_jobs(jobs: list[models.MailerJob]) -> None:
     """
-    Syncs the provided list of mailer jobs to ensure they are registered in the system.
+    Resynchronizes all mailer jobs by registering each given job through the job registration
+    process. This ensures all specified mailer jobs are synchronized and ready for dispatch.
 
-    This function takes a list of `MailerJob` objects and registers each
-    job to ensure they are properly synced with the system.
+    Args:
+        jobs (list[models.MailerJob]): A list of MailerJob instances to be resynchronized.
 
-    :param jobs: A list of `MailerJob` objects to be resynced.
-    :type jobs: list[models.MailerJob]
-    :return: None
+    Returns:
+        None
     """
     for j in jobs:
         register_job(j)

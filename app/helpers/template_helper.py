@@ -1,18 +1,34 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/helpers/template_helper.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides functions for validating template fields.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
 def validate_template_fields(name: str, content_html: str):
     """
-    Validates the mandatory fields for a template.
+    Validates the fields of a template and ensures they meet the specified conditions.
 
-    Ensures that the "name" field is not empty or consists of only whitespace.
-    The "content_html" is not validated as it is allowed to be empty.
+    This function checks if the provided `name` is not empty or consists solely of
+    whitespace. For `content_html`, empty content is allowed.
 
-    :param name: The name of the template which must not be empty.
-    :type name: str
-    :param content_html: The HTML content of the template, can be empty.
-    :type content_html: str
-    :return: A tuple where the first value is a boolean indicating the validation
-        status, and the second value is a message or None if validation
-        succeeded.
-    :rtype: tuple[bool, str | None]
+    Args:
+        name (str): The name of the template to validate.
+        content_html (str): The HTML content of the template.
+
+    Returns:
+        tuple: A tuple containing a boolean and a string. The boolean indicates whether
+               the validation was successful. If validation fails, the string contains
+               an error message. If successful, the string is `None`.
     """
     if not (name or "").strip():
         return False, "Name darf nicht leer sein"

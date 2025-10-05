@@ -1,4 +1,18 @@
-# app/htmx/members_htmx.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/htmx/members_htmx.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides HTMX endpoints for managing members.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, UploadFile, File
@@ -26,20 +40,18 @@ jinja_templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 def context(request: Request, db: Session, **extra):
     """
-    Builds a context dictionary for use in a given request context.
+    Provides a context dictionary that includes the request, a list of groups,
+    and any additional key-value pairs.
 
-    This function retrieves a list of groups from the database using the group service
-    and constructs a context dictionary, combining the request data, retrieved groups,
-    and any additional keyword arguments provided.
+    Args:
+        request: The incoming HTTP request object.
+        db: The database session to fetch the list of groups.
+        **extra: Arbitrary additional key-value pairs to include in
+            the context.
 
-    :param request: The HTTP request object.
-    :type request: Request
-    :param db: The database session used for retrieving the groups.
-    :type db: Session
-    :param extra: Additional keyword arguments to include in the context dictionary.
-    :type extra: dict
-    :return: A dictionary containing the request object, groups, and any additional data.
-    :rtype: dict
+    Returns:
+        dict: A context dictionary containing the request, a list
+        of groups, and any additional data.
     """
     groups = group_service.list_groups(db)
     return {"request": request, "GROUPS": groups, **extra}
@@ -59,9 +71,35 @@ def save_member_htmx(
     group_id: int | None = Form(None),
     db: Session = Depends(database.get_db),
 ):
+    """
+    Handles saving or updating a member's data via an HTMX-based POST request. Performs
+    data validation, processes UI-related errors, and interacts with the database for
+    member persistence. Returns an HTML response with the necessary changes to update
+    the UI dynamically.
+
+    Args:
+        request (Request): Represents the incoming HTTP request for rendering templates.
+        id (str | None, optional): The ID of the existing member to update. Use None for
+            creating a new member.
+        firstname (str): The first name of the member.
+        lastname (str): The last name of the member.
+        gender (str): The gender of the member.
+        email (str): The email address of the member.
+        birthdate (str | None, optional): The birthdate of the member in the format 'YYYY-MM-DD'.
+        member_since (str | None, optional): The membership start date in the format 'YYYY-MM-DD'.
+        group_id (int | None, optional): The ID of the group the member belongs to.
+        db (Session): The database session used for querying and saving data.
+
+    Returns:
+        HTMLResponse: A response containing the rendered HTML template with the
+        updated member data and error messages if validation fails.
+
+    Raises:
+        None: Errors encountered during validation or database operations are either
+        appended to the response or rendered via the HTML template.
+    """
     errors = []
 
-    # 🧩 UI-Logik bleibt vollständig erhalten (Alter, Format, UX)
     parsed_birthdate = None
     if birthdate:
         try:
@@ -95,7 +133,7 @@ def save_member_htmx(
     if not group:
         errors.append("Keine gültige Gruppe gefunden")
 
-    # 🧩 Template-Fehleranzeige (unverändert)
+    #  Template-Fehleranzeige
     if errors:
         member_data = {
             "id": id,
@@ -119,7 +157,7 @@ def save_member_htmx(
             },
         )
 
-    # 🧩 Speicherung mit zentraler Service-Funktion
+    # Speicherung mit zentraler Service-Funktion
     try:
         member_service.save_member(
             db=db,
@@ -143,7 +181,7 @@ def save_member_htmx(
         db.rollback()
         errors.append(f"Fehler beim Speichern: {str(e)}")
 
-    # 🧩 Fehlerhafte Speicherung → UI bleibt unverändert
+    # Fehlerhafte Speicherung
     member_data = {
         "id": id,
         "firstname": firstname,
@@ -170,20 +208,20 @@ def save_member_htmx(
 @members_htmx_router.post("/import-validate", response_class=HTMLResponse)
 def import_members_validate(request: Request, file: UploadFile = File(...), db: Session = Depends(database.get_db),):
     """
-    Handles the import and validation of members from a CSV file.
+    Handles the member import validation process by parsing the uploaded CSV file
+    and rendering a preview of its contents for further review.
 
-    This function receives a file uploaded via a POST request and attempts
-    to parse the file as a CSV. If successful, the parsed data (rows) are
-    used as context for rendering a template. This process allows validation
-    and preview of the imported members data before any further actions are
-    performed.
+    Args:
+        request (Request): The HTTP request object representing the incoming
+            request, which contains metadata about the client request.
+        file (UploadFile): The CSV file uploaded by the user. This file
+            contains the data to be parsed and validated.
+        db (Session): The database session dependency used for interacting with
+            the application's database.
 
-    :param request: The incoming HTTP request.
-    :type request: Request
-    :param file: The file uploaded by the client, expected to be a CSV file.
-    :type file: UploadFile
-    :return: An HTML response rendering the preview of the members data.
-    :rtype: HTMLResponse
+    Returns:
+        HTMLResponse: An HTML response that renders the "members_import_preview.html"
+        template along with the parsed CSV data for review.
     """
     rows = parse_csv(file)
     return jinja_templates.TemplateResponse("partials/members_import_preview.html", context(request, db=db, rows=rows))
@@ -192,23 +230,19 @@ def import_members_validate(request: Request, file: UploadFile = File(...), db: 
 @members_htmx_router.post("/import-commit")
 async def import_members_commit(request: Request, db: Session = Depends(database.get_db)):
     """
-    Handles the POST request for importing and committing member data. This function
-    parses, validates, and processes the incoming data, ensuring all required fields
-    are present. If validation errors exist, it responds with the appropriate error
-    message within the preview template. If the data passes validation, it saves the
-    information to the database and returns a redirect response.
+    Processes the commit request for importing members by handling the submitted
+    form, validating the entries, and saving the members to the database if valid.
 
-    :param request: The incoming HTTP request containing the form data to be processed.
-                    Form data includes rows of information about members.
-                    Type: Request
-    :param db: The database session utilized for committing the validated member data.
-               Dependency injected via FastAPI's Depends.
-               Type: Session
-    :return: If validation errors exist, returns a Jinja2 template response with the
-             error details and the submitted rows. If validation is successful, the
-             function commits the data to the database and returns a 204 No Content
-             response with a redirect header.
-    :rtype: Union[TemplateResponse, Response]
+    Args:
+        request (Request): FastAPI request object to access form data and
+            request parameters.
+        db (Session): SQLAlchemy database session dependency for interacting
+            with the database.
+
+    Returns:
+        Response: An HTTP response with status code 204 on successful member import
+            or a Jinja template response for handling validation errors or missing
+            required fields.
     """
     form = await request.form()
 
@@ -266,15 +300,16 @@ async def import_members_revalidate(
     db: Session = Depends(database.get_db),   # <-- DB Session einfügen
 ):
     """
-    Handles the POST request for importing and revalidating member data. Parses and
-    processes incoming form data to construct normalized rows and validates them
-    before rendering a preview template with the processed data.
+    Processes and validates member data imported in a form, revalidates the content,
+    and renders a preview template for review.
 
-    :param request: The HTTP request object containing form data for processing.
-    :type request: Request
+    Args:
+        request (Request): The HTTP request object containing the form data to process.
+        db (Session): Database session dependency to interact with the database.
 
-    :return: TemplateResponse containing a preview of the validated member data.
-    :rtype: TemplateResponse
+    Returns:
+        HTMLResponse: Renders the "partials/members_import_preview.html" template
+        with validated rows for client-side presentation.
     """
     form = await request.form()
 
@@ -319,6 +354,19 @@ def add_group(
     is_default: bool = Form(False),
     db: Session = Depends(database.get_db),
 ):
+    """
+    Adds a new group to the database and renders an updated groups list.
+
+    This function handles a POST request to create a new group in the database via the
+    'group_service.create_group' method. After creation, it retrieves the updated list of groups
+    using 'group_service.list_groups' and renders the groups list template.
+
+    Args:
+        request: The HTTP request object.
+        name: The name of the group submitted through the form.
+        is_default: Indicates whether the new group should be marked as the default.
+        db: Database session dependency.
+    """
     group_service.create_group(db, name=name.strip(), is_default=is_default)
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse(
@@ -333,6 +381,20 @@ def delete_group(
     request: Request,
     db: Session = Depends(database.get_db),
 ):
+    """
+    Deletes a group by its ID and updates the group list.
+
+    This endpoint allows a group to be deleted via its unique ID. After deletion,
+    the list of groups is updated and rendered using the appropriate HTML template.
+
+    Args:
+        group_id (int): The unique identifier of the group to be deleted.
+        request (Request): The HTTP request object.
+        db (Session): The database session for handling query operations.
+
+    Returns:
+        HTMLResponse: A rendered template showing the updated list of groups.
+    """
     group_service.delete_group(db, group_id=group_id)
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse(
@@ -349,6 +411,23 @@ def update_group(
     is_default: bool = Form(False),
     db: Session = Depends(database.get_db),
 ):
+    """
+    Updates an existing group with the provided information such as name and
+    default status. Utilizes the `group_service` to perform update operations
+    in the database and then renders a list of groups using a template.
+
+    Args:
+        group_id (int): The ID of the group to update.
+        request (Request): The HTTP request object containing metadata about the
+            request.
+        name (str): The new name for the group, obtained from the form input.
+        is_default (bool): A boolean flag to indicate if the group should be set as
+            the default group. Defaults to False.
+        db (Session): The database session used to execute database operations.
+
+    Returns:
+        HTMLResponse: A rendered HTML response containing the updated list of groups.
+    """
     g = group_service.update_group(db, group_id=group_id, name=name.strip(), is_default=is_default)
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse(
@@ -357,8 +436,9 @@ def update_group(
     )
 
 # ==========================================================
-# 🧩 Mitgliederliste (HTMX-kompatibel, mit Filter)
+#  Mitgliederliste (HTMX-kompatibel, mit Filter)
 # ==========================================================
+
 @members_htmx_router.get("/list", response_class=HTMLResponse)
 def list_members_htmx(
     request: Request,
@@ -366,8 +446,18 @@ def list_members_htmx(
     db: Session = Depends(database.get_db),
 ):
     """
-    Gibt eine HTML-Teilansicht (Partial) mit der Mitgliederliste zurück.
-    Unterstützt Filter für aktive, gelöschte oder alle Mitglieder.
+    Handles the listing of members based on their deletion status via an HTMX
+    compatible endpoint. The response is rendered as HTML using a Jinja2 template.
+
+    Args:
+        request (Request): The FastAPI request object.
+        deleted (str): Deletion status filter for the members. Accepted values are
+            "true" (deleted members), "false" (active members), and "all" (both
+            active and deleted members). Default is "false".
+        db (Session): SQLAlchemy session dependency, used for database access.
+
+    Returns:
+        HTMLResponse: Rendered HTML response containing the member list.
     """
     deleted = (deleted or "").lower().strip()
 
@@ -387,7 +477,21 @@ def list_members_htmx(
 @members_htmx_router.delete("/{member_id}", response_class=HTMLResponse)
 def soft_delete_member_htmx(member_id: int, request: Request, db: Session = Depends(database.get_db)):
     """
-    Markiert ein Mitglied als gelöscht (Soft Delete).
+    Soft-deletes a member and returns an updated list of active members.
+
+    This function performs a soft delete operation on a specific member
+    based on the given member ID. If the member is successfully soft-deleted,
+    it updates the member list and renders the updated list to the client.
+    If the member with the given ID cannot be found, an HTTPException with
+    status code 404 is raised.
+
+    Args:
+        member_id (int): The unique identifier of the member to delete.
+        request (Request): The HTTP request instance.
+        db (Session): The database session dependency.
+
+    Returns:
+        HTMLResponse: Renders the updated member list in an HTML response.
     """
     deleted_member = member_service.soft_delete_member(db, member_id)
     if not deleted_member:
@@ -402,7 +506,19 @@ def soft_delete_member_htmx(member_id: int, request: Request, db: Session = Depe
 @members_htmx_router.post("/{member_id}/restore", response_class=HTMLResponse)
 def restore_member_htmx(member_id: int, request: Request, db: Session = Depends(database.get_db)):
     """
-    Stellt ein zuvor soft-gelöschtes Mitglied wieder her.
+    Restores a deleted member and updates the members list to reflect the changes. If the member
+    is not found or not deleted, an HTTPException with status code 404 is raised.
+
+    Args:
+        member_id (int): ID of the member to be restored.
+        request (Request): The HTTP request object.
+        db (Session): Database session dependency.
+
+    Raises:
+        HTTPException: If the member is not found or is not in a deleted state.
+
+    Returns:
+        HTMLResponse: Rendered HTML response containing the updated members list.
     """
     restored = member_service.restore_member(db, member_id)
     if not restored:
@@ -418,7 +534,25 @@ def restore_member_htmx(member_id: int, request: Request, db: Session = Depends(
 @members_htmx_router.delete("/{member_id}/wipe", response_class=HTMLResponse)
 def wipe_member_htmx(member_id: int, request: Request, db: Session = Depends(database.get_db)):
     """
-    Löscht ein Mitglied dauerhaft aus der Datenbank.
+    Deletes a specific member from the database and updates the list of members.
+
+    This function deletes a member with the specified member ID from the database.
+    If the member cannot be located or deleted, a 404 HTTPException is raised. After
+    the deletion, the function fetches an updated list of members, including deleted
+    ones, and returns a rendered HTML response containing the updated members list.
+
+    Args:
+        member_id (int): The unique identifier of the member to be deleted.
+        request (Request): The HTTP request object.
+        db (Session): The database session dependency for executing database
+            operations.
+
+    Returns:
+        HTMLResponse: An HTML response containing the updated list of members.
+
+    Raises:
+        HTTPException: If the member cannot be found or deleted, an exception with
+            a 404 status code is raised.
     """
     success = member_service.wipe_member(db, member_id, force=True)
     if not success:

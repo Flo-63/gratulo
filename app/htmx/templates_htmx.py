@@ -1,3 +1,18 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/htmx/templates_htmx.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides HTTP endpoints for managing templates.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 import os
 from pathlib import Path
 from fastapi import APIRouter, Depends, Form, Request, Response, UploadFile, File, HTTPException
@@ -18,17 +33,18 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @templates_htmx_router.get("/list")
 def templates_list(request: Request, db: Session = Depends(get_db)):
     """
-    Fetches the list of templates and renders the templates list HTML
-    partial using Jinja templates. Integrates with the database for
-    data retrieval and handles the HTTP request.
+    Handles the route to retrieve and render the list of templates. The function
+    interacts with the service layer to get the templates data from the database
+    and then renders the data into an HTML template using Jinja.
 
-    :param request: HTTP request object containing metadata and
-        request information
-    :type request: Request
-    :param db: Database session instance for retrieving templates
-    :type db: Session
-    :return: Rendered HTML response containing the templates list
-    :rtype: TemplateResponse
+    Args:
+        request (Request): The incoming HTTP request object containing metadata
+            and other request-related information.
+        db (Session): The database session used to query the templates.
+
+    Returns:
+        TemplateResponse: A response generated using Jinja to render the
+        "partials/templates_list.html" template with the provided context data.
     """
     templates = template_service.get_templates(db)
     return jinja_templates.TemplateResponse(
@@ -47,25 +63,22 @@ def save_template(
     content_html: str = Form(""),
 ):
     """
-    Handles the saving of a template through an HTTP POST request. This functionality
-    allows saving or updating templates identified by their ID and associated with a
-    name and HTML content. The operation is backed by a database session and ensures
-    a proper response with an HTTP status code and redirection headers.
+    Saves a template to the database with provided details. If the `id` is not
+    provided or empty, a new template is created; otherwise, an existing template
+    with the given `id` is updated. Once saved, redirects to the `/templates`
+    route.
 
-    :param request: The incoming HTTP request object.
-    :type request: Request
-    :param db: The database session dependency for executing operations.
-    :type db: Session
-    :param id: The optional identifier of the template to be updated. If not provided,
-        a new template creation is assumed.
-    :type id: str | None
-    :param name: The name of the template to be saved. This is a required parameter.
-    :type name: str
-    :param content_html: The HTML content of the template. Defaults to an empty string
-        if not provided.
-    :type content_html: str
-    :return: A Response object with status code 204 and redirection headers.
-    :rtype: Response
+    Args:
+        request (Request): The incoming HTTP request object.
+        db (Session): Database session dependency.
+        id (str | None): The identifier of the template to be updated, or None for
+            creating a new template.
+        name (str): The name of the template.
+        content_html (str): The HTML content of the template.
+
+    Returns:
+        Response: HTTP response with a status code of 204 and a redirect header
+        to the `/templates` route.
     """
     template_id = int(id) if id and id.strip() else None
     template_service.save_template(db, template_id, name, content_html)
@@ -75,38 +88,39 @@ def save_template(
 @templates_htmx_router.delete("/{template_id}", response_class=Response)
 def delete_template(template_id: int, db: Session = Depends(get_db)):
     """
-    Deletes a template with a specified ID from the database. This operation
-    is permanent and cannot be undone. Upon successful deletion, the response
-    will redirect the user to the `/templates` page.
+    Deletes a specified template from the database.
 
-    :param template_id: The ID of the template to delete.
-    :type template_id: int
-    :param db: The database session to use for performing the delete operation.
-    :type db: Session
-    :return: A response indicating the deletion status with a redirect header.
-    :rtype: Response
+    This endpoint allows the removal of a template based on its unique identifier.
+    Upon successful deletion, the server responds with a 204 No Content status and
+    redirects the user to the templates list.
+
+    Args:
+        template_id (int): The unique identifier of the template to be deleted.
+        db (Session): The database session dependency for performing database
+            operations.
+
+    Returns:
+        Response: An HTTP response with a 204 No Content status and an
+            "HX-Redirect" header pointing to "/templates".
     """
     template_service.delete_template(db, template_id)
     return Response(status_code=204, headers={"HX-Redirect": "/templates"})
 
 
-# =========================
-#  NEUE ENDPOINTS
-# =========================
-
-from fastapi.responses import JSONResponse
-
 @templates_htmx_router.get("/list-images", response_class=JSONResponse)
 def list_images():
     """
-    List all images from the upload directory that match supported file types.
+    Lists image files from the upload directory and returns their URLs as a JSON response.
 
-    The function fetches all files from the UPLOAD_DIR directory, filters out
-    non-image files and unsupported formats, sorts them by their modification
-    time in descending order, and returns only the URLs of the image files.
+    This function retrieves all image files from the specified upload directory, filters
+    them based on supported image formats, and sorts them by their last modified time
+    in descending order. The URLs of the image files are then returned as a JSON response.
 
-    :return: A JSONResponse containing a list of URLs of the image files.
-    :rtype: JSONResponse
+    Raises:
+        FileNotFoundError: If the upload directory does not exist.
+
+    Returns:
+        JSONResponse: A JSON response containing a list of URLs for the retrieved image files.
     """
     try:
         paths = [Path(UPLOAD_DIR) / f for f in os.listdir(UPLOAD_DIR)]
@@ -130,15 +144,14 @@ def list_images():
 @templates_htmx_router.post("/upload-image")
 async def upload_image(file: UploadFile = File(...)):
     """
-    Upload an image to the server. This function handles the file upload process, ensures
-    that the uploaded file's name does not collide with existing files, saves the file
-    to the server, and returns the location of the uploaded file.
+    Handles image upload and saves the file to the specified directory while ensuring
+    that the filename does not collide with existing files in the directory.
 
-    :param file: The image file to be uploaded.
-    :type file: UploadFile
+    Args:
+        file: The image file uploaded by the user.
 
-    :return: A JSON response with the location of the uploaded file.
-    :rtype: dict
+    Returns:
+        dict: A dictionary containing the file location as a key-value pair.
     """
     filename = file.filename
     save_path = os.path.join(UPLOAD_DIR, filename)

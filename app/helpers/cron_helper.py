@@ -1,3 +1,17 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/helpers/cron_helper.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides helper functions for cron job scheduling.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
 # app/helpers/cron_helper.py
 
 from fastapi import HTTPException
@@ -15,29 +29,25 @@ WEEKDAYS = {
 
 def build_cron(interval_type: str, time_str: str, weekday: str | None, monthday: str | None) -> str:
     """
-    Builds a Cron schedule string based on the specified interval type, time, and optionally
-    weekday or monthday. The generated string conforms to the standard Cron format.
+    Constructs a CRON expression based on the specified interval type (daily, weekly, or monthly), time,
+    and optional weekday or monthday. The CRON expression is used to define a schedule for specific
+    intervals.
 
-    The function validates the provided parameters to ensure correctness. It raises appropriate
-    exceptions if the parameters are missing, invalid, or outside of their allowed range.
+    This function validates the input parameters, ensuring that they conform to expected formats
+    and ranges. Raises errors in case of invalid input.
 
-    :param interval_type: The type of interval for the Cron schedule. Supported values are
-                          'daily', 'weekly', and 'monthly'.
-    :type interval_type: str
-    :param time_str: The time string in the format 'HH:MM', which specifies the hour and minute
-                     for the schedule.
-    :type time_str: str
-    :param weekday: For the 'weekly' interval type, this specifies the day of the week
-                    (0–6, where 0 is Sunday and 6 is Saturday). This parameter is optional
-                    for other interval types.
-    :type weekday: str | None
-    :param monthday: For the 'monthly' interval type, this specifies the day of the month
-                     (1–28). This parameter is optional for other interval types.
-    :type monthday: str | None
-    :return: A string representing the Cron schedule in the format: 'minute hour day month day_of_week'.
-    :rtype: str
-    :raises HTTPException: If any parameters are missing or invalid, or if their values are outside
-                           the expected range.
+    Args:
+        interval_type: The type of interval for the schedule ("daily", "weekly", "monthly").
+        time_str: The time of day for the schedule, formatted as "HH:MM".
+        weekday: The day of the week for the schedule, where 0=Sunday, 6=Saturday (required for "weekly").
+        monthday: The day of the month for the schedule, limited to values 1 through 28 (required for "monthly").
+
+    Raises:
+        HTTPException: Raised if the time is missing, incorrectly formatted, out of valid range,
+            or if the interval type, weekday, or monthday is invalid or missing as required.
+
+    Returns:
+        str: A CRON expression string representing the schedule.
     """
     if not time_str or ":" not in time_str:
         raise HTTPException(status_code=400, detail="Uhrzeit fehlt oder ist ungültig")
@@ -81,17 +91,20 @@ def build_cron(interval_type: str, time_str: str, weekday: str | None, monthday:
 
 def cron_to_human(cron_expr: str) -> str:
     """
-    Converts a cron expression into a human-readable string describing its scheduling.
+    Converts a cron expression into a more human-readable schedule description.
 
-    :param cron_expr: A string representing the cron expression. This must consist
-                      of exactly 5 parts separated by spaces, corresponding to minute,
-                      hour, day, month, and weekday in the format typically used for
-                      CRON (e.g., "* * * * *").
-    :raises ValueError: If the provided string does not contain exactly 5 parts
-                        or is composed of an invalid cron format.
-    :return: A human-readable German description of the schedule based on the cron
-             expression (e.g., "Täglich um HH:MM"), or an error message stating the
-             input was invalid.
+    This function takes a cron expression, which is a five-part string (minute, hour,
+    day of the month, month, and day of the week), and interprets it into a human-readable
+    format. Depending on the values in each part of the expression, it will return a
+    description such as "Täglich um", "Wöchentlich am", or "Monatlich am". If the cron
+    expression is invalid, an appropriate error message string is returned.
+
+    Args:
+        cron_expr: A five-part cron expression string (e.g., "30 7 * * 1").
+
+    Returns:
+        str: A human-readable representation of the cron schedule or an error message
+            if the given cron expression is invalid.
     """
     try:
         parts = cron_expr.strip().split()

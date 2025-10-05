@@ -1,3 +1,18 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/services/job_service.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides services for managing mail jobs.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -24,51 +39,35 @@ def save_job(
     group_id: int | None = None,
 ) -> models.MailerJob:
     """
-    Saves or updates a mailer job in the database and registers it with the scheduler.
+    Saves a mailing job to the database with the provided parameters and properly registers
+    it in the scheduler. This function handles both creation and updates of the job, ensuring
+    validation of parameters and managing uniqueness constraints in the database.
 
-    This function manages the creation or update of a mailer job based on the provided
-    parameters. Depending on the mode (one-time or regular), it validates inputs
-    and constructs the appropriate cron expressions or schedules. It ensures that
-    jobs are unique for a specific selection and group combination and registers
-    the saved job with the scheduler.
+    Args:
+        db (Session): Database session for querying and persisting data.
+        id (int | None): Job ID for identifying an existing job; None for creating a new job.
+        name (str): Name of the job. Must be unique and not empty.
+        subject (str | None): Subject of the mail.
+        template_id (int): ID of the mail template to be associated with the job.
+        mode (str): Mode of execution for the job, either "once" or "regular".
+        once_at (str | None): Date and time for a one-time job in the format "%Y-%m-%dT%H:%M".
+        selection (str | None): Specifies the target audience; valid values are
+            "birthdate", "entry", "all", or "list".
+        interval_type (str | None): Interval type for regular jobs; valid values are "daily", "weekly",
+            or "monthly".
+        time (str | None): Time for regular jobs in "HH:MM" format.
+        weekday (str | None): Day of the week for weekly jobs; values range from "0" (Sunday) to "6"
+            (Saturday).
+        monthday (str | None): Day of the month for monthly jobs; values range from "1" to "28".
+        group_id (int | None): Id of the group to associate with the job. If None, a default group
+            will be used.
 
-    :param db: Database session used for querying and committing changes.
-    :type db: Session
-    :param id: The ID of the job (if updating an existing job), or None for a new job.
-    :type id: int | None
-    :param name: The unique name of the job. Cannot be empty.
-    :type name: str
-    :param subject: The subject of the emails to be sent by the job. Optional.
-    :type subject: str | None
-    :param template_id: The ID of the email template to be used by the job.
-    :type template_id: int
-    :param mode: The mode of the job execution. Either "once" for a one-time job,
-        or "regular" for recurring jobs.
-    :type mode: str
-    :param once_at: The date and time of execution for one-time jobs in the format
-        "%Y-%m-%dT%H:%M". Not applicable for regular jobs.
-    :type once_at: str | None
-    :param selection: Selection criteria for the job. Can be "birthdate", "entry",
-        "all", or "list". Must conform to these values for regular jobs.
-    :type selection: str | None
-    :param interval_type: Specifies the interval type for recurring jobs: "daily",
-        "weekly", or "monthly". Not applicable for one-time jobs.
-    :type interval_type: str | None
-    :param time: The time of day in "HH:MM" format for recurring jobs. Not
-        applicable for one-time jobs.
-    :type time: str | None
-    :param weekday: Day of the week for weekly jobs. Represented as a string value
-        in the range "0" (Monday) to "6" (Sunday). Optional for other cases.
-    :type weekday: str | None
-    :param monthday: Day of the month for monthly jobs. Represented as a string
-        value in the range "1" to "28". Optional for other cases.
-    :type monthday: str | None
-    :param group_name: The name of the group this job is associated with. Defaults
-        to "standard".
-    :type group_name: str
-    :return: The saved mailer job instance after successful database insertion or
-        update.
-    :rtype: models.MailerJob
+    Returns:
+        models.MailerJob: The saved or updated mailing job instance.
+
+    Raises:
+        HTTPException: Raised in cases of validation failure, missing required parameters,
+            uniqueness conflicts, or database integrity issues.
     """
     name_clean = (name or "").strip()
     if not name_clean:

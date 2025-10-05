@@ -4,89 +4,75 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/gratulo.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/auth_api.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/docs_api.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/groups_api.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/members_api.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/auth.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/constants.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/database.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/deps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/encryption.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/logging.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/schemas.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/data/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/data/instance/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/data/uploads/.gitkeep" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/docs/api_guide.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/cron_helper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/mailer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/mailer_runner.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/member_helper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/placeholders.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/security_helper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/helpers/template_helper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/htmx/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/htmx/members_htmx.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/htmx/templates_htmx.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/auth_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/group_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/job_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/mailer_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/member_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/scheduler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/template_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/auth_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/jobs_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/legal_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/mailer_config_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/main_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/members_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/templates_ui.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/css/style.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/admin.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/base.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/job_editor.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/jobs.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/legal/license.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/legal/privacy.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/legal/terms.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/login.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/mailer_config.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/member_editor.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/members.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/group_row.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/groups_list.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/job_logs_modal.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/jobs_list.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/member_editor_form.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/member_editor_partial.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/members_import_preview.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/members_list.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/templates_list.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/template_editor.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/templates.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="First Complete Version">
+      <change afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/README_DE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gratulo.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gratulo.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/auth_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/auth_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/docs_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/docs_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/groups_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/groups_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/members_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/members_api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/deps.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/deps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/encryption.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/encryption.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/logging.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/logging.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/cron_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/cron_helper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/mailer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/mailer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/mailer_runner.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/member_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/member_helper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/placeholders.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/placeholders.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/security_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/security_helper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/template_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/template_helper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/htmx/members_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/members_htmx.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/htmx/templates_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/templates_htmx.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/auth_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/auth_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/group_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/group_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/job_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/job_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/mailer_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/mailer_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/member_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/member_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/template_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/template_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/auth_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/auth_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/jobs_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/jobs_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/legal_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/legal_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/mailer_config_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/mailer_config_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/main_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/main_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/members_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/members_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/templates_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/templates_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/static/css/style.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/admin.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/job_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/job_editor.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/jobs.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/jobs.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/license.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/license.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/privacy.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/privacy.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/terms.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/terms.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/mailer_config.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/mailer_config.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/member_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/member_editor.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/members.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/members.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/group_row.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/group_row.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/groups_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/groups_list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/job_logs_modal.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/job_logs_modal.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/jobs_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/jobs_list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/member_editor_form.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/member_editor_form.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/member_editor_partial.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/member_editor_partial.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/members_import_preview.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/members_import_preview.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/members_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/members_list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/templates_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/templates_list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/template_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/template_editor.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/templates.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/templates.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,7 +120,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "ml.llm.LLMConfigurable",
+    "settings.editor.selected.configurable": "fileTemplates",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -200,12 +186,26 @@
       <workItem from="1758749381920" duration="506000" />
       <workItem from="1758749908187" duration="372000" />
       <workItem from="1758750291666" duration="207203000" />
-      <workItem from="1759652149735" duration="15477000" />
+      <workItem from="1759652149735" duration="21035000" />
+      <workItem from="1759684900208" duration="12669000" />
     </task>
+    <task id="LOCAL-00001" summary="First Complete Version">
+      <option name="closed" value="true" />
+      <created>1759668330278</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1759668330278</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="First Complete Version" />
+    <option name="LAST_COMMIT_MESSAGE" value="First Complete Version" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -215,7 +215,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759668106868" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759694385157" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>

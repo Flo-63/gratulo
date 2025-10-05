@@ -1,62 +1,80 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/core/schemas.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module defines schemas for data validation and serialization.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
 from pydantic import BaseModel, Field, field_validator, EmailStr
 from datetime import date, datetime
 from typing import Optional
 
 # ------------------------------
-# 📘 GROUP SCHEMAS
+#  GROUP SCHEMAS
 # ------------------------------
+
 
 class GroupBase(BaseModel):
     """
-    Represents the foundational structure of a group entity.
+    Represents the base structure of a group entity.
 
-    This class serves as a base model representation of a group, typically used
-    for organizing entities with a name and a flag indicating if it's the default
-    group.
+    This class outlines the fundamental attributes and structure of a group,
+    providing a template for creating or handling group-related data. It
+    serves as a foundational class that can be extended or used for defining
+    group configurations.
 
-    :ivar name: The name of the group.
-    :type name: str
-    :ivar is_default: Indicates if this group is the default group. Defaults to False.
-    :type is_default: bool
+    Attributes:
+        name (str): The name of the group.
+        is_default (bool): Indicates whether this group is the default group.
     """
     name: str
     is_default: bool = False
 
 class GroupCreate(GroupBase):
     """
-    Represents a class for creating a new group entity.
+    Represents a model for creating a new group.
 
-    This class inherits from `GroupBase` and serves as a specialized
-    implementation that handles the creation of group entities. It
-    does not contain any unique methods but can extend `GroupBase`
-    functionality if needed in the future.
+    This class is intended to be used for defining the parameters required for
+    creating a new group. It inherits from the `GroupBase` class, which may
+    contain shared attributes or functionality for group-related operations.
 
+    Attributes:
+        None
     """
     pass
 
 class GroupUpdate(GroupBase):
     """
-    Represents an update to a group by inheriting from the base
-    class `GroupBase`.
+    Represents an update to a group.
 
-    This class is used to provide modifications or updates to the
-    data of a group. It extends functionality provided by the base
-    group class while maintaining consistency with its attributes
-    and structure.
+    This class is used to define the structure for updating group information.
+    It extends from GroupBase and inherits all its properties, which form the
+    base structure for group data. Typically, this class can be utilized when
+    updating group-specific details through APIs or internal systems.
+
+    Attributes:
+        None
     """
     pass
 
 class GroupResponse(GroupBase):
-    """
-    Represents a response object for a group.
+    """Represents the response for a group entity.
 
-    This class extends the `GroupBase` and includes additional
-    attributes specific to the response context. It is
-    designed to be used in scenarios where a group-related
-    response object is needed in an ORM-enabled environment.
+    This class is a response model that extends `GroupBase` and includes
+    additional identifiers or information needed when handling group-related
+    API operations or responses.
 
-    :ivar id: Unique identifier for the group.
-    :type id: int
+    Attributes:
+        id (int): The unique identifier for the group.
     """
     id: int
 
@@ -65,32 +83,24 @@ class GroupResponse(GroupBase):
 
 
 # ------------------------------
-# 👤 MEMBER SCHEMAS
+#  MEMBER SCHEMAS
 # ------------------------------
 
 class MemberBase(BaseModel):
-    """
-    Represents a base model for a member.
+    """Represents a member with basic details.
 
-    This class is designed to provide a structure for storing information
-    about a member, including personal details and associated data. It
-    inherits from `BaseModel` to leverage validation and data management
-    features.
+    This class is used for defining and managing member data, including their
+    personal details and optional membership metadata. It extends `BaseModel`
+    to utilize validation and parsing capabilities.
 
-    :ivar firstname: The first name of the member.
-    :type firstname: str
-    :ivar lastname: The last name of the member.
-    :type lastname: str
-    :ivar email: The email address of the member.
-    :type email: EmailStr
-    :ivar birthdate: The date of birth of the member, if provided.
-    :type birthdate: Optional[date]
-    :ivar gender: The gender of the member, if provided.
-    :type gender: Optional[str]
-    :ivar member_since: The date when the membership started, if provided.
-    :type member_since: Optional[date]
-    :ivar group_id: The identifier of the group associated with the member, if provided.
-    :type group_id: Optional[int]
+    Attributes:
+        firstname (str): The first name of the member.
+        lastname (str): The last name of the member.
+        email (EmailStr): The email address of the member.
+        birthdate (Optional[date]): The date of birth of the member. Defaults to None.
+        gender (Optional[str]): The gender of the member. Defaults to None.
+        member_since (Optional[date]): The date when the member joined. Defaults to None.
+        group_id (Optional[int]): The ID of the group to which the member belongs. Defaults to None.
     """
     firstname: str
     lastname: str
@@ -102,40 +112,37 @@ class MemberBase(BaseModel):
 
 
 class MemberCreate(MemberBase):
-    """
-    Represents the creation of a new member entity.
+    """Represents a model for creating a member.
 
-    This class is derived from MemberBase and is used to define the
-    structure and properties specific to creating a new member. It is
-    intended to extend functionality relevant for member creation while
-    maintaining a close relationship with the base member structure.
+    This class is used for defining the creation of a member. It is a
+    subclass of `MemberBase`, which serves as the base for member-related
+    operations.
+
+    Attributes:
+        None
     """
     pass
 
 
 class MemberUpdate(BaseModel):
     """
-    Represents an update object for a member.
+    Represents an update model for a member.
 
-    This class is used to encapsulate the updates allowed for a member's profile
-    information, including personal details, contact information, and membership
-    attributes. It inherits from BaseModel, enabling validation and type enforcement
-    on the provided data.
+    This class is used to handle updates for a member's information. It contains
+    various optional attributes representing the details of the member that can
+    be updated, such as their personal details, membership information, or group
+    association. This class is typically used in scenarios where partial updates
+    to a member's data are required.
 
-    :ivar firstname: Member's first name.
-    :type firstname: Optional[str]
-    :ivar lastname: Member's last name.
-    :type lastname: Optional[str]
-    :ivar email: Member's email address.
-    :type email: Optional[EmailStr]
-    :ivar birthdate: Member's date of birth.
-    :type birthdate: Optional[date]
-    :ivar gender: Member's gender.
-    :type gender: Optional[str]
-    :ivar member_since: The date when the member joined.
-    :type member_since: Optional[date]
-    :ivar group_id: The ID of the group to which the member belongs, allowing changes to group assignment.
-    :type group_id: Optional[int]
+    Attributes:
+        firstname (Optional[str]): The first name of the member.
+        lastname (Optional[str]): The last name of the member.
+        email (Optional[EmailStr]): The email address of the member.
+        birthdate (Optional[date]): The birthdate of the member.
+        gender (Optional[str]): The gender of the member.
+        member_since (Optional[date]): The date since the member has been part
+            of the organization or group.
+        group_id (Optional[int]): The ID of the group the member belongs to.
     """
     firstname: Optional[str] = None
     lastname: Optional[str] = None
@@ -147,21 +154,19 @@ class MemberUpdate(BaseModel):
 
 
 class MemberResponse(MemberBase):
-    """
-    Represents a response for a member containing detailed information related to the
-    member's status within the system. This class provides structured data that includes
-    metadata such as deletion status, timestamps for deletion, and associated group details.
+    """Representation of a member response.
 
-    The purpose of this class is to serve as a response model for member-related API endpoints.
+    This class extends MemberBase and represents a detailed response for a
+    member, including attributes such as id, deleted status, and group details.
 
-    :ivar id: Unique identifier of the member.
-    :type id: int
-    :ivar is_deleted: Indicates whether the member is deleted. Defaults to ``False``.
-    :type is_deleted: Optional[bool]
-    :ivar deleted_at: Timestamp indicating when the member was deleted. Defaults to ``None``.
-    :type deleted_at: Optional[date]
-    :ivar group: Contains details about the associated group with the member.
-    :type group: Optional[GroupResponse]
+    Attributes:
+        id (int): Unique identifier for the member.
+        is_deleted (Optional[bool]): Indicates if the member is deleted. Default
+            is False.
+        deleted_at (Optional[date]): Date when the member was deleted, if
+            applicable. Default is None.
+        group (Optional[GroupResponse]): Details of the group associated with the
+            member. Default is None.
     """
     id: int
     is_deleted: Optional[bool] = False
@@ -178,5 +183,20 @@ class MemberResponse(MemberBase):
     class Config:
         from_attributes = True
 
+# ------------------------------
+#  AUTH SCHEMAS
+# ------------------------------
+
+
 class TokenData(BaseModel):
+    """
+    Represents the token data associated with a user.
+
+    This class is used to store and manage token-related data, such as the
+    username, for authentication purposes. It extends the BaseModel from Pydantic
+    for data validation and parsing.
+
+    Attributes:
+        username (str): The username associated with the token.
+    """
     username: str

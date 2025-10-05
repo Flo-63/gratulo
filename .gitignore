@@ -20,3 +20,4 @@ app/data/instance/*.db-journal
 # --- Uploads ---
 app/data/uploads/
 
+/TinyMCE API Key

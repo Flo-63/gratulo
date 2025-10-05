@@ -1,4 +1,18 @@
-# app/helpers/placeholders.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/helpers/placeholders.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module defines functions for resolving placeholders in HTML templates.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 
 from datetime import datetime
 from app.core.models import Member
@@ -6,16 +20,23 @@ from app.core.models import Member
 
 def resolve_placeholders(template_html: str, member: Member) -> str:
     """
-    Replaces placeholders in the given HTML template string with member-specific information.
+    Replaces placeholders in a template string with member-specific information.
 
-    The function takes a template HTML string containing placeholders and a member object
-    and substitutes the placeholders with specific values based on the member's information
-    such as gender, name, email, birthdate, membership start date, and other attributes.
+    This function takes a template HTML string and a Member object, replacing predefined
+    placeholders within the template with corresponding details from the Member object. The
+    placeholders include variables for the member's personal information like their name,
+    gender-specific titles, email, birthdate, and membership information. It supports gender
+    distinctions (male, female, or diverse) for proper salutations.
 
-    :param template_html: The HTML template string that contains placeholders to be replaced.
-    :param member: The `Member` object containing the data used to replace placeholders.
-    :return: A string representing the HTML with the placeholders replaced by actual member data.
-    :rtype: str
+    Args:
+        template_html (str): A string containing placeholders to be replaced with member
+            information.
+        member (Member): An object containing properties such as firstname, lastname, email,
+            gender, birthdate, and member_since to populate the placeholders.
+
+    Returns:
+        str: The generated string where all placeholders in the template have been replaced
+            with the corresponding member-specific data.
     """
 
     gender = (member.gender or "d").lower()

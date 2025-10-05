@@ -1,4 +1,18 @@
-# app/helpers/member_helpers.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/helpers/member_helper.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides helper functions for member-related operations.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 
 import re
 from sqlalchemy.orm import Session
@@ -12,41 +26,43 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 def render_import_error(row_num: int, message: str) -> str:
     """
-    Generate a formatted import error message indicating the row number
-    and the error description. Primarily intended for highlighting issues
-    during data import operations.
+    Renders an import error message for a given row number and message.
 
-    :param row_num: The number of the row where the import error occurred.
-    :type row_num: int
-    :param message: A descriptive message explaining the specific error
-        encountered while importing data.
-    :type message: str
-    :return: A formatted error message that specifies the row number and
-        provides detailed context of the issue.
-    :rtype: str
+    This function takes a row number and an error message as input, and returns a
+    string that describes the error with the corresponding row number and message.
+    It is used to provide clear and concise error feedback while processing data.
+
+    Args:
+        row_num (int): The row number where the error occurred.
+        message (str): The accompanying error message that provides additional
+            details about the issue.
+
+    Returns:
+        str: A formatted error message including the row number and the error message.
     """
     return f"Fehler in Zeile {row_num}: {message}"
 
 
 def parse_date_flexible(value: str, field_name: str, row_num: int) -> datetime.date:
     """
-    Parses a date from a string using a flexible format. The function attempts to convert
-    a given string into a date object, ensuring that the format matches the specified
-    pattern. If conversion fails, it raises an HTTPException with a detailed error
-    message.
+    Parses a date string in the format "%d.%m.%Y" into a datetime.date object.
 
-    :param value: The string input that contains the date to parse.
-    :type value: str
-    :param field_name: The name of the field from which the date is sourced. Used
-        for error reporting to provide context.
-    :type field_name: str
-    :param row_num: The row number in the dataset for error localization in
-        case of failure.
-    :type row_num: int
-    :return: A `datetime.date` object if the parsing is successful.
-    :rtype: datetime.date
-    :raises HTTPException: When the input string cannot be parsed as a date
-        matching the expected format.
+    This function tries to convert the given string value into a `datetime.date`
+    object based on the provided format. In case of a failure, it raises an
+    HTTPException with a detailed error message.
+
+    Args:
+        value (str): The string value that is expected to represent a date.
+        field_name (str): The name of the field from where the value originated,
+            used for error reporting.
+        row_num (int): The row number to provide context in case of error.
+
+    Returns:
+        datetime.date: The parsed date object corresponding to the provided
+        value.
+
+    Raises:
+        HTTPException: If the value cannot be parsed into a valid date.
     """
     try:
         return datetime.strptime(value.strip(), "%d.%m.%Y").date()
@@ -56,17 +72,24 @@ def parse_date_flexible(value: str, field_name: str, row_num: int) -> datetime.d
 
 def parse_member_since(value: str, row_num: int) -> datetime.date:
     """
-    Parses and validates a membership date from a given input value. The method ensures
-    the provided date falls within the acceptable range, starting from the club's
-    foundation date up to the current date. If the validation fails, an exception is raised.
+    Parses the given membership start date and validates its correctness.
 
-    :param value: Membership date provided as a string
-    :param row_num: Row number associated with the input value, used for error context
-    :return: A valid membership date as a `datetime.date` object
-    :rtype: datetime.date
+    This function takes a string representation of a date, parses it into a
+    `datetime.date` object, and performs validation to ensure the date is within
+    acceptable bounds. Specifically, it checks that the date is not earlier than
+    the club's foundation date and not later than the current date.
 
-    :raises HTTPException: If the parsed date is earlier than the club's foundation date
-        or is a future date
+    Args:
+        value: The string representation of the membership start date.
+        row_num: The row number from which the date originates, used for error
+            reporting.
+
+    Returns:
+        A `datetime.date` object representing the parsed and validated date.
+
+    Raises:
+        HTTPException: If the parsed date is earlier than the club's foundation
+            date or later than the current date.
     """
     dt = parse_date_flexible(value, "Eintrittsdatum", row_num)
     if dt < CLUB_FOUNDATION_DATE:
@@ -78,15 +101,19 @@ def parse_member_since(value: str, row_num: int) -> datetime.date:
 
 def normalize_gender(value: str) -> str:
     """
-    Normalizes the input string representing a gender value by converting it to a standard
-    format. Specifically, it converts male-related values to "m" and female-related values
-    to "w". All input is stripped of leading/trailing spaces and converted to lowercase.
+    Normalizes a given gender value to a standardized format.
 
-    :param value: The input string representing a gender value.
-    :type value: str
-    :return: A normalized gender value as "m" for male, "w" for female, or the original
-        trimmed input if it cannot be normalized to these values.
-    :rtype: str
+    The function processes the input gender value by removing leading and trailing
+    whitespace, converting the string to lowercase, and mapping certain values to
+    either "m" (for male) or "w" (for female). If the input does not match any of
+    the predefined male or female identifiers, the function returns the sanitized
+    original value.
+
+    Args:
+        value (str): The gender input string to be normalized.
+
+    Returns:
+        str: A normalized gender value ("m", "w", or the sanitized original value).
     """
     if not value:
         return ""
@@ -99,9 +126,28 @@ def normalize_gender(value: str) -> str:
 
 def normalize_date(value) -> date | None:
     """
-    Normalisiert ein Datum, egal ob es als String ("YYYY-MM-DD"),
-    datetime.date oder None übergeben wird.
-    Gibt immer ein datetime.date-Objekt oder None zurück.
+    Normalizes date input into a `date` object or returns `None` if input is `None`.
+
+    This function handles three types of input:
+    - If the input is `None`, it returns `None`.
+    - If the input is already a `date` object, it returns the same object.
+    - If the input is a `str`, it parses the string into a `date` object, assuming the
+      format "%Y-%m-%d". Leading and trailing whitespace in the string is trimmed.
+      If the trimmed string is empty, the function returns `None`.
+
+    If the string input cannot be parsed into a `date` object, a `ValueError` is raised. In case
+    the input is of an unsupported type, a `TypeError` is raised.
+
+    Args:
+        value: The input value that represents a date. Can be of type `None`, `date`, or `str`.
+
+    Returns:
+        A `date` object if the input is a valid representation of a date, or `None`
+        if the input is `None` or an empty string.
+
+    Raises:
+        ValueError: If the input string format is invalid for date conversion.
+        TypeError: If the input type is not supported.
     """
     if value is None:
         return None
@@ -120,22 +166,26 @@ def normalize_date(value) -> date | None:
 
 def validate_rows_old(rows: list[dict], db: Session) -> list[dict]:
     """
-    Validates and cleans a list of rows containing member data. This function ensures that every
-    row adheres to specific validation rules, such as verifying the email format, presence of key
-    fields, and consistency in dates. It also maps data to appropriate groups and provides defaults
-    for missing groups. Invalid rows result in a detailed error message raised via HTTP exceptions.
+    Validates and cleans up rows of data for importing into a system.
 
-    :param rows: A list of dictionaries, where each dictionary represents a row of member data to
-        be validated. The expected keys include "email", "Vorname", "Nachname", "Geburtstag",
-        "Eintrittsdatum", "group_name", "Geschlecht", and "Kombi".
-    :type rows: list[dict]
-    :param db: A database session for querying group information and retrieving default group details.
-    :type db: Session
-    :return: A list of cleaned and validated rows. Each row is a dictionary containing structured
-        member data such as email, first name, last name, group ID, and gender, among others.
-    :rtype: list[dict]
-    :raises HTTPException: If any row fails validation due to reasons such as missing fields,
-        invalid email format, duplicate emails, unrealistic birthdates, or invalid group names.
+    This method processes the provided rows by validating each entry based on specific
+    criteria (email format, names, birthdates, group assignments, etc.). Invalid rows
+    raise errors with detailed messages, while valid rows are cleaned and returned as
+    a list of dictionaries prepared for further processing.
+
+    Args:
+        rows (list[dict]): The list of dictionaries, where each dictionary represents a
+            row of data to validate and process.
+        db (Session): Database session to be used for fetching required data, such
+            as groups or default group configuration.
+
+    Returns:
+        list[dict]: A list of cleaned and validated rows representing the input data,
+            formatted and prepared for further usage.
+
+    Raises:
+        HTTPException: An error raised with specific details if validation fails
+            for any row, such as missing fields or invalid data formats.
     """
     emails_seen = set()
     cleaned = []

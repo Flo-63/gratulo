@@ -1,4 +1,19 @@
-/* --- Basislayout --- */
+/*
+===============================================================================
+Project   : gratulo
+Module    : frontend/static/css/style.css
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : Provide the basic styles for the UI, i.e. button definition
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+*/
+
+
+
 body {
     font-family: sans-serif;
     margin: 2rem;

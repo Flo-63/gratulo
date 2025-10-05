@@ -1,3 +1,19 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/ui/mailer_config_ui.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : THis module provides the UI for managing mailer configuration.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
 from fastapi import APIRouter, Request, Depends, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.exceptions import RequestValidationError
@@ -13,6 +29,19 @@ mailer_config_ui_router = APIRouter(include_in_schema=False)
 
 @mailer_config_ui_router.get("/mailer-config")
 def mailer_config_ui(request: Request, db: Session = Depends(get_db)):
+    """
+    Handles the GET request to retrieve and display the mailer configuration UI.
+
+    This endpoint renders the mailer configuration page with the current configuration
+    retrieved from the database, using the Jinja2 template engine.
+
+    Args:
+        request: The HTTP request object.
+        db: A database session dependency used to query the database.
+
+    Returns:
+        TemplateResponse: A response containing the rendered mailer configuration page.
+    """
     config = db.query(MailerConfig).first()
     return jinja_templates.TemplateResponse(
         "mailer_config.html",
@@ -39,6 +68,34 @@ def mailer_config_save(
     admin_emails: str = Form(""),
     db: Session = Depends(get_db),
 ):
+    """
+    Handles saving mailer configuration to the database based on user input through the UI.
+
+    This function validates various input parameters necessary for configuring the mailer, ensuring
+    acceptable formats and required field values. Depending on the provided authentication method
+    ("email" or "oauth"), it performs additional logic to handle their specific requirements. Upon
+    successful validation, the mailer configuration is persisted to the database. If validation
+    fails, an error message is displayed, and the user is redirected back to the configuration
+    template.
+
+    Args:
+        request: The HTTP request object.
+        smtp_host: The SMTP host for the mailer.
+        smtp_port: The SMTP port to connect to the mailer.
+        smtp_user: The username for SMTP authentication.
+        smtp_password: The password for SMTP authentication (optional).
+        use_tls: Whether to use TLS for SMTP communication.
+        from_address: The email address used in the "From" field of messages.
+        auth_method: The authentication method ("email" or "oauth").
+        login_email: The login email for email-based authentication (optional).
+        login_password: The password for the login email (optional).
+        oauth_client_id: The OAuth client ID for OAuth authentication (optional).
+        oauth_client_secret: The OAuth client secret for OAuth authentication (optional).
+        oauth_provider_url: The provider URL for OAuth authentication (optional).
+        oauth_redirect_uri: The redirect URI for OAuth authentication (optional).
+        admin_emails: A comma-separated list of admin email addresses (optional).
+        db: The database session object.
+    """
     error_message = None
 
     # --- Validierungen ---

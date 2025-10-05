@@ -1,13 +1,27 @@
-# app/core/constants.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/core/constants.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides general constants and settings
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
+
 import os
 import datetime
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 
-# sicherstellen, dass .env geladen ist
 load_dotenv()
 
-# String aus .env holen
 raw_date = os.getenv("CLUB_FOUNDATION_DATE", "2009-01-01")
 
 try:
@@ -15,7 +29,6 @@ try:
 except ValueError:
     raise RuntimeError(f"Ungültiges CLUB_FOUNDATION_DATE in .env: {raw_date}")
 
-DB_URL = os.getenv("DB_URL")
 LOCAL_TZ = ZoneInfo(os.getenv("LOCAL_TZ", "Europe/Berlin"))
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
@@ -23,7 +36,6 @@ BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 REDIS_URL = os.getenv("REDIS_URL")
 
 if not REDIS_URL:
-    # Standard: im Docker-Netzwerk ist der Hostname "redis"
     REDIS_URL = "redis://redis:6379"
 
 # Initial-Admin aus .env (nur setzen, wenn beide Werte vorhanden und nicht leer)

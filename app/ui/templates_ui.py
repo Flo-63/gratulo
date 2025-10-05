@@ -1,3 +1,18 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/ui/templates_ui.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides UI endpoints for managing templates.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
@@ -11,16 +26,20 @@ templates_ui_router = APIRouter(prefix="/templates", include_in_schema=False)
 @templates_ui_router.get("", response_class=HTMLResponse)
 async def templates_page(request: Request, db: Session = Depends(get_db)):
     """
-    Handles requests to render the templates page and fetches the templates
-    from the database for display. The templates are processed with the
-    Jinja 2 template engine and returned as an HTML response.
+    Handles the HTTP GET request for the templates page and renders the templates.html view.
 
-    :param request: The HTTP request object.
-    :type request: Request
-    :param db: The database session dependency.
-    :type db: Session
-    :return: Rendered HTML response of the templates page.
-    :rtype: HTMLResponse
+    This function retrieves a list of templates from the database using the provided
+    template_service. The retrieved templates are then passed to the Jinja2 template
+    renderer to generate the HTML response that is returned to the client.
+
+    Args:
+        request (Request): The HTTP request object containing context and metadata for
+            the incoming request.
+        db (Session): The database session dependency injected to facilitate database
+            operations.
+
+    Returns:
+        HTMLResponse: A rendered HTML response containing the templates page.
     """
     templates = template_service.get_templates(db)
     return jinja_templates.TemplateResponse(
@@ -32,10 +51,18 @@ async def templates_page(request: Request, db: Session = Depends(get_db)):
 @templates_ui_router.get("/new", response_class=HTMLResponse)
 async def new_template_page(request: Request):
     """
-    Handles the request to render the new template editor page.
+    Handles the `/new` endpoint and renders the `template_editor.html` page.
 
-    :param request: Request object containing client request data
-    :return: An HTML response rendering the template editor page
+    This function generates an HTML response using the Jinja2 template engine.
+    It is mapped to the `/new` route and is designed to display the template
+    editor interface.
+
+    Args:
+        request: The HTTP request object.
+
+    Returns:
+        HTMLResponse: A response containing the rendered HTML content for
+        the template editor page.
     """
     return jinja_templates.TemplateResponse(
         "template_editor.html",
@@ -46,25 +73,25 @@ async def new_template_page(request: Request):
 @templates_ui_router.get("/{template_id}/edit", response_class=HTMLResponse)
 async def edit_template_page(request: Request, template_id: int, db: Session = Depends(get_db)):
     """
-    Retrieve and render the HTML editor page for a specific template.
+    Handles the display of the template editor page for editing a specific template.
 
-    This endpoint fetches a template based on the provided template ID from the
-    database, and then renders the template editor page using the retrieved
-    template data.
+    This function retrieves the template from the database using the provided
+    template ID and renders the template editor page. If the template is not
+    found, an HTTP 404 exception is raised.
 
-    :param request: The HTTP request object, providing details about the current
-        HTTP request context, such as headers, path, and method.
-    :type request: Request
-    :param template_id: The identification number of the template to retrieve and
-        edit.
-    :type template_id: int
-    :param db: A database session used to interact with persistence storage.
-    :type db: Session, optional
-    :return: An HTML response displaying the template editor page populated with
-        the data of the specified template.
-    :rtype: HTMLResponse
+    Args:
+        request (Request): The HTTP request object containing metadata about the
+            request.
+        template_id (int): The ID of the template to be edited.
+        db (Session): Database session dependency used to query the
+            database.
 
-    :raises HTTPException: If the specified template is not found (404).
+    Raises:
+        HTTPException: If the template with the given ID is not found, a 404 HTTP
+            exception is raised.
+
+    Returns:
+        HTMLResponse: Renders and returns the template editor HTML page.
     """
     template = template_service.get_template(db, template_id)
     if not template:

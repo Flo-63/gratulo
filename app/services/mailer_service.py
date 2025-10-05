@@ -1,3 +1,17 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/services/mailer_service.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides services related to mailer operations.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
 # app/services/mailer_service.py
 import logging
 import time
@@ -15,21 +29,15 @@ logger = logging.getLogger(__name__)
 
 def execute_job_by_id(job_id: int, logical: date | None = None):
     """
-    Executes a mailer job identified by its job ID. This function initializes a database
-    session, logs the start and completion of the job, and passes the supplied parameters
-    to the `run_mailer_job` function for processing. If any exception occurs during the
-    execution, the error is logged without halting the execution of the script. The database
-    connection is closed properly under all circumstances.
+    Executes a mailer job with a given job ID and logical date.
 
-    :param job_id: Integer representing the unique identifier for the mailer job to execute.
-    :type job_id: int
+    This function retrieves a database session, logs the start of the job execution,
+    executes the mailer job logic, and ensures the database session is properly closed.
+    It logs the progress and any exceptions encountered during job execution.
 
-    :param logical: Optional date object specifying the logical date for the job execution.
-                    If no date is provided, it defaults to the current date.
-                    Accepted type is either `date` or `None`.
-    :type logical: date or None
-
-    :return: None
+    Args:
+        job_id (int): Identifier of the job to execute.
+        logical (date | None): Logical date for which the job should execute. Defaults to the current date.
     """
     from app.core.database import SessionLocal
 
@@ -47,14 +55,21 @@ def execute_job_by_id(job_id: int, logical: date | None = None):
 
 def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     """
-    Executes a mailer job by processing recipients, resolving placeholders in templates,
-    and sending emails. Logs the operation results, including success, errors, and performance
-    metrics, to the database.
+    Executes the mailer job for a specific job ID and logical date.
 
-    :param db: Database session object used for querying and updating the database
-    :param job_id: Identifier of the mailer job to be executed
-    :param logical: Logical date associated with the mailer job execution
-    :return: None
+    This function processes a mailer job, resolves recipients, and sends emails
+    based on the specified job parameters. Logs are maintained in the database
+    for job execution, including success or failure details. If a fallback group
+    and job are available, the function will use them to determine recipients in case
+    the original group returns no recipients.
+
+    Args:
+        db (Session): Database session for querying and committing changes.
+        job_id (int): Identifier of the mailer job to be executed.
+        logical (date): Logical date for which the mailer job is executed.
+
+    Raises:
+        None: All exceptions are handled internally within the function.
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:
@@ -201,27 +216,23 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
 
 def _resolve_recipients(db: Session, job: models.MailerJob, logical: date):
     """
-    Resolves recipients for a mailing job based on the selection criteria
-    and group configuration in the given job.
+    Resolves and retrieves the list of recipients for a given mailer job based on
+    selection criteria and group assignments.
 
-    This function determines a set of recipients filtered by the specific
-    criteria in the mailing job and logical date, separating members into
-    default and non-default groups.
+    This method dynamically filters and selects members depending on the job's
+    configuration, including attributes such as selection type, group membership,
+    and logical date constraints for specific events like birthdays or entry dates.
 
-    The implementation handles:
-    1. Members of a non-default group (specific job group is provided).
-    2. Members of the default group and members of other groups that do not have
-       an overlapping job with the same selection criteria.
+    Args:
+        db (Session): SQLAlchemy session used for querying the database.
+        job (models.MailerJob): Mailer job instance containing job-specific
+            configurations for recipient selection.
+        logical (date): Logical date used for filtering members based on criteria
+            such as birthdate or entry date.
 
-    :param db: Database session used for querying purposes
-    :type db: Session
-    :param job: The mailer job containing the selection criteria and group details
-    :type job: models.MailerJob
-    :param logical: Logical date for filtering recipients, typically corresponding to
-                    certain anniversaries or events
-    :type logical: date
-    :return: A list of Member objects filtered according to the criteria defined in the job
-    :rtype: list[models.Member]
+    Returns:
+        list: A list of recipients (models.Member) that fulfill the selection
+        criteria specified in the given mailer job.
     """
 
     def apply_selection(query):

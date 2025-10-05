@@ -1,23 +1,55 @@
-# app/core/database.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : core.database.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides database configuration and session management for the Gratulo application.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-from app.core.constants import DB_URL
 from app.core.deps import INSTANCE_DIR
+
+import os
+os.environ["PYTHONIOENCODING"] = "utf-8"
+os.environ["LC_ALL"] = "C.UTF-8"
+os.environ["LANG"] = "C.UTF-8"
 
 
 # DB-Datei im Instance-Verzeichnis
 default_sqlite_url = f"sqlite:///{INSTANCE_DIR}/mailer.db"
-DATABASE_URL = os.getenv("DB_URL", default_sqlite_url)
+default_postgres_url = "postgresql+psycopg2://gratulo:secret@localhost:5432/gratulo"
 
-# Engine
+#DATABASE_URL = os.getenv("DB_URL", default_postgres_url)
+
+
+# if "client_encoding" not in DATABASE_URL:
+#     DATABASE_URL += "?client_encoding=utf8"
+
+# Engine PostgreSQL
+#engine = create_engine(
+#    DATABASE_URL,
+#    pool_pre_ping=True,          # wichtig für stabile Verbindung
+#    echo=False                   # debug=True falls du SQL sehen willst
+#)
+
+DATABASE_URL = os.getenv("DB_URL", default_sqlite_url)
+# Engine SQLITE
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
 )
+
 
 # Session
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -28,16 +60,14 @@ Base = declarative_base()
 # Dependency für FastAPI
 def get_db():
     """
-    Yields a database session and ensures proper cleanup after use.
+    Provides a database session for use within application logic.
 
-    This function provides a generator to work with a database session by
-    yielding a session instance and ensuring its closure after the database
-    operations are complete. It handles the session lifecycle by initializing
-    the session before yielding and closing it in a `finally` block to prevent
-    any resource leaks.
+    This function is a generator that yields a database session object.
+    It ensures that the session is properly closed after use, regardless of
+    whether the code using it completes successfully or raises an exception.
 
-    :return: A generator yielding the database session object.
-    :rtype: Generator[SessionLocal, None, None]
+    Yields:
+        Session: A database session instance.
     """
     db = SessionLocal()
     try:

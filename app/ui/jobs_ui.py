@@ -1,3 +1,19 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/ui/jobs_ui.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides UI endpoints for managing jobs
+    for managing jobs.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -14,17 +30,20 @@ jobs_ui_router = APIRouter(prefix="/jobs", include_in_schema=False, dependencies
 @jobs_ui_router.get("", response_class=HTMLResponse)
 async def jobs_page(request: Request, db: Session = Depends(database.get_db)):
     """
-    Handles the HTTP GET request for the jobs page. Fetches all mailer job entries
-    from the database and renders them into the 'jobs.html' template.
+    Handles the retrieval and rendering of the jobs page.
 
-    :param request: The HTTP request object.
-    :type request: Request
-    :param db: The database session dependency injected via FastAPI's dependency
-        injection system.
-    :type db: Session
-    :return: An HTML response containing the rendered 'jobs.html' template populated
-        with the list of mailer jobs.
-    :rtype: HTMLResponse
+    This function is responsible for fetching all jobs stored in the database
+    and rendering them into the "jobs.html" template. It is designed to be an
+    async endpoint for use with an HTTP GET request. The `HTMLResponse` is used
+    to provide an HTML page back to the user.
+
+    Args:
+        request (Request): The incoming HTTP request.
+        db (Session): A database session dependency, used to query the required data.
+
+    Returns:
+        TemplateResponse: The response rendered from the "jobs.html" template, including
+        the queried list of jobs.
     """
     jobs = db.query(models.MailerJob).all()
     return jinja_templates.TemplateResponse(
@@ -36,16 +55,17 @@ async def jobs_page(request: Request, db: Session = Depends(database.get_db)):
 @jobs_ui_router.get("/new", response_class=HTMLResponse)
 async def new_job_page(request: Request, db: Session = Depends(database.get_db)):
     """
-    Handles the GET request for the "/new" endpoint and renders the `job_editor.html`
-    template. The method retrieves required data, such as all templates and the
-    specific selections in use, and passes these values to the template rendering context.
+    Handles the request to render the new job creation page. This endpoint generates
+    an HTML page that allows users to create a new job, providing context data such
+    as available templates, used selections, and groups.
 
-    :param request: The incoming HTTP request to the endpoint.
-    :type request: Request
-    :param db: Dependency-injected database session for database operations.
-    :type db: Session
-    :return: Rendered HTML response for the job editor page.
-    :rtype: HTMLResponse
+    Args:
+        request (Request): The HTTP request object containing metadata about the request.
+        db (Session): The database session dependency used to query the database.
+
+    Returns:
+        HTMLResponse: The rendered HTML page with the context data necessary for
+        creating a new job.
     """
     templates = db.query(models.Template).all()
 
@@ -67,20 +87,22 @@ async def new_job_page(request: Request, db: Session = Depends(database.get_db))
 @jobs_ui_router.get("/{job_id}/edit", response_class=HTMLResponse)
 async def edit_job_page(request: Request, job_id: int, db: Session = Depends(database.get_db)):
     """
-    Fetches the job editing page for a specific job identified by ``job_id``. Retrieves the job details,
-    available templates, and the selections that are in use for the job ("birthdate" and "entry" only).
-    Returns an HTML response rendering the job editor page with the relevant data.
+    Handles rendering the job editing page for a specific job ID.
 
-    :param request: The HTTP request object passed to the route handler.
-                    Type: ``Request``
-    :param job_id: The unique identifier of the job to be fetched.
-                   Type: ``int``
-    :param db: The database session dependency used to query the necessary data.
-               Type: ``Session``
-    :return: An HTML response rendering the job editor page with the job information, template data,
-             and filters for used selections.
-             Type: ``HTMLResponse``
-    :raises HTTPException: Raised with status code 404 if no job with the provided ``job_id`` is found.
+    This function retrieves the job details, available templates, used selections,
+    and groups from the database. It then renders an HTML response using the
+    specified template and context data.
+
+    Args:
+        request (Request): The incoming HTTP request object.
+        job_id (int): The unique identifier of the job to be edited.
+        db (Session): The database session dependency.
+
+    Returns:
+        HTMLResponse: The rendered HTML response containing the job editing page.
+
+    Raises:
+        HTTPException: Raised if the specified job ID does not exist in the database.
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:

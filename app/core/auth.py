@@ -1,3 +1,20 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/core/auth.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides authentication-related functions for the
+            Gratulo application.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -9,23 +26,24 @@ def require_admin(
     db: Session = Depends(get_db),
 ):
     """
-    Checks if the requesting user has administrator privileges. Depending on the
-    authentication configuration, it verifies the user's rights and enforces various
-    restrictions. If the user is not authorized, appropriate HTTP exceptions are
-    raised. This function is commonly used to control access to sensitive operations
-    or resources requiring administrative permissions.
+    Restricts access to admin resources, ensuring that only authorized admin users can proceed.
 
-    :param request: The incoming HTTP Request object containing session information
-                    about the current user.
-    :type request: fastapi.Request
+    This function checks the session data for a logged-in user and verifies the user's
+    admin status through multiple methods, including initial admin checks, OAuth admin
+    validation, and email-based admin flag.
 
-    :param db: Database session object for querying the MailerConfig and other
-               persisted data.
-    :type db: sqlalchemy.orm.Session
+    Args:
+        request (Request): The incoming HTTP request containing session data.
+        db (Session): The database session dependency for querying configuration data.
 
-    :return: A dictionary object representing the user data if the user is an
-             authorized administrator.
-    :rtype: dict
+    Raises:
+        HTTPException: Raised with status 303 and redirect to '/login' if no user is logged in.
+        HTTPException: Raised with status 403 if no mailer configuration is found in the database.
+        HTTPException: Raised with status 403 if the user does not have admin rights based on
+            OAuth admin email validation or a missing admin flag in email-based authentication.
+
+    Returns:
+        dict: The user dictionary object of the authenticated and authorized admin user.
     """
     user = request.session.get("user")
     if not user:
@@ -37,7 +55,7 @@ def require_admin(
 
     config = db.query(MailerConfig).first()
 
-    # 🟦 Initial-Admin darf immer rein
+    # Initial-Admin darf immer rein
     if INITIAL_ADMIN_USER and user["email"] == INITIAL_ADMIN_USER.lower():
         return user
 

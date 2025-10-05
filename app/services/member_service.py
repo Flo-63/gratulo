@@ -1,14 +1,34 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/services/member_service.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides services for managing members for UI and API Endpoints
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
 import csv
 from datetime import datetime, date
 from io import StringIO
+
 from fastapi import HTTPException, UploadFile
+
 from sqlalchemy import asc, literal, or_, func
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core import models, schemas
 from app.core.constants import CLUB_FOUNDATION_DATE
 from app.services import group_service
 from app.helpers.member_helper import normalize_date
+
 
 # Erwartete Standard-Felder (immer auf DB-Spalten-Namen gemappt)
 EXPECTED_FIELDS = [
@@ -68,15 +88,23 @@ HEADER_MAP = {
 
 def parse_csv(file: UploadFile) -> list[dict]:
     """
-    Parses a CSV file uploaded by the user and returns a list of dictionaries. The method attempts
-    to normalize headers using a predefined mapping and parses the CSV based on detected delimiters.
-    It validates rows according to expected fields and ensures that only valid rows are returned.
+    Parses a CSV file to extract and normalize its rows.
 
-    :param file: The uploaded CSV file to be parsed. It is expected to be of type UploadFile.
-    :return: A list of dictionaries where each dictionary represents a row from the CSV file with
-        normalized and validated data.
-    :rtype: list[dict]
-    :raises HTTPException: If the file cannot be read, the CSV cannot be parsed, or validation fails.
+    This function reads a CSV file, attempts to parse it using possible delimiters
+    (`;` or `,`), and normalizes the headers based on a predefined mapping. The
+    function validates that the file has valid content before converting its rows
+    to a specific structure defined by expected fields. Only rows with at least one
+    non-empty value are included in the output.
+
+    Args:
+        file (UploadFile): The file-like object containing CSV data to be parsed.
+
+    Returns:
+        list[dict]: A list of dictionaries representing the parsed and normalized
+        rows from the CSV file.
+
+    Raises:
+        HTTPException: If the file cannot be read or parsed.
     """
     try:
         decoded = file.file.read().decode("utf-8-sig")
@@ -120,19 +148,24 @@ def parse_csv(file: UploadFile) -> list[dict]:
 
 def validate_rows(rows: list[dict], db: Session) -> list[dict]:
     """
-    Validates a list of rows containing user data. Each row is checked for required
-    and properly formatted fields, as well as specific business logic such as age
-    limitations and group validations. Errors found in the validation process are
-    stored in the `_errors` field of each row.
+    Validates a list of rows containing user data against specified rules and the database.
 
-    :param rows: A list of dictionaries representing user data. The dictionaries
-        should include the following keys: "firstname", "lastname", "email",
-        "birthdete", "member_since", "gender", and "group_name".
-    :type rows: list[dict]
-    :return: A list of dictionaries, each containing the original row data
-        and an additional `_errors` field which includes any validation errors
-        for the row.
-    :rtype: list[dict]
+    This function checks if all the required fields are present and properly formatted,
+    ensuring data validity before processing further. Each row's errors, if any, are
+    recorded, and additional fields such as group information are populated based on
+    the database.
+
+    Args:
+        rows (list[dict]): A list of dictionaries representing user data to be validated.
+            Each dictionary typically contains details such as "firstname", "lastname",
+            "email", "birthdate", "member_since", "gender", and "group_name".
+        db (Session): An active database session used for retrieving group-related data
+            and default values required for validation.
+
+    Returns:
+        list[dict]: A list of validated rows where each dictionary includes the original
+            user data, additional fields (e.g., "group_id"), and a dictionary of validation
+            errors under the key "_errors", if any.
     """
 
     validated = []
@@ -211,11 +244,6 @@ def validate_rows(rows: list[dict], db: Session) -> list[dict]:
 
     return validated
 
-from datetime import datetime, date
-from fastapi import HTTPException
-
-from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
 
 def save_member(
     db: Session,
@@ -228,6 +256,32 @@ def save_member(
     member_since: str | date | None,
     group_id: int,
 ):
+    """
+    Saves or updates a member in the database. This function validates the provided
+    data, ensuring the group exists, the email is unique, and the dates are valid.
+    If the member `id` is provided, the function updates the existing member. If no
+    `id` is given, a new member is created. The function commits the changes to the
+    database, refreshing the member's state afterward.
+
+    Args:
+        db (Session): The database session to execute the queries.
+        id (int | None): The ID of the member; if None, a new member is created.
+        firstname (str): The first name of the member.
+        lastname (str): The last name of the member.
+        gender (str): The gender of the member.
+        email (str): The email address of the member, which must be unique.
+        birthdate (str | date | None): The birthdate of the member.
+        member_since (str | date | None): The date the member joined.
+        group_id (int): The ID of the group to which the member belongs.
+
+    Returns:
+        models.Member: The saved or updated member instance.
+
+    Raises:
+        HTTPException: If the group is not found, the email is not unique, the
+        input dates are invalid, the member does not exist for the given ID, or
+        there is a database error.
+    """
     try:
         # ... (alle bisherigen Prüfungen & Konvertierungen bleiben)
         group = validate_group(db, group_id)
@@ -266,24 +320,16 @@ def save_member(
 
 def commit_members(db: Session, rows: list[dict]) -> None:
     """
-    Deletes all current members from the database and commits new members based on
-    the provided data. This operation involves associating each member with a valid
-    group, creating relationships, and validating specific fields such as dates.
+    Commits new members to the database while removing all existing members. The function first deletes all current
+    members in the database, then processes a given list of member dictionaries to create new member entries.
+    Member-related information such as group associations, birthdays, and membership dates are validated and prepared
+    before being saved in the database. The function ensures that a valid group is associated with each member entry.
 
-    :param db:
-        Database session used to interact with the database.
-    :type db: Session
-    :param rows:
-        List of dictionaries where each dictionary represents a member's details
-        including email, firstname, lastname, gender, group_id (optional),
-        group_name (optional), member_since (optional), and birthdate (optional).
-    :type rows: list[dict]
-    :return:
-        None
-    :rtype: None
-    :raises HTTPException:
-        Raised with status code 400 if no valid group is found or if an invalid
-        birthdate is provided in the input data.
+    Args:
+        db (Session): The database session used for executing queries and committing changes.
+        rows (list[dict]): A list of dictionaries representing new member data. Each dictionary should include
+            keys such as 'email', 'firstname', 'lastname', 'gender', 'group_id', 'group_name', 'member_since',
+            and 'birthdate'.
     """
     # 1. Alle bisherigen Mitglieder löschen
     db.query(models.Member).delete()
@@ -331,6 +377,18 @@ def commit_members(db: Session, rows: list[dict]) -> None:
 
 
 def list_members(db: Session, include_deleted: bool = False):
+    """
+    Fetches a list of members from the database, with the ability to filter out deleted
+    members and sort them by their last and first names in ascending order.
+
+    Args:
+        db (Session): Database session used to query the members.
+        include_deleted (bool): If True, includes deleted members in the result.
+            Defaults to False.
+
+    Returns:
+        List[models.Member]: A list of member objects retrieved from the database.
+    """
     query = db.query(models.Member)
     if not include_deleted:
         query = query.filter(models.Member.is_deleted == literal(0))
@@ -344,7 +402,16 @@ def list_members(db: Session, include_deleted: bool = False):
 
 def soft_delete_member(db, member_id: int):
     """
-    Markiert ein Mitglied als gelöscht (Soft Delete).
+    Marks a member as deleted without removing the record from the database. This function
+    sets the `is_deleted` attribute of the member to True and updates the `deleted_at`
+    field with the current UTC time.
+
+    Args:
+        db: Database session used to query and update the member record.
+        member_id (int): The ID of the member to be soft-deleted.
+
+    Returns:
+        models.Member: The updated member object if found; otherwise, None.
     """
     member = db.query(models.Member).filter(models.Member.id == member_id).first()
     if not member:
@@ -358,13 +425,18 @@ def soft_delete_member(db, member_id: int):
 
 def get_member_api(db: Session, member_id: int) -> schemas.MemberResponse:
     """
-    Holt ein einzelnes Mitglied aus der Datenbank anhand seiner ID.
-    Enthält auch Gruppeninformationen (falls vorhanden).
+    Fetches a member from the database, including their associated group, and validates/serializes
+    it into a response schema. If the member is not found, an HTTPException with status 404 is raised.
 
-    :param db: Aktive Datenbanksession
-    :param member_id: ID des gesuchten Mitglieds
-    :return: MemberResponse (inkl. Gruppe)
-    :raises HTTPException: Wenn das Mitglied nicht gefunden wird
+    Args:
+        db: The database session used to query the member.
+        member_id: The unique identifier of the member to be retrieved.
+
+    Returns:
+        An instance of schemas.MemberResponse containing the serialized member data.
+
+    Raises:
+        HTTPException: If no member with the specified ID is found in the database.
     """
     member = (
         db.query(models.Member)
@@ -380,6 +452,18 @@ def get_member_api(db: Session, member_id: int) -> schemas.MemberResponse:
     return schemas.MemberResponse.model_validate(member)
 
 def get_member(db: Session, member_id: int) -> models.Member | None:
+    """
+    Fetches a member from the database based on the provided member ID. The function performs
+    a database query to retrieve the member details, including the related group information
+    using eager loading, if available.
+
+    Args:
+        db (Session): The SQLAlchemy database session used to query the database.
+        member_id (int): The unique identifier of the member to retrieve.
+
+    Returns:
+        models.Member | None: The retrieved member object if found, otherwise None.
+    """
     return (
         db.query(models.Member)
         .options(joinedload(models.Member.group))
@@ -388,7 +472,19 @@ def get_member(db: Session, member_id: int) -> models.Member | None:
     )
 
 def list_active_members(db: Session):
-    """Liefert nur aktive Mitglieder (nicht gelöscht)."""
+    """
+    Fetches a list of all active members from the database.
+
+    An active member is defined as a member who is not marked as deleted.
+    The list is returned sorted by lastname in ascending order and, within the
+    same lastname, by firstname in ascending order.
+
+    Args:
+        db: Database session used to query for active members.
+
+    Returns:
+        List of active members sorted by lastname and firstname in ascending order.
+    """
     return (
         db.query(models.Member)
         .filter(models.Member.is_deleted == False)
@@ -398,7 +494,17 @@ def list_active_members(db: Session):
 
 
 def list_deleted_members(db: Session):
-    """Liefert nur gelöschte Mitglieder (Soft Deleted)."""
+    """
+    Fetches a list of deleted members from the database, ordered by lastname and firstname
+    in ascending order.
+
+    Args:
+        db (Session): Database session used for querying the members table.
+
+    Returns:
+        list: A list of deleted members from the database. Each member is represented as an
+        instance of the Member model.
+    """
     return (
         db.query(models.Member)
         .filter(models.Member.is_deleted == True)
@@ -409,7 +515,21 @@ def list_deleted_members(db: Session):
 
 def restore_member(db: Session, member_id: int):
     """
-    Hebt Soft-Delete eines Mitglieds auf.
+    Restore a deleted member in the database.
+
+    This function retrieves a specific member from the database by its ID.
+    If the member exists and is marked as deleted, it restores the member
+    by setting their deleted status to `False` and clearing the deletion
+    timestamp. The changes are then committed to the database.
+
+    Args:
+        db (Session): The database session object used for querying and
+            updating the database.
+        member_id (int): The unique identifier of the member to restore.
+
+    Returns:
+        models.Member: The restored member object if successful.
+        None: If the member does not exist or is not marked as deleted.
     """
     member = db.query(models.Member).filter(models.Member.id == member_id).first()
     if not member or not member.is_deleted:
@@ -424,7 +544,19 @@ def restore_member(db: Session, member_id: int):
 
 def wipe_member(db: Session, member_id: int) -> bool:
     """
-    Entfernt ein Mitglied vollständig aus der Datenbank.
+    Deletes a member from the database by the given member ID.
+
+    This function queries the database to find a member with the specified
+    member ID. If the member is found, it deletes the member from the database
+    and commits the changes. If the member is not found, it returns False.
+
+    Args:
+        db (Session): The database session used to execute queries.
+        member_id (int): The ID of the member to delete.
+
+    Returns:
+        bool: True if the member was successfully deleted, False if the member
+        was not found.
     """
     member = db.query(models.Member).filter(models.Member.id == member_id).first()
     if not member:
@@ -436,13 +568,21 @@ def wipe_member(db: Session, member_id: int) -> bool:
 
 def search_members(db: Session, query: str, include_deleted: bool = False):
     """
-    Durchsucht Mitglieder anhand von Vorname, Nachname oder E-Mail-Adresse (case-insensitive).
-    Optional können auch gelöschte Mitglieder berücksichtigt werden.
+    Searches for members in the database based on the given query and optional deletion status filter.
 
-    :param db: Aktive SQLAlchemy-Datenbanksession
-    :param query: Suchstring (Teil eines Namens oder einer E-Mail)
-    :param include_deleted: Wenn True, werden auch gelöschte Mitglieder einbezogen
-    :return: Liste von Member-Objekten, sortiert nach Nachname und Vorname
+    This function performs a case-insensitive search for members by their first name, last name, or email.
+    If `include_deleted` is set to False, only non-deleted members are included in the search results.
+    The results are sorted alphabetically by last name and first name.
+
+    Args:
+        db (Session): The database session used to query the members.
+        query (str): The search term used to find members. It is a case-insensitive match for first name,
+            last name, or email.
+        include_deleted (bool, optional): If True, includes deleted members in the search results.
+            Defaults to False.
+
+    Returns:
+        List[models.Member]: A list of members matching the search criteria.
     """
     if not query:
         return []
@@ -464,13 +604,37 @@ def search_members(db: Session, query: str, include_deleted: bool = False):
 
 
 def get_member_by_email(db: Session, email: str):
-    """Mitglied anhand der E-Mail suchen."""
+    """
+    Fetches a single member from the database using their email address.
+
+    This function queries the database to retrieve a member record that matches
+    the provided email address. It returns the first result or `None` if no record
+    is found.
+
+    Args:
+        db (Session): Database session object used to interact with the database.
+        email (str): Email address of the member to retrieve.
+
+    Returns:
+        models.Member | None: The member object if found; otherwise, None.
+    """
     return db.query(models.Member).filter(models.Member.email == email).first()
 
 def validate_group(db: Session, group_id: int | None) -> models.Group:
     """
-    Validiert, ob eine gültige Gruppe existiert.
-    Gibt die gefundene Gruppe oder die Default-Gruppe zurück.
+    Validates the provided group ID and retrieves a corresponding group object. If the group ID
+    is not provided or invalid, retrieves the default group. Raises an exception if no valid
+    group is found.
+
+    Args:
+        db (Session): A database session for querying data.
+        group_id (int | None): The ID of the group to validate or retrieve.
+
+    Returns:
+        models.Group: The group object corresponding to the provided ID or the default group.
+
+    Raises:
+        HTTPException: If no valid group is found.
     """
     group = None
     if group_id:
@@ -484,7 +648,23 @@ def validate_group(db: Session, group_id: int | None) -> models.Group:
 
 def validate_unique_email(db: Session, email: str, member_id: int | None = None):
     """
-    Stellt sicher, dass keine doppelte E-Mail existiert.
+    Validates the uniqueness of an email address within the database. Ensures that the email
+    is not already associated with an existing member. If a member ID is provided, the query
+    excludes that member to support email updates for the specified member.
+
+    Args:
+        db (Session): Database session used to perform queries.
+        email (str): Email address to validate for uniqueness.
+        member_id (int | None, optional): ID of the member to exclude from the uniqueness
+            check. Defaults to None.
+
+    Raises:
+        HTTPException: Raised if the email address is already associated with another
+            member in the database.
+
+    Returns:
+        bool: True if the email address is unique and not associated with another
+            member.
     """
     query = db.query(models.Member).filter(models.Member.email == email)
     if member_id:
@@ -500,15 +680,32 @@ def validate_birth_and_membership_dates(
         member_since: str | date | None
 ) -> tuple[date | None, date | None]:
     """
-    Prüft, ob Geburts- und Eintrittsdatum technisch sinnvoll sind.
-    (Keine UI-Hinweise wie „über 80 Jahre“ — nur Integritätsvalidierung.)
+    Validates and normalizes the provided birthdate and member_since date inputs.
 
-    Unterstützt sowohl Strings ("YYYY-MM-DD") als auch datetime.date-Objekte.
+    This function ensures that the given dates are in the correct format and adhere
+    to specific logical constraints, such as the birthdate not being in the future
+    or the membership date not being earlier than the birthdate. It also converts
+    string date inputs into Python date objects for further processing.
 
-    :param birthdate: Geburtsdatum (optional, str oder date)
-    :param member_since: Eintrittsdatum (optional, str oder date)
-    :return: Tupel aus (birthdate, member_since) als date-Objekte oder None
-    :raises HTTPException: Bei unlogischen oder ungültigen Datumswerten
+    Args:
+        birthdate: The birthdate input, which could be a string, a date object,
+            or None. Strings are expected in the YYYY-MM-DD format.
+        member_since: The membership start date input, which could be a string,
+            a date object, or None. Strings are expected in the YYYY-MM-DD format.
+
+    Returns:
+        A tuple of two elements:
+            - A normalized birthdate as a date object or None if the input was empty.
+            - A normalized member_since date as a date object or None if the input
+              was empty.
+
+    Raises:
+        HTTPException: If any of the following conditions is violated:
+            - An invalid date format is provided.
+            - A date input has an unsupported type.
+            - The membership date is earlier than the birthdate.
+            - The birthdate is in the future.
+            - The membership date is in the future.
     """
 
     def normalize_date(value: str | date | None) -> date | None:

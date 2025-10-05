@@ -1,3 +1,19 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/api/members_api.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides endpoints for managing members via API
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
 from fastapi import APIRouter, Depends, HTTPException, Query,status
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -27,13 +43,24 @@ def search_members(
     db: Session = Depends(database.get_db),
 ):
     """
-    Sucht Mitglieder anhand von Vorname, Nachname oder E-Mail-Adresse.
-    Optional können auch gelöschte Mitglieder einbezogen werden.
+    Searches for members by query.
 
-    :param query: Suchbegriff (mindestens 2 Zeichen)
-    :param include_deleted: True, um auch gelöschte Mitglieder einzuschließen
-    :param db: Datenbanksession
-    :return: Liste der gefundenen Mitglieder
+    This function searches for members based on the provided query, which can match
+    first name, last name, or email. Optionally, it can include deleted members in
+    the search results.
+
+    Args:
+        query: The search term for filtering members; minimum length is 2
+            characters, and it matches first name, last name, or email.
+        include_deleted: Specifies whether to include deleted members in the
+            search results (default is False).
+        db: The database session dependency for querying.
+
+    Returns:
+        A list of members matching the search criteria.
+
+    Raises:
+        HTTPException: If no matching members are found.
     """
     results = member_service.search_members(db, query, include_deleted)
     if not results:
@@ -47,17 +74,26 @@ def list_members(
     db: Session = Depends(database.get_db),
 ):
     """
-    Retrieve a list of members based on the `deleted` filter.
+    Handles the retrieval of members with filtering options for deleted status.
 
-    This endpoint allows the retrieval of member records based on their deletion status.
-    The `deleted` parameter determines whether to return all members, only deleted members,
-    or only active members.
+    This function allows clients to retrieve a list of members with optional
+    filtering for their deletion status. The available filters include 'true'
+    (for deleted members), 'false' (for active members), or 'all' (for both
+    active and deleted members). The members data is pulled from the database
+    and returned in the response.
 
-    :param deleted: A string filter to specify which members to retrieve. Possible
-                    values are 'true', 'false', or 'all'.
-                    Default is 'false', which retrieves only active members.
-    :param db: The database session dependency used for interacting with the database.
-    :return: A list of member records matching the specified deletion filter.
+    Args:
+        deleted (str): Indicates the type of members to retrieve. Accepts one
+            of the following values:
+            - 'true': Retrieve only deleted members.
+            - 'false': Retrieve only active members.
+            - 'all': Retrieve all members, regardless of deletion status.
+        db (Session): The database session dependency used to query the member
+            data.
+
+    Returns:
+        list[schemas.MemberResponse]: A list of member data conforming to the
+            MemberResponse schema.
     """
     if deleted == "all":
         members = member_service.list_members(db, include_deleted=True)
@@ -66,7 +102,7 @@ def list_members(
     else:
         members = member_service.list_active_members(db)
 
-    logger.debug(f"🧩 DEBUG list_members: deleted={deleted}, count={len(members)}")
+    logger.debug(f"DEBUG list_members: deleted={deleted}, count={len(members)}")
     return members
 
 
@@ -74,21 +110,20 @@ def list_members(
 @members_api_router.get("/{member_id}", response_model=schemas.MemberResponse)
 def get_member(member_id: int, db: Session = Depends(database.get_db)):
     """
-    Retrieves a member by their ID from the database.
+    Fetch a member's details by their unique identifier.
 
-    This function handles GET requests to fetch the information of a specific
-    member based on their unique member ID. If the member does not exist, it
-    raises an HTTP 404 error with a relevant message.
+    This endpoint retrieves the information of a specific member by their ID
+    from the database. If the member does not exist, a 404 HTTP exception is raised.
 
-    :param member_id: The unique identifier of the member to retrieve.
-    :type member_id: int
-    :param db: The database session dependency injected by FastAPI.
-    :type db: Session
-    :return: The member data retrieved based on the given member ID.
-    :rtype: schemas.MemberResponse
+    Args:
+        member_id (int): The unique identifier of the member to retrieve.
+        db (Session): The database session dependency.
 
-    :raises HTTPException: If the member is not found in the database, an error
-        with status code 404 is raised.
+    Raises:
+        HTTPException: If the member with the given ID is not found.
+
+    Returns:
+        schemas.MemberResponse: The response model containing member details.
     """
     member = member_service.get_member_api(db, member_id)
     if not member:
@@ -102,19 +137,18 @@ def get_member(member_id: int, db: Session = Depends(database.get_db)):
 @members_api_router.post("/", response_model=schemas.MemberResponse)
 def create_member(member: schemas.MemberCreate, db: Session = Depends(get_db)):
     """
-    Creates a new member in the database.
+    Creates a new member in the database and logs the creation if successful.
 
-    This function allows the creation of a new member with the provided data.
-    It uses the `member_service.save_member` method to persist the member's details to
-    the database. If the member is successfully created, it logs the operation.
+    This function takes in a member creation payload and inserts it into the database
+    using the provided database session. Logging occurs upon successful member creation.
 
-    :param member: Data required to create a new member, including first name,
-        last name, gender, email, birthdate, membership start date, and group ID.
-    :type member: schemas.MemberCreate
-    :param db: Database session dependency used to interact with the persistence layer.
-    :type db: Session
-    :return: The created member object, if successful.
-    :rtype: schemas.MemberResponse
+    Args:
+        member (schemas.MemberCreate): The member creation payload containing details
+            like firstname, lastname, gender, email, birthdate, member_since, and group_id.
+        db (Session): The database session dependency to interact with the database.
+
+    Returns:
+        schemas.MemberResponse: The response model of the created member containing their details.
     """
     new_member = member_service.save_member(
         db=db,
@@ -139,23 +173,21 @@ def create_member(member: schemas.MemberCreate, db: Session = Depends(get_db)):
 @members_api_router.put("/{member_id}", response_model=schemas.MemberResponse)
 def update_member(member_id: int, member_update: schemas.MemberUpdate, db: Session = Depends(database.get_db)):
     """
-    Updates an existing member's information based on the provided identifier and update data.
-    This function retrieves the member from the database using the `member_id`, checks if the member
-    exists and is not marked as deleted. It then applies the updated information from `member_update`
-    object by selectively overriding fields that are provided, leaving others unchanged. After saving
-    the changes, the updated member record is retrieved and returned.
+    Updates an existing member in the database with the provided details. If the member
+    does not exist or is marked as deleted, a 404 HTTP error will be raised. The operation
+    logs audit information about the update and fields affected.
 
-    :param member_id: The unique identifier of the member to be updated.
-    :type member_id: int
-    :param member_update: An object containing the new data to update for the member.
-    :type member_update: schemas.MemberUpdate
-    :param db: The database session dependency used for database operations.
-    :type db: Session
-    :return: The updated member object reflecting the applied changes.
-    :rtype: schemas.MemberResponse
+    Args:
+        member_id (int): Unique identifier of the member to be updated.
+        member_update (schemas.MemberUpdate): Object containing the updated data for
+            the member. Fields not included will retain their previous values.
+        db (Session): Database session dependency.
 
-    :raises HTTPException: If no member with the provided identifier is found or if the member has
-        been marked as deleted.
+    Returns:
+        schemas.MemberResponse: The updated member record.
+
+    Raises:
+        HTTPException: If the member does not exist or is marked as deleted.
     """
     member = member_service.get_member(db, member_id)
     if not member or member.is_deleted:
@@ -175,7 +207,7 @@ def update_member(member_id: int, member_update: schemas.MemberUpdate, db: Sessi
     )
 
     updated = member_service.get_member(db, member_id)
-    logger.info(f"✏️ Mitglied aktualisiert (ID {member_id})")
+    logger.info(f"Mitglied aktualisiert (ID {member_id})")
     audit_logger.info(f"UPDATE member_id={member_id}, fields={list(data.keys())}")
     return updated
 
@@ -183,14 +215,17 @@ def update_member(member_id: int, member_update: schemas.MemberUpdate, db: Sessi
 @members_api_router.delete("/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_member(member_id: int, db: Session = Depends(database.get_db)):
     """
-    Deletes a member by setting its `is_deleted` attribute to True and marking the
-    timestamp for deletion. The operation is logged for auditing purposes.
+    Deletes a member by setting its status as deleted and marking the deletion
+    time in the database. This operation is idempotent and only marks
+    existing active members as deleted.
 
-    :param member_id: Identifier of the member to be deleted.
-    :type member_id: int
-    :param db: Database session dependency.
-    :type db: Session
-    :return: None
+    Args:
+        member_id (int): Unique identifier of the member to delete.
+        db (Session): Database session used to query and update member records.
+
+    Raises:
+        HTTPException: Raised with a 404 status code if the member does not exist
+            or is already marked as deleted.
     """
     member = member_service.get_member(db, member_id)
     if not member or member.is_deleted:
@@ -208,24 +243,31 @@ def delete_member(member_id: int, db: Session = Depends(database.get_db)):
 @members_api_router.post("/{member_id}/restore", response_model=schemas.MemberResponse)
 def restore_member(member_id: int, db: Session = Depends(database.get_db)):
     """
-    Restores a deleted member identified by its member ID. If the member is not found
-    or is not in a deleted state, an HTTP 404 exception is raised. Upon successful
-    restoration, logs the action for both general and audit purposes and returns the
-    restored member data.
+    Restores a logically deleted member by its unique identifier.
 
-    :param member_id: The unique identifier of the member to be restored.
-    :type member_id: int
-    :param db: Database session dependency.
-    :return: The restored member as a response model.
-    :rtype: schemas.MemberResponse
+    This endpoint allows the restoration of a previously deleted member. If the
+    member does not exist, or has not been deleted, an exception will be raised.
+    Upon successful restoration, informational logs for general and audit purposes
+    are generated.
 
-    :raises HTTPException: If the member with the given ID is not found or is not deleted.
+    Args:
+        member_id (int): The unique identifier of the member to restore.
+        db (Session): The database session dependency used to perform the
+            restoration.
+
+    Raises:
+        HTTPException: Raised when the member is not found or has not been logically
+            deleted.
+
+    Returns:
+        schemas.MemberResponse: The restored member data in the specified response
+            model format.
     """
     member = member_service.restore_member(db, member_id)
     if not member:
         raise HTTPException(status_code=404, detail="Mitglied nicht gefunden oder nicht gelöscht")
 
-    logger.info(f"♻️ Mitglied wiederhergestellt (ID {member.id})")
+    logger.info(f"Mitglied wiederhergestellt (ID {member.id})")
     audit_logger.info(f"RESTORE member_id={member.id}")
     return member
 
@@ -236,19 +278,19 @@ def wipe_member(
     db: Session = Depends(database.get_db),
 ):
     """
-    Deletes a member permanently from the database. If the member is still active, the operation
-    can only be forced by setting `force` to True. This endpoint logs both a warning and an
-    audit log entry when successful.
+    Deletes a member permanently from the database. If the member is still active, deletion is blocked
+    unless the `force` parameter is explicitly set to `True`. Requires an active database session.
 
-    :param member_id: The unique identifier for the member to be deleted.
-    :type member_id: int
-    :param force: Specifies whether to force the deletion even for active members.
-    :type force: bool
-    :param db: The database session dependency.
-    :type db: Session
-    :return: None
+    Args:
+        member_id (int): Unique identifier of the member to delete.
+        force (bool): If set to `True`, forces deletion even if the member is active.
+        db (Session): Active SQLAlchemy session connected to the database.
 
-    :raises HTTPException: If the member is active and the `force` parameter is not set to True.
+    Raises:
+        HTTPException: If the member is still active and `force` is not set to `True`.
+
+    Returns:
+        None: Indicates successful deletion of the member.
     """
     success = member_service.wipe_member(db, member_id, force=force)
     if not success:
@@ -257,7 +299,7 @@ def wipe_member(
             detail="Mitglied ist noch aktiv – zum endgültigen Löschen 'force=true' angeben.",
         )
 
-    logger.warning(f"🧨 Mitglied dauerhaft gelöscht (ID {member_id}, force={force})")
+    logger.warning(f"Mitglied dauerhaft gelöscht (ID {member_id}, force={force})")
     audit_logger.info(f"WIPE member_id={member_id} force={force}")
     return None
 

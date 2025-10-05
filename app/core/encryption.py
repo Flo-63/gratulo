@@ -1,11 +1,21 @@
-# app/core/encryption.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/core/encryption.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides encryption functionality for the Gratulo application.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
 
 import os
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy.types import TypeDecorator, LargeBinary
-
-
-
 
 try:
     SESSION_LIFETIME = int(os.getenv("SESSION_LIFETIME", 480))  # Default: 8 Stunden = 480 Minuten
@@ -46,26 +56,41 @@ SERVICE_PASSWORD = os.getenv("SERVICE_USER_PASSWORD", "supersecret")
 
 class EncryptedType(TypeDecorator):
     """
-    A custom SQLAlchemy TypeDecorator ensuring encryption and decryption
-    of certain fields in the database.
+    A type decorator for encrypting and decrypting database values.
 
-    The `EncryptedType` class uses Fernet symmetric encryption to securely
-    store sensitive data in the database. Before values are written to the
-    database, they are encrypted. Data retrieved from the database is
-    decrypted before being returned. This ensures that data is stored in an
-    encrypted format, providing an extra layer of security.
+    This class provides functionality to encrypt data before storing it in the
+    database and decrypt it when retrieved. It uses Fernet symmetric encryption
+    to secure the stored data. The encryption process ensures that sensitive
+    information remains protected while stored in the database.
 
-    :ivar impl: The underlying database type used by this custom type.
-    :type impl: SQLAlchemy type (e.g., LargeBinary)
-    :ivar cache_ok: Indicates if the results of this type are safe to cache.
-    :type cache_ok: bool
+    Attributes:
+        impl: SQLAlchemy's data type that this decorator wraps around. This is
+            set to `LargeBinary`, which represents binary data.
+        cache_ok (bool): Indicates whether results from this type are safe to
+            cache.
     """
 
     impl = LargeBinary
     cache_ok = True
 
     def process_bind_param(self, value, dialect):
-        """Wird aufgerufen, bevor ein Wert in die DB geschrieben wird"""
+        """
+        Encrypts and processes a parameter value for database binding.
+
+        This method takes a parameter value, checks its type, and performs encryption
+        for secure storage in a database. If the value is `None`, it simply returns
+        `None`. If the parameter is a string, it is encoded into bytes before
+        encryption. The encryption is performed using the specified `fernet`
+        encryption object.
+
+        Args:
+            value: Parameter value to be processed, which can be a string or `None`.
+            dialect: Dialect being used by the database.
+
+        Returns:
+            The encrypted parameter value if the input value is not `None`. If the
+            input value is `None`, it returns `None`.
+        """
         if value is None:
             return None
         if isinstance(value, str):
@@ -73,7 +98,22 @@ class EncryptedType(TypeDecorator):
         return fernet.encrypt(value)
 
     def process_result_value(self, value, dialect):
-        """Wird aufgerufen, wenn ein Wert aus der DB gelesen wird"""
+        """
+        Processes and decrypts a database value if it exists and is encrypted.
+
+        This method attempts to decrypt the value using the provided decryption method.
+        If the value is an unencrypted string, it returns that as decoded text.
+        In the case where the value is None or an exception occurs during
+        decryption or decoding, None is returned.
+
+        Args:
+            value: The raw database value to be processed, potentially encrypted.
+            dialect: The dialect used for database operations (unused in this function).
+
+        Returns:
+            The decrypted and decoded value as a string, the decoded unencrypted string,
+            or None if the value is None or cannot be decoded.
+        """
         if value is None:
             return None
         try:

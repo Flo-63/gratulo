@@ -1,4 +1,18 @@
-# app/main.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/main.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This is the main entry point for the Gratulo application.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -17,11 +31,10 @@ from app.core.logging import setup_logging
 
 setup_logging()
 
-
 app = FastAPI(
     title="Gratulo API",
     version="0.8.3",
-    description=open("app/docs/API_GUIDE.md", encoding="utf-8").read(),
+    description=open("app/docs/api_guide.md", encoding="utf-8").read(),
     docs_url="/swagger",
     redoc_url="/docs"
 )
@@ -59,15 +72,11 @@ app.include_router(groups_api.groups_api_router, prefix="/api/groups", tags=["Gr
 @app.on_event("startup")
 def startup_event():
     """
-    Handles tasks to be executed during the application's startup event.
+    This function is triggered on application startup and performs necessary initialization
+    tasks such as creating database tables and starting the scheduler.
 
-    The function initializes the necessary database tables by creating them
-    if they do not already exist. It then starts a scheduler to manage
-    time-based tasks within the application.
-
-    :no-param:
-    :no-raises:
-    :return: None
+    Raises:
+        SQLAlchemyError: If there is an issue with creating tables using SQLAlchemy.
     """
     # Tabellen erzeugen (falls noch nicht vorhanden)
     Base.metadata.create_all(bind=engine)
@@ -76,12 +85,15 @@ def startup_event():
 @app.on_event("startup")
 async def init_redis_limiter():
     """
-    Initializes the Redis connection for the rate limiter and validates its
-    availability upon application startup. If Redis is unavailable, it logs an
-    error and disables rate limiting functionality until Redis is reachable.
+    Handles the initialization of Redis connection for rate limiting on application startup.
 
-    :return: None
-    :rtype: None
+    Establishes a connection to the Redis server using the environment variable "REDIS_URL",
+    or defaults to "redis://redis:6379" if not set. Initializes the FastAPI rate limiter
+    and logs the connection status.
+
+    Raises:
+        Exception: If the connection to Redis fails, logs the error and disables
+        rate limiting until Redis becomes reachable.
     """
     import logging
     logger = logging.getLogger("uvicorn")
@@ -101,12 +113,13 @@ async def init_redis_limiter():
 @app.on_event("shutdown")
 async def shutdown_event():
     """
-    Called during the shutdown event of the FastAPI application.
+    Handles the shutdown event for the FastAPI application.
 
-    This function is executed when the FastAPI application is being shut down.
-    It ensures proper cleanup by closing resources used by the FastAPI limiter.
+    This function is triggered during the shutdown process of the FastAPI application, ensuring that
+    resources associated with the rate limiter are properly closed and released.
 
-    :return: This function does not return any value.
-    :rtype: None
+    Raises:
+        Any exception raised during the closure of the FastAPILimiter.
+
     """
     await FastAPILimiter.close()

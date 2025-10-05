@@ -1,4 +1,18 @@
-# app/core/deps.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/core/deps.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides dependency definitions for the Gratulo application.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 
 from pathlib import Path
 from datetime import datetime
@@ -22,7 +36,6 @@ INSTANCE_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-
 # Jinja2 Templates
 jinja_templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
@@ -32,17 +45,15 @@ jinja_templates.env.auto_reload = True
 
 def context(request, **kwargs):
     """
-    Generate and return a context dictionary for use in templates.
+    Generates a context dictionary containing the request, the current year,
+    and additional keyword arguments.
 
-    This function creates a context dictionary containing the request object,
-    the current year, and additional key-value pairs passed through ``kwargs``.
-    It provides a convenient way to supply common data to templates.
+    Args:
+        request: The HTTP request object.
+        **kwargs: Arbitrary keyword arguments to include in the context.
 
-    :param request: The HTTP request object.
-    :type request: Any
-    :param kwargs: Additional key-value pairs to be included in the context.
-    :return: A dictionary containing the request object, the current year,
-             and additional context data from ``kwargs``.
-    :rtype: dict
+    Returns:
+        dict: A dictionary containing the request, the current year, and any
+        provided keyword arguments.
     """
     return {"request": request, "year": datetime.now().year, **kwargs}

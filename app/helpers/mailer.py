@@ -1,4 +1,18 @@
-# app/helpers/mailer.py
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/helpers/mailer.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides helper functions for sending emails.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
 import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
@@ -23,18 +37,22 @@ CID_PATTERN = re.compile(
 
 def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
     """
-    Processes the provided email body by embedding images referenced in the content
-    and converting file paths to corresponding Content-ID references, which are
-    suitable for sending as inline attachments in an email. Ensures that the email
-    body is encapsulated in an HTML template for proper rendering in all email
-    clients.
+    Prepares and formats the email body into an HTML template with inline images.
 
-    :param body: The HTML content of the email body, which may include references
-        to images that need to be embedded.
-    :param msg: The MIMEMultipart object representing the email message to which
-        the embedded inline images will be attached.
-    :return: The processed email body as a complete HTML template with embedded
-        CID image references.
+    This function identifies any image paths in the provided email body and attaches
+    these images as inline attachments to the email message. The function modifies
+    the email body to reference the attached images using content IDs. Images can
+    be loaded from specified directories for uploads, static files, or the current
+    working directory. If an image file is not found, the function logs a warning
+    and continues processing other images.
+
+    Args:
+        body (str): The email body potentially containing image paths to embed.
+        msg (MIMEMultipart): The email message object to which inline images will be attached.
+
+    Returns:
+        str: The formatted HTML email body where image paths are replaced with
+             content IDs referring to the inline attachments.
     """
     matches = CID_PATTERN.findall(body)
 
@@ -92,26 +110,19 @@ def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
 
 def send_mail(config: MailerConfig, to_address: str, subject: str, body: str) -> None:
     """
-    Sends an email to the specified recipient with the provided subject and body.
+    Sends an email using the provided SMTP configuration and details. Supports both
+    TLS and SSL for secure connections. The email content can include HTML with
+    inline images.
 
-    The function prepares an email message with support for HTML content and inline
-    images. It uses the provided configuration to establish a connection with the
-    SMTP server to dispatch the email. The implementation supports both TLS and
-    SSL configurations.
+    Args:
+        config (MailerConfig): SMTP configuration with server details and credentials.
+        to_address (str): Recipient's email address.
+        subject (str): Subject of the email.
+        body (str): HTML body content of the email.
 
-    :param config: Mailer configuration containing SMTP server details, credentials,
-                   and other required settings.
-    :type config: MailerConfig
-    :param to_address: Email address of the recipient.
-    :type to_address: str
-    :param subject: Subject line of the email.
-    :type subject: str
-    :param body: HTML content or plain text of the email message.
-    :type body: str
-    :return: None
-    :rtype: None
-    :raises RuntimeError: If the mailer configuration is missing.
-    :raises Exception: For any errors encountered during the email transmission.
+    Raises:
+        RuntimeError: If the email configuration is not provided.
+        Exception: For any unforeseen issues during the email sending process.
     """
 
     if not config:
@@ -137,7 +148,7 @@ def send_mail(config: MailerConfig, to_address: str, subject: str, body: str) ->
         context = ssl.create_default_context()
 
         if config.use_tls:
-            logger.debug(f"🔐 Verbinde per STARTTLS mit {config.smtp_host}:{config.smtp_port}")
+            logger.debug(f"Verbinde per STARTTLS mit {config.smtp_host}:{config.smtp_port}")
             with smtplib.SMTP(config.smtp_host, config.smtp_port) as server:
                 server.starttls(context=context)
                 if config.smtp_user and config.smtp_password:
