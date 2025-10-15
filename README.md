@@ -182,8 +182,15 @@ docker run -d -p 8000:8000 --env-file .env gratulo
 This starts the application inside a container on port 8000.
 The .env file from your project root provides configuration (e.g., database, SMTP, Redis).
 ```
-## Run with Docker Compose
+## Build with Docker Compose
 ```bash
+docker compose build --no-cache
+or
+docker compose up -d --force-recreate
+```
+## Run with Docker Compose
+```
+bash
 docker-compose up -d
 ```
 This uses the included docker-compose.yml file, which provides all required services.
@@ -217,6 +224,8 @@ redoc UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 This project is licensed under the
 **[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/)**.
 You are free to use, modify, and share the code **for noncommercial purposes only**.
+Commercial use requires a separate license.  
+See [`COMMERCIAL_LICENSE_EN.md`](./COMMERCIAL_LICENSE_EN.md) or [`COMMERCIAL_LICENSE_DE.md`](./COMMERCIAL_LICENSE_DE.md) for details.
 
 ---
 

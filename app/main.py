@@ -97,11 +97,11 @@ async def startup_event():
 
     logger = logging.getLogger("uvicorn")
 
-    # 1️⃣ Tabellen erzeugen
+    # Tabellen erzeugen
     Base.metadata.create_all(bind=engine)
     start_scheduler()
 
-    # 2️⃣ Redis + Limiter initialisieren
+    # Redis + Limiter initialisieren
     redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
     try:
         r = await redis.from_url(redis_url, encoding="utf-8", decode_responses=True)

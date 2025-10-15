@@ -43,7 +43,7 @@ def allow(key: str, limit: int = RATE_LIMIT_MAILS, window: int = RATE_LIMIT_WIND
     current = redis_client.incr(bucket)
 
     if current == 1:
-        redis_client.expire(bucket, window)
+        redis_client.expire(bucket, window, nx=True)  # TTL nur setzen, wenn neu
 
     return current <= limit
 

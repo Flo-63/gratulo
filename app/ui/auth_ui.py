@@ -16,6 +16,9 @@ Purpose   : This module provides authentication-related user interface (UI) endp
 from fastapi import APIRouter, Request, Form, Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi.responses import HTMLResponse, RedirectResponse
+
+from fastapi import Form
+
 from sqlalchemy.orm import Session
 from app.core.deps import jinja_templates, context
 from app.core.database import get_db
@@ -38,21 +41,22 @@ async def login_submit(
     password: str = Form(None),
 ):
     """
-    Handles the user login process. This endpoint allows users to authenticate
-    with their email and password. It validates the user credentials, updates the
-    session on successful authentication, and redirects accordingly.
+    Handles login submission for the admin area. Validates credentials, processes authentication steps such
+    as Two-Factor Authentication (2FA) if enabled, and manages user sessions. Redirects the user to the
+    appropriate page based on the state of the login (successful login, pending 2FA, or failure).
 
     Args:
-        request (Request): The current HTTP request containing session information.
-        db (Session): The database session dependency for accessing the database.
-        email (str): The user's email address (optional).
-        password (str): The user's password (optional).
+        request (Request): The incoming HTTP request object containing session and form data.
+        db (Session): The database session used for querying and persisting data.
+        email (str): The email address submitted via the login form.
+        password (str): The password submitted via the login form.
 
     Returns:
-        RedirectResponse: If the login is successful, redirects the user to the
-            home page with a status code of 303.
-        TemplateResponse: If the login fails, renders the login page with an
-            appropriate error message and a status code of 401.
+        RedirectResponse: Redirects to the homepage on successful login or to the 2FA verification page
+        if 2FA is enabled. On login failure, returns a rendered login page with an error message.
+
+    Raises:
+        None: Does not explicitly raise any exception.
     """
     config = db.query(MailerConfig).first()
 
@@ -95,18 +99,17 @@ async def login_submit(
 @auth_ui_router.get("/logout")
 async def logout(request: Request):
     """
-    Handles user logout by clearing the session and redirecting to the login page.
+    Logs out the user by clearing the session and redirects to the login page.
 
-    This endpoint clears the current user's session data, effectively logging them
-    out of the system, and then redirects them to the login page using a 303 status code.
+    This endpoint is used to log out the current user by clearing their session
+    data. After the session is cleared, the user is redirected to the login page.
 
     Args:
-        request (Request): The incoming HTTP request object containing session
-            and other request-related data.
+        request: The incoming HTTP request object containing session information.
 
     Returns:
-        RedirectResponse: An HTTP response object that performs a redirection to
-        the login page with a 303 status code.
+        RedirectResponse: A response object to redirect the user to the login
+        page with a 303 status code.
     """
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
@@ -118,15 +121,11 @@ async def logout(request: Request):
 @auth_ui_router.get("/oauth/start")
 async def oauth_start():
     """
-    Handles the starting point for OAuth authentication by redirecting to
-    the OAuth callback endpoint.
-
-    This function is an endpoint that initiates the OAuth flow by redirecting
-    the client to the `/oauth/callback` path.
+    Handles the start of the OAuth process by redirecting to the OAuth callback URL.
 
     Returns:
-        RedirectResponse: A response object redirecting to the OAuth callback
-        endpoint.
+        RedirectResponse: A response object that redirects the user to the
+        "/oauth/callback" endpoint.
     """
     return RedirectResponse("/oauth/callback")
 
@@ -134,25 +133,24 @@ async def oauth_start():
 @auth_ui_router.get("/oauth/callback")
 async def oauth_callback(request: Request, db: Session = Depends(get_db)):
     """
-    Handles OAuth callback and authenticates the user based on the provided OAuth
-    parameters.
+    Handles OAuth callback for user authentication and authorization.
 
-    This function checks whether the authenticated user email matches the allowed
-    admin emails stored in the database. If the user is authorized, the session
-    is updated with the user's email, and the user is redirected to the admin
-    dashboard. Unauthorized users receive a 403 access denied response.
+    This endpoint processes the callback from an OAuth provider and validates the
+    user's email against the allowed admin emails configured in the database. If
+    the email is not authorized, access is denied with a 403 status. Otherwise,
+    the user's email is stored in the session, and they are redirected to the
+    admin page.
 
     Args:
-        request (Request): The HTTP request object containing session and other
-            request details.
-        db (Session): Database session dependency used for querying application
-            configurations.
+        request (Request): The incoming HTTP request object, used to manage the
+            session and extract request-specific information.
+        db (Session): SQLAlchemy session dependency for database access.
 
     Returns:
-        RedirectResponse: Redirects the authenticated user to the admin page if
-            authorized.
-        HTMLResponse: Returns a 403 HTML response if the user is not an allowed
-            admin.
+        HTMLResponse: An HTML response denying access with a 403 status if the
+            user's email is not authorized.
+        RedirectResponse: A redirection response to the admin page with a 303
+            status if the user is successfully authenticated and authorized.
     """
     config = db.query(MailerConfig).first()
     user_email = "florian@radtreffcampus.de"
@@ -168,13 +166,28 @@ async def oauth_callback(request: Request, db: Session = Depends(get_db)):
 # ---------------------------
 # Zwei-Faktor-Authentifizierung
 # ---------------------------
-from fastapi import Form
-from app.services.auth_service import verify_2fa_token
-from app.core.models import AdminUser
 
 @auth_ui_router.get("/2fa-verify")
 async def two_factor_form(request: Request):
-    """Zeigt das Eingabeformular für den 6-stelligen Authenticator-Code."""
+    """
+    Handles rendering the two-factor authentication verification form.
+
+    The endpoint is responsible for serving the Two-Factor Authentication (2FA)
+    verification page. It retrieves the pending user from the session. If no
+    pending user is found, the user will be redirected to the login page. This
+    endpoint leverages a Jinja2 template to render the 2FA verification form
+    with the pending user's username passed in the context.
+
+    Args:
+        request (Request): The HTTP request object carrying session and other
+        data for the current user.
+
+    Returns:
+        TemplateResponse: Renders the 2FA verification HTML page if the session
+        includes a pending 2FA user.
+        RedirectResponse: Redirects to the login page if no pending 2FA user
+        exists in the session.
+    """
     pending_user = request.session.get("pending_2fa_user")
     if not pending_user:
         return RedirectResponse("/login", status_code=303)
@@ -191,7 +204,23 @@ async def two_factor_verify(
     token: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    """Verifiziert den 2FA-Code und loggt den Benutzer ein."""
+    """
+    Handles the Two-Factor Authentication (2FA) verification process for admin users. This
+    endpoint is triggered after the user submits their 2FA token for verification. It ensures
+    the validity of the token for the user associated with the current session. Upon successful
+    verification, the user session is updated to reflect authentication and redirects to the main
+    page. In case of failure, the user is redirected back to the 2FA verification form with an
+    error message.
+
+    Args:
+        request (Request): The HTTP request object containing session data.
+        token (str): The 2FA token provided by the user.
+        db (Session): The database session dependency for querying user data.
+
+    Returns:
+        RedirectResponse: A redirection to the main page upon success or re-rendering of
+        the 2FA verification form upon failure.
+    """
     pending_user = request.session.get("pending_2fa_user")
     if not pending_user:
         return RedirectResponse("/login", status_code=303)
@@ -204,7 +233,7 @@ async def two_factor_verify(
             status_code=401,
         )
 
-    # ✅ Erfolgreich
+    # Erfolgreich
     request.session.pop("pending_2fa_user", None)
     request.session["user"] = make_user(user.username, is_admin=True)
     request.session["2fa_valid"] = True
