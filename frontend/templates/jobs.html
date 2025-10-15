@@ -12,15 +12,72 @@ Purpose   : Provides the container for the dynamic list of jobs page
 ===============================================================================
 -->
 
-
-
 {% extends "base.html" %}
 
 {% block content %}
+{% set status = status or {} %}
+{% set queued = status.get('queued', 0) %}
+{% set next_run_in = status.get('next_run_in', 0) %}
+{% set rate_limit_window = RATE_LIMIT_WINDOW if RATE_LIMIT_WINDOW is defined else 60 %}
+
 <div class="max-w-7xl mx-auto mt-10 space-y-6">
     <!-- Kopfbereich -->
     <div class="flex justify-between items-center">
         <h1 class="text-3xl font-bold text-gray-800">📬 Mailer Jobs</h1>
+            <!-- Statusanzeige Mail-Queue -->
+        <div id="job-status"
+             hx-get="/htmx/jobs/job-status"
+             hx-trigger="load, every 5s"
+             hx-swap="innerHTML">
+          <div id="job-status-content">
+            {% include "partials/job_status.html" %}
+          </div>
+        </div>
+
+      {% if status %}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-800">
+
+        <!-- Queue -->
+        <div class="flex flex-col">
+          <span class="font-medium text-gray-600">Mail-Queue</span>
+            {% if queued > 0 %}
+              <span class="text-amber-700 font-semibold">{{ queued }} ausstehend</span>
+            {% else %}
+              <span class="text-green-700 font-semibold">leer</span>
+            {% endif %}
+        </div>
+
+        <!-- Worker -->
+        <div class="flex flex-col">
+          <span class="font-medium text-gray-600">Worker</span>
+          {% if queued > 0 %}
+            <span class="text-gray-800 font-semibold">aktiv</span>
+          {% else %}
+            <span class="text-gray-500 font-semibold">wartet</span>
+          {% endif %}
+        </div>
+
+        <!-- Nächster Lauf -->
+        <div class="flex flex-col" x-data="{ seconds: {{ next_run_in or 0 }} }"
+             x-init="setInterval(() => { if (seconds > 0) seconds-- }, 1000)">
+          <span class="font-medium text-gray-600">Nächster Lauf</span>
+          <template x-if="seconds > 0">
+            <span class="text-gray-800 font-semibold" x-text="seconds + ' s'"></span>
+          </template>
+          <template x-if="seconds == 0">
+            <span class="text-green-700 font-semibold">läuft</span>
+          </template>
+        </div>
+
+      </div>
+
+      <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div class="h-full bg-indigo-500 transition-all duration-1000"
+             :style="'width:' + (100 - (seconds / {{ RATE_LIMIT_WINDOW }} * 100)) + '%;'"></div>
+      </div>
+      {% endif %}
+    </div>
+
         <div class="flex gap-2">
             <a href="/jobs/new"
                class="btn btn-green">

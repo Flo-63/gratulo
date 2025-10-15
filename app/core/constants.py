@@ -13,8 +13,6 @@ Purpose   : This module provides general constants and settings
 """
 
 
-
-
 import os
 import datetime
 from dotenv import load_dotenv
@@ -32,11 +30,20 @@ except ValueError:
 LOCAL_TZ = ZoneInfo(os.getenv("LOCAL_TZ", "Europe/Berlin"))
 BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
+ENABLE_REST_API = os.getenv("ENABLE_REST_API", "true").lower() == "true"
+
 # Redis URL: aus .env oder Default für Docker-Setup
 REDIS_URL = os.getenv("REDIS_URL")
 
 if not REDIS_URL:
     REDIS_URL = "redis://redis:6379"
+
+
+# Einstellungen für Rate Limiter im Mailing
+RATE_LIMIT_MAILS = int(os.getenv("MAILER_RATE_LIMIT", 40))       # max. Mails pro Minute
+RATE_LIMIT_WINDOW = int(os.getenv("MAILER_RATE_WINDOW", 60))     # Sekunden
+
+MAIL_QUEUE_INTERVAL_SECONDS = int(os.getenv("MAIL_QUEUE_INTERVAL_SECONDS", 120))
 
 # Initial-Admin aus .env (nur setzen, wenn beide Werte vorhanden und nicht leer)
 _env_user = os.getenv("INITIAL_ADMIN_USER", "").strip()

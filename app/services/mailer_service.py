@@ -21,23 +21,26 @@ from sqlalchemy.orm import Session
 
 from app.core import models
 from app.core.models import MailerConfig, MailerJobLog
-from app.helpers.mailer import send_mail
+from app.services.mail_queue import enqueue_mail
 from app.helpers.placeholders import resolve_placeholders
+from app.helpers.security_helper import anonymize, mask_email
 
 logger = logging.getLogger(__name__)
 
 
 def execute_job_by_id(job_id: int, logical: date | None = None):
     """
-    Executes a mailer job with a given job ID and logical date.
+    Executes a mailer job for the specified job ID and logical date.
 
-    This function retrieves a database session, logs the start of the job execution,
-    executes the mailer job logic, and ensures the database session is properly closed.
-    It logs the progress and any exceptions encountered during job execution.
+    This function initiates a database session, determines the logical date if not
+    provided, logs the execution process, and invokes the mailer job. Logs errors
+    if the execution process fails and ensures the database session is closed
+    after execution.
 
     Args:
-        job_id (int): Identifier of the job to execute.
-        logical (date | None): Logical date for which the job should execute. Defaults to the current date.
+        job_id (int): The unique identifier of the job to be executed.
+        logical (date | None): The logical date for executing the job. If None,
+            the current date will be used.
     """
     from app.core.database import SessionLocal
 
@@ -55,21 +58,20 @@ def execute_job_by_id(job_id: int, logical: date | None = None):
 
 def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     """
-    Executes the mailer job for a specific job ID and logical date.
+    Executes a mailer job based on the given job ID and logical date, sending emails to
+    determined recipients using the specified templates, and logs the execution details
+    and results in the database.
 
-    This function processes a mailer job, resolves recipients, and sends emails
-    based on the specified job parameters. Logs are maintained in the database
-    for job execution, including success or failure details. If a fallback group
-    and job are available, the function will use them to determine recipients in case
-    the original group returns no recipients.
+    This function queries the database to locate the mailer job and associated template
+    using the given job ID. If the template or mailer configuration is missing, or if no
+    recipients can be resolved, the function logs appropriate information and terminates.
+    For valid jobs with recipients, it attempts to send emails, tracks success and failures,
+    computes execution duration, and updates the database with the results.
 
     Args:
-        db (Session): Database session for querying and committing changes.
+        db (Session): Database session for querying and committing database changes.
         job_id (int): Identifier of the mailer job to be executed.
-        logical (date): Logical date for which the mailer job is executed.
-
-    Raises:
-        None: All exceptions are handled internally within the function.
+        logical (date): Logical date associated with the mail execution.
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:
@@ -177,13 +179,15 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
             html_out = resolve_placeholders(template.content_html, member)
             subject = (job.subject or subject_fallback).strip()
 
-            send_mail(config=config, to_address=member.email, subject=subject, body=html_out)
+            enqueue_mail(to_address=member.email, subject=subject, body=html_out)
             mails_sent += 1
-            logger.info(f"[MailerService] ✅ Mail an {member.email} gesendet.")
+            logger.info(f"[MailerService] Mail an {mask_email(member.email)} in Queue gestellt.")
+
         except Exception:
             errors += 1
             failed_recipients.append(member.email)
-            logger.exception(f"[MailerService] ❌ Fehler beim Senden an {member.email}")
+            logger.exception(f"[MailerService] ❌ Fehler beim Senden an {mask_email(member.email)}")
+
 
     duration = int((time.perf_counter() - start_time) * 1000)
 
@@ -197,7 +201,11 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
 
     details = f"{mails_sent} gesendet, {errors} Fehler"
     if failed_recipients:
-        details += f" (Fehler bei: {', '.join(failed_recipients[:5])}{'...' if len(failed_recipients) > 5 else ''})"
+        details += (
+            f" (Fehler bei: "
+            f"{', '.join(anonymize(r) for r in failed_recipients[:5])}"
+            f"{'...' if len(failed_recipients) > 5 else ''})"
+        )
 
     log_entry = MailerJobLog(
         job_id=job.id,
@@ -216,23 +224,25 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
 
 def _resolve_recipients(db: Session, job: models.MailerJob, logical: date):
     """
-    Resolves and retrieves the list of recipients for a given mailer job based on
-    selection criteria and group assignments.
+    Resolves a list of recipients for a given mailer job based on selection criteria
+    and group associations.
 
-    This method dynamically filters and selects members depending on the job's
-    configuration, including attributes such as selection type, group membership,
-    and logical date constraints for specific events like birthdays or entry dates.
+    This function determines the intended recipients for a given mailer job,
+    taking into account selection rules like "all", "birthdate", or "entry" while
+    respecting group-specific logic. For the default group, members are processed
+    differently than those from other groups, which are checked for conflicts with
+    existing jobs.
 
     Args:
-        db (Session): SQLAlchemy session used for querying the database.
-        job (models.MailerJob): Mailer job instance containing job-specific
-            configurations for recipient selection.
-        logical (date): Logical date used for filtering members based on criteria
-            such as birthdate or entry date.
+        db (Session): The database session used to query for members and jobs.
+        job (models.MailerJob): The mailer job specifying criteria for recipient
+            selection.
+        logical (date): The logical reference date used for filtering based on
+            "birthdate" or "entry" selection criteria.
 
     Returns:
-        list: A list of recipients (models.Member) that fulfill the selection
-        criteria specified in the given mailer job.
+        list: A list of member entities matching the selection criteria for the
+        specified mailer job.
     """
 
     def apply_selection(query):

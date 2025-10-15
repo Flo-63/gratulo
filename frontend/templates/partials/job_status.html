@@ -1,0 +1,77 @@
+{% set status = status or {} %}
+{% set next_run_in = status.get('next_run_in', 0) %}
+{% set rate_limit_window = status.get('rate_limit_window', RATE_LIMIT_WINDOW or 60) %}
+{% set mail_queue_interval = mail_queue_interval or 15 %}
+{% set queued = status.get('queued', 0) %}
+{% set last_sent = status.get('last_sent') %}
+
+<div id="job-status"
+     hx-get="/htmx/jobs/job-status"
+     hx-trigger="every 5s"
+     hx-swap="outerHTML"
+     x-data="mailQueueStatus({{ next_run_in }}, {{ mail_queue_interval }}, {{ rate_limit_window }})"
+     x-init="start()"
+     data-next-run="{{ status.next_run_in }}"
+     data-queue-interval="{{ mail_queue_interval }}"
+     data-rate-limit="{{ rate_limit_window }}"
+     class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col gap-4 text-sm text-gray-800 transition-all">
+
+  <!-- Kopfbereich -->
+  <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+    <h3 class="text-base font-semibold text-gray-700">Mail-Queue Status</h3>
+    <div class="text-xs text-gray-400" x-text="new Date().toLocaleTimeString()"></div>
+  </div>
+
+  <!-- Inhalt -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <!-- Mail-Queue -->
+    <div>
+      <span class="block text-gray-500">Mail-Queue</span>
+      {% if queued > 0 %}
+        <span class="text-amber-700 font-semibold">{{ queued }} ausstehend</span>
+      {% else %}
+        <span class="text-green-700 font-semibold">leer</span>
+      {% endif %}
+    </div>
+
+    <!-- Worker -->
+    <div>
+      <span class="block text-gray-500">Worker</span>
+      {% if queued > 0 %}
+        <span class="text-gray-800 font-semibold">aktiv</span>
+      {% else %}
+        <span class="text-gray-500 font-semibold">wartet</span>
+      {% endif %}
+    </div>
+
+    <!-- Nächster Lauf -->
+    <div>
+      <span class="block text-gray-500">Nächster Lauf</span>
+      <template x-if="seconds > 0">
+        <span class="text-gray-800 font-semibold" x-text="seconds + ' s'"></span>
+      </template>
+      <template x-if="seconds === 0">
+        <span class="text-green-700 font-semibold">läuft</span>
+      </template>
+    </div>
+
+    <!-- Letzter Versand -->
+    <div>
+      <span class="block text-gray-500">Letzter Versand</span>
+      {% if last_sent %}
+        <span class="text-gray-800 font-semibold">
+          {{ last_sent.split('.')[0].replace('T', ' ') if last_sent else '' }}
+        </span>
+      {% else %}
+        <span class="text-gray-400 font-semibold">–</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Fortschrittsbalken -->
+  <div class="h-2 mt-2 bg-gray-100 rounded-full overflow-hidden">
+    <div class="h-full bg-indigo-500 transition-all duration-1000 ease-linear"
+         :style="progressWidth">
+    </div>
+  </div>
+</div>

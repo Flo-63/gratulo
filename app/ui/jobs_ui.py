@@ -23,7 +23,6 @@ from app.core import database, models
 from app.core.auth import require_admin
 from app.services import group_service
 
-
 jobs_ui_router = APIRouter(prefix="/jobs", include_in_schema=False, dependencies=[Depends(require_admin)])
 
 

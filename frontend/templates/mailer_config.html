@@ -2,16 +2,15 @@
 ===============================================================================
 Project   : gratulo
 Module    : frontend/templates/mailer_config.html
-Created   : 2025-10-05
+Created   : 2025-10-15
 Author    : Florian
-Purpose   : Show the mailer configuration page
+Purpose   : Here, the user can configure the mailer settings for the application.
 
 @docstyle: google
 @language: english
 @voice: imperative
 ===============================================================================
 -->
-
 
 {% extends "base.html" %}
 
@@ -25,17 +24,15 @@ Purpose   : Show the mailer configuration page
       <!-- 🟦 Mailer Karte -->
       <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
         <h2 class="text-lg font-semibold text-gray-700 mb-4">Mailer</h2>
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Zeile 1: Host -->
+          <!-- Host -->
           <div>
             <label class="block text-sm font-medium text-gray-700">SMTP Host</label>
-            <input type="text" name="smtp_host" value="{{ config.smtp_host or '' }}"
-                   required
+            <input type="text" name="smtp_host" value="{{ config.smtp_host or '' }}" required
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
           </div>
 
-          <!-- Zeile 1: Port + TLS -->
+          <!-- Port + TLS -->
           <div>
             <label class="block text-sm font-medium text-gray-700">Port</label>
             <div class="flex items-center gap-3">
@@ -43,9 +40,7 @@ Purpose   : Show the mailer configuration page
                       class="mt-1 block rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm w-20">
                 {% set ports = [25, 465, 587] %}
                 {% for port in ports %}
-                  <option value="{{ port }}" {% if config and config.smtp_port == port %}selected{% endif %}>
-                    {{ port }}
-                  </option>
+                  <option value="{{ port }}" {% if config and config.smtp_port == port %}selected{% endif %}>{{ port }}</option>
                 {% endfor %}
               </select>
               <label class="flex items-center gap-2 mt-1">
@@ -55,15 +50,14 @@ Purpose   : Show the mailer configuration page
             </div>
           </div>
 
-          <!-- Zeile 2: Benutzer -->
+          <!-- Benutzer -->
           <div>
             <label class="block text-sm font-medium text-gray-700">SMTP Benutzer</label>
-            <input type="text" name="smtp_user" value="{{ config.smtp_user or '' }}"
-                   required
+            <input type="text" name="smtp_user" value="{{ config.smtp_user or '' }}" required
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
           </div>
 
-          <!-- Zeile 2: Passwort -->
+          <!-- Passwort -->
           <div>
             <label class="block text-sm font-medium text-gray-700">SMTP Passwort</label>
             <input type="password" name="smtp_password" placeholder="••••••••"
@@ -73,58 +67,42 @@ Purpose   : Show the mailer configuration page
             {% endif %}
           </div>
 
-          <!-- Zeile 3: Absenderadresse -->
+          <!-- Absenderadresse -->
           <div class="md:col-span-2">
             <label class="block text-sm font-medium text-gray-700">Absenderadresse</label>
-            <input type="email" name="from_address" value="{{ config.from_address or '' }}"
-                   required
+            <input type="email" name="from_address" value="{{ config.from_address or '' }}" required
                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
           </div>
         </div>
       </div>
 
-      <!-- Authentifizierung -->
+      <!-- 🔐 Authentifizierung -->
       <div class="bg-gray-50 p-4 rounded-lg shadow-sm">
         <h2 class="text-lg font-semibold text-gray-700 mb-4">Authentifizierung</h2>
 
-        <!-- Auswahl Methode -->
+        {% if using_env_login %}
+        <div class="mb-4 p-3 rounded border border-yellow-300 bg-yellow-50 text-sm text-yellow-900">
+          ⚠️ Aktuell ist der Login über <code>INITIAL_ADMIN_USER</code>/<code>INITIAL_PASSWORD</code> (ENV) aktiv.<br>
+          Entfernen Sie diese Werte nach der Erstkonfiguration. Die Admin-Benutzerverwaltung unten wirkt sich
+          erst aus, wenn der ENV-Override deaktiviert ist.
+        </div>
+        {% endif %}
+
+        <!-- Methode -->
         <div class="flex gap-6 mb-6">
           <label class="flex items-center gap-2">
-            <input type="radio" name="auth_method" value="email"
-                   x-model="method"
+            <input type="radio" name="auth_method" value="email" x-model="method"
                    {% if not config or config.auth_method == 'email' %}checked{% endif %}>
-            <span>E-Mail & Passwort</span>
+            <span>E-Mail & Passwort (Provider)</span>
           </label>
           <label class="flex items-center gap-2">
-            <input type="radio" name="auth_method" value="oauth"
-                   x-model="method"
+            <input type="radio" name="auth_method" value="oauth" x-model="method"
                    {% if config and config.auth_method == 'oauth' %}checked{% endif %}>
-            <span>OAuth</span>
+            <span>OAuth (Provider)</span>
           </label>
         </div>
 
-        <!-- Email Login -->
-        <div x-show="method === 'email'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Login E-Mail</label>
-            <input type="email" name="login_email" value="{{ config.login_email or '' }}"
-                   :disabled="method !== 'email'" :required="method === 'email'"
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-          </div>
-          <!-- Login Passwort -->
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Login Passwort</label>
-              <input type="password" name="login_password" placeholder="••••••••"
-                     :disabled="method !== 'email'"
-                     :required="method === 'email' && {{ (not config or not config.login_password) | string | lower}}"
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            {% if config and config.login_password %}
-              <p class="text-xs text-gray-500 mt-1">Leer lassen, um das aktuelle Passwort zu behalten.</p>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- OAuth -->
+        <!-- 🔗 OAuth -->
         <div x-show="method === 'oauth'" class="space-y-4 bg-white p-4 mt-6 rounded border">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -155,27 +133,27 @@ Purpose   : Show the mailer configuration page
                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
             </div>
           </div>
+        </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Admins (E-Mail Adressen)</label>
-            <textarea name="admin_emails" rows="2"
-                      :disabled="method !== 'oauth'"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      placeholder="admin1@example.com, admin2@example.com">{{ config.admin_emails or '' }}</textarea>
-            <p class="text-xs text-gray-500">Kommagetrennte Liste der E-Mail Adressen mit Adminrechten.</p>
-          </div>
+        <!-- 👥 Admin-User-Verwaltung -->
+        <div x-show="method === 'email'" class="mt-4">
+            <div id="admin-users-section"
+                 hx-get="/mailer-config/admin-users"
+                 hx-trigger="load"
+                 hx-target="#admin-users-section"
+                 hx-swap="innerHTML"
+                 class="bg-gray-50 p-4 rounded-lg shadow-sm border text-sm text-gray-800">
+              <p class="text-gray-500">Admin-Benutzer werden geladen...</p>
+            </div>
         </div>
       </div>
 
       <!-- Aktionen -->
       <div class="flex gap-2">
-        <button type="submit" class="btn btn-blue">
-          Speichern
-        </button>
-        <a href="/jobs" class="btn btn-gray">
-          Abbrechen
-        </a>
+        <button type="submit" class="btn btn-blue">Speichern</button>
+        <a href="/jobs" class="btn btn-gray">Abbrechen</a>
       </div>
+
     </form>
   </div>
 </div>

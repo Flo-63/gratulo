@@ -169,3 +169,12 @@ def mailer_config_save(
     db.commit()
 
     return RedirectResponse(url="/admin", status_code=303)
+
+@mailer_config_ui_router.get("/mailer-config/admin-users")
+def admin_users_partial(request: Request, db: Session = Depends(get_db)):
+    users = db.query(AdminUser).order_by(AdminUser.username.asc()).all()
+    return jinja_templates.TemplateResponse(
+        "partials/admin_user_list.html",  # 👈 jetzt im partials-Ordner
+        context(request, admin_users=users)
+    )
+

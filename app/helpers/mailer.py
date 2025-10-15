@@ -21,10 +21,14 @@ from email.mime.image import MIMEImage
 import logging
 import os
 import re
-from sqlalchemy.sql import extract
-
+from redis import Redis
+from app.core.constants import REDIS_URL
 from app.core.models import MailerConfig
 from app.core.deps import UPLOADS_DIR, STATIC_DIR
+from app.core.rate_limiter import wait_for_slot
+from app.helpers.security_helper import mask_email
+
+redis_client = Redis.from_url(REDIS_URL, decode_responses=True)
 
 logger = logging.getLogger(__name__)
 
@@ -37,22 +41,16 @@ CID_PATTERN = re.compile(
 
 def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
     """
-    Prepares and formats the email body into an HTML template with inline images.
-
-    This function identifies any image paths in the provided email body and attaches
-    these images as inline attachments to the email message. The function modifies
-    the email body to reference the attached images using content IDs. Images can
-    be loaded from specified directories for uploads, static files, or the current
-    working directory. If an image file is not found, the function logs a warning
-    and continues processing other images.
+    Prepares an HTML email body by embedding inline images as content IDs (CIDs) and wrapping
+    the email content in standard HTML email formatting. The function parses paths to inline
+    images from the email body and attaches them to the provided email message object.
 
     Args:
-        body (str): The email body potentially containing image paths to embed.
-        msg (MIMEMultipart): The email message object to which inline images will be attached.
+        body (str): The HTML content of the email containing paths to inline images.
+        msg (MIMEMultipart): The email message object to which the inline images will be attached.
 
     Returns:
-        str: The formatted HTML email body where image paths are replaced with
-             content IDs referring to the inline attachments.
+        str: The formatted email body with inline images replaced by their corresponding CIDs.
     """
     matches = CID_PATTERN.findall(body)
 
@@ -110,23 +108,30 @@ def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
 
 def send_mail(config: MailerConfig, to_address: str, subject: str, body: str) -> None:
     """
-    Sends an email using the provided SMTP configuration and details. Supports both
-    TLS and SSL for secure connections. The email content can include HTML with
-    inline images.
+    Sends an email with the specified parameters using the provided mailer
+    configuration.
+
+    This function supports sending HTML emails with inline images and also ensures
+    rate limiting for mail dispatch. The email can be sent using either TLS or SSL
+    as defined in the mailer configuration.
 
     Args:
-        config (MailerConfig): SMTP configuration with server details and credentials.
-        to_address (str): Recipient's email address.
+        config (MailerConfig): Configuration object containing SMTP details and
+            authentication credentials.
+        to_address (str): Recipient email address.
         subject (str): Subject of the email.
-        body (str): HTML body content of the email.
+        body (str): HTML content of the email body.
 
     Raises:
-        RuntimeError: If the email configuration is not provided.
-        Exception: For any unforeseen issues during the email sending process.
+        RuntimeError: If the mailer configuration is missing.
+        Exception: For any error encountered during the email-sending process.
     """
 
     if not config:
         raise RuntimeError("❌ Keine Mailer-Konfiguration vorhanden.")
+
+    #  Rate Limiter prüfen
+    wait_for_slot("mailer", limit=40, window=60)
 
     # multipart/related erlaubt HTML + Bilder
     msg = MIMEMultipart("related")
@@ -161,8 +166,9 @@ def send_mail(config: MailerConfig, to_address: str, subject: str, body: str) ->
                     server.login(config.smtp_user, config.smtp_password)
                 server.send_message(msg)
 
-        logger.info(f"✅ Mail erfolgreich an {to_address} gesendet (Betreff: {subject})")
+        logger.info(f"✅ Mail erfolgreich an {mask_email(to_address)} gesendet (Betreff: {subject})")
 
     except Exception as e:
-        logger.exception(f"❌ Fehler beim Senden der Mail an {to_address}: {e}")
+        logger.exception(f"❌ Fehler beim Senden der Mail an {mask_email(to_address)}: {e}")
         raise
+

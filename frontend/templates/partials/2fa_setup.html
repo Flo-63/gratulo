@@ -1,0 +1,46 @@
+<!--
+===============================================================================
+Project   : gratulo
+Template  : 2fa_setup.html
+Created   : 15.10.2025
+Author    : Florian
+Purpose   : [Describe the purpose of this HTML template.]
+===============================================================================
+-->
+<div class="bg-white rounded-lg shadow p-4 text-sm text-gray-800">
+  <h4 class="text-md font-semibold mb-2">2FA einrichten für {{ user.username }}</h4>
+
+  {% if error %}
+    <div class="bg-red-50 border border-red-300 text-red-700 px-3 py-2 rounded mb-3">
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <p class="mb-3">Scanne diesen QR-Code mit deiner Authenticator-App und gib danach den 6-stelligen Code ein.</p>
+
+  <div class="flex items-center gap-4">
+    <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR Code" class="border rounded shadow">
+  </div>
+
+  <form
+    hx-post="/mailer-config/admin-users/{{ user.id }}/2fa-verify"
+    hx-target="#admin-users-section"
+    hx-swap="innerHTML"
+    class="mt-4 space-y-3"
+  >
+    <label class="block text-sm font-medium text-gray-700">6-stelligen Code eingeben:</label>
+    <input type="text" name="token" maxlength="6" pattern="[0-9]{6}" required
+           class="block w-40 rounded-md border-gray-300 shadow-sm text-center tracking-widest text-lg">
+
+    <div class="flex gap-2 mt-2">
+      <button type="submit" class="btn btn-blue">Bestätigen</button>
+      <button type="button"
+              class="btn btn-gray"
+              hx-get="/mailer-config/admin-users"
+              hx-target="#admin-users-section"
+              hx-swap="innerHTML">
+        Abbrechen
+      </button>
+    </div>
+  </form>
+</div>

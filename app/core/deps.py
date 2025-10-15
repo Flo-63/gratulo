@@ -12,11 +12,10 @@ Purpose   : This module provides dependency definitions for the Gratulo applicat
 ===============================================================================
 """
 
-
-
 from pathlib import Path
 from datetime import datetime
 from fastapi.templating import Jinja2Templates
+from app.core.constants import ENABLE_REST_API
 
 # Basis-Verzeichnis: eine Ebene höher als "app"
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -38,6 +37,7 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Jinja2 Templates
 jinja_templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+jinja_templates.env.globals["ENABLE_REST_API"] = ENABLE_REST_API
 
 jinja_templates.env.cache = {}
 jinja_templates.env.auto_reload = True
@@ -45,15 +45,15 @@ jinja_templates.env.auto_reload = True
 
 def context(request, **kwargs):
     """
-    Generates a context dictionary containing the request, the current year,
-    and additional keyword arguments.
+    Generates a context dictionary containing the provided request, the current year,
+    and any additional keyword arguments.
 
     Args:
         request: The HTTP request object.
-        **kwargs: Arbitrary keyword arguments to include in the context.
+        **kwargs: Arbitrary keyword arguments to include in the returned dictionary.
 
     Returns:
-        dict: A dictionary containing the request, the current year, and any
-        provided keyword arguments.
+        dict: A context dictionary containing the request, current year, and the
+        additional keyword arguments.
     """
     return {"request": request, "year": datetime.now().year, **kwargs}

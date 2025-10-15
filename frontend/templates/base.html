@@ -47,8 +47,10 @@ Purpose   : Base template for the gratulo frontend
         {% if request.url.path not in ["/", "/admin"] %}
           <a href="/admin" class="text-gray-700 hover:text-blue-600 font-medium">Dashboard</a>
         {% endif %}
-        {% if request.url.path in ["/mailer-config"] %}
-          <a href="/docs" class="text-gray-700 hover:text-blue-600 font-medium">API Docs</a>
+        {% if ENABLE_REST_API and request.url.path in ["/mailer-config", "/jobs", "/admin"] %}
+          <a href="/docs" class="text-gray-700 hover:text-blue-600 font-medium">
+            API Docs
+          </a>
         {% endif %}
         <a href="/mailer-config" class="text-gray-700 hover:bg-gray-100">⚙️</a>
 
@@ -88,7 +90,26 @@ Purpose   : Base template for the gratulo frontend
     </div>
   </div>
 
-  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+   <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- Danach dein Alpine-Component Script -->
+   <script src="{{ url_for('static', path='/js/mail_queue_status.js') }}"></script>
+
+>
+
+    <script>
+      // Wenn HTMX Inhalte ersetzt oder neu lädt:
+      document.body.addEventListener("htmx:afterSwap", (e) => {
+        // Nur wenn Alpine existiert
+        if (window.Alpine) {
+          // Alpine auf neuen DOM anwenden
+          window.Alpine.flushAndStopDeferringMutations();
+          window.Alpine.initTree(e.target);
+        }
+      });
+    </script>
+
+
   <script>
     function showNotification(message, type = "error") {
       const notif = document.getElementById("notification");
@@ -135,6 +156,7 @@ Purpose   : Base template for the gratulo frontend
       }
     });
   </script>
+
 </body>
 
 </html>

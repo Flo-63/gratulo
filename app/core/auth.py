@@ -4,47 +4,71 @@ Project   : gratulo
 Module    : app/core/auth.py
 Created   : 2025-10-05
 Author    : Florian
-Purpose   : This module provides authentication-related functions for the
-            Gratulo application.
-
-@docstyle: google
-@language: english
-@voice: imperative
+Purpose   : Provides authentication and admin access control for Gratulo.
 ===============================================================================
 """
-
-
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.models import MailerConfig
-from app.core.constants import INITIAL_ADMIN_USER
+from app.core.models import AdminUser
+from app.core.constants import INITIAL_ADMIN_USER, INITIAL_PASSWORD
+from datetime import datetime, timezone
+import bcrypt
+
+def ensure_initial_admin(db: Session):
+    """
+    Ensures the existence of an initial admin user in the database during the application's
+    initial setup phase. If no admin user exists, an informational message is printed to notify
+    the user of temporary credentials for initial configuration.
+
+    Args:
+        db: Session
+            An active SQLAlchemy database session.
+    """
+    if not (INITIAL_ADMIN_USER and INITIAL_PASSWORD):
+        return
+
+    exists = db.query(AdminUser).count() > 0
+    if not exists:
+        print(
+            "[warn] Kein AdminUser in der Datenbank gefunden.\n"
+            "       Login über INITIAL_ADMIN_USER/INITIAL_PASSWORD aktiv.\n"
+            "       Entfernen Sie diese Werte nach der Erstkonfiguration,\n"
+            "       um die Admin-Verwaltung über die Datenbank zu aktivieren."
+        )
+
 
 def require_admin(
     request: Request,
     db: Session = Depends(get_db),
 ):
     """
-    Restricts access to admin resources, ensuring that only authorized admin users can proceed.
+    Ensure administrative privileges for the user making the request.
 
-    This function checks the session data for a logged-in user and verifies the user's
-    admin status through multiple methods, including initial admin checks, OAuth admin
-    validation, and email-based admin flag.
+    This function verifies the presence of an initial admin, checks if the
+    requesting user is logged in, and ensures that the user has active
+    administrator privileges in the database. If any of these conditions
+    are not met, appropriate HTTPExceptions are raised.
 
     Args:
-        request (Request): The incoming HTTP request containing session data.
-        db (Session): The database session dependency for querying configuration data.
-
-    Raises:
-        HTTPException: Raised with status 303 and redirect to '/login' if no user is logged in.
-        HTTPException: Raised with status 403 if no mailer configuration is found in the database.
-        HTTPException: Raised with status 403 if the user does not have admin rights based on
-            OAuth admin email validation or a missing admin flag in email-based authentication.
+        request: The incoming HTTP request object, which includes session
+            information about the current user.
+        db: A database session used to query the database for user
+            authentication and authorization.
 
     Returns:
-        dict: The user dictionary object of the authenticated and authorized admin user.
+        A dictionary containing the admin user's ID, username, and whether
+        two-factor authentication is enabled.
+
+    Raises:
+        HTTPException: If the user is not logged in, lacks the necessary
+            admin rights, or is inactive, appropriate status and detail
+            messages are returned.
     """
+    # Stelle sicher, dass Initial-Admin vorhanden ist
+    ensure_initial_admin(db)
+
     user = request.session.get("user")
     if not user:
         raise HTTPException(
@@ -53,25 +77,20 @@ def require_admin(
             detail="Nicht eingeloggt",
         )
 
-    config = db.query(MailerConfig).first()
+    # Suche Benutzer in der Datenbank
+    db_user = (
+        db.query(AdminUser)
+        .filter(AdminUser.username == user.get("username").lower())
+        .first()
+    )
 
-    # Initial-Admin darf immer rein
-    if INITIAL_ADMIN_USER and user["email"] == INITIAL_ADMIN_USER.lower():
-        return user
-
-    if not config:
-        raise HTTPException(status_code=403, detail="Keine Konfiguration gefunden")
-
-    # OAuth-Adminprüfung
-    if config.auth_method == "oauth":
-        allowed_admins = [m.strip().lower() for m in (config.admin_emails or "").split(",") if m.strip()]
-        if user["email"] not in allowed_admins:
-            raise HTTPException(status_code=403, detail="Keine Adminrechte")
-
-    # Email-Auth: Admin-Flag muss stimmen
-    if not user.get("is_admin", False):
+    # Wenn kein Benutzer oder inaktiv → ablehnen
+    if not db_user or not db_user.is_active:
         raise HTTPException(status_code=403, detail="Keine Adminrechte")
 
-    return user
-
-
+    # Adminrechte bestätigt
+    return {
+        "id": db_user.id,
+        "username": db_user.username,
+        "is_2fa_enabled": db_user.is_2fa_enabled,
+    }

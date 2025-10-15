@@ -19,8 +19,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.core.deps import jinja_templates, context
 from app.core.database import get_db
-from app.core.models import MailerConfig
-from app.services.auth_service import verify_login, make_user
+from app.core.models import MailerConfig, AdminUser
+from app.services.auth_service import verify_login, make_user, verify_2fa_token
 from app.core.constants import INITIAL_ADMIN_USER, INITIAL_PASSWORD
 
 auth_ui_router = APIRouter(include_in_schema=False)
@@ -60,20 +60,33 @@ async def login_submit(
     success, error = verify_login(db, email, password)
 
     if success:
-        # sauberes User-Objekt in Session speichern
+        # Benutzer aus DB laden
+        db_user = db.query(AdminUser).filter(AdminUser.username == email).first()
+
+        # Wenn 2FA aktiv → Zwischenstufe
+        if db_user and db_user.is_2fa_enabled:
+            request.session["pending_2fa_user"] = db_user.username
+            return RedirectResponse("/2fa-verify", status_code=303)
+
+        # sonst normaler Login
         request.session["user"] = make_user(email, is_admin=True)
         return RedirectResponse("/", status_code=303)
 
     # Fehlerfall -> Fehlermeldung an Template
-    return jinja_templates.TemplateResponse(
-        "login.html",
-        context(request,
-            auth_method="email" if (INITIAL_ADMIN_USER and INITIAL_PASSWORD) or (config and config.auth_method == "email") else None,
-            using_env_login=bool(INITIAL_ADMIN_USER and INITIAL_PASSWORD),
-            error_message=error or "❌ Ungültige E-Mail oder Passwort."
-        ),
-        status_code=401,
-    )
+    else:
+        auth_method = (
+            "email" if (INITIAL_ADMIN_USER and INITIAL_PASSWORD)
+            else (config.auth_method if config and config.auth_method else "oauth")
+        )
+        return jinja_templates.TemplateResponse(
+            "login.html",
+            context(request,
+                auth_method=auth_method,
+                using_env_login=bool(INITIAL_ADMIN_USER and INITIAL_PASSWORD),
+                error_message=error or "❌ Ungültige E-Mail oder Passwort."
+            ),
+            status_code=401,
+        )
 
 
 # ---------------------------
@@ -150,3 +163,50 @@ async def oauth_callback(request: Request, db: Session = Depends(get_db)):
 
     request.session["user"] = user_email
     return RedirectResponse("/admin", status_code=303)
+
+
+# ---------------------------
+# Zwei-Faktor-Authentifizierung
+# ---------------------------
+from fastapi import Form
+from app.services.auth_service import verify_2fa_token
+from app.core.models import AdminUser
+
+@auth_ui_router.get("/2fa-verify")
+async def two_factor_form(request: Request):
+    """Zeigt das Eingabeformular für den 6-stelligen Authenticator-Code."""
+    pending_user = request.session.get("pending_2fa_user")
+    if not pending_user:
+        return RedirectResponse("/login", status_code=303)
+
+    return jinja_templates.TemplateResponse(
+        "2fa_verify.html",
+        context(request, username=pending_user, error=None),
+    )
+
+
+@auth_ui_router.post("/2fa-verify")
+async def two_factor_verify(
+    request: Request,
+    token: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Verifiziert den 2FA-Code und loggt den Benutzer ein."""
+    pending_user = request.session.get("pending_2fa_user")
+    if not pending_user:
+        return RedirectResponse("/login", status_code=303)
+
+    user = db.query(AdminUser).filter(AdminUser.username == pending_user).first()
+    if not user or not verify_2fa_token(user, token):
+        return jinja_templates.TemplateResponse(
+            "2fa_verify.html",
+            context(request, username=pending_user, error="❌ Ungültiger Code oder abgelaufen."),
+            status_code=401,
+        )
+
+    # ✅ Erfolgreich
+    request.session.pop("pending_2fa_user", None)
+    request.session["user"] = make_user(user.username, is_admin=True)
+    request.session["2fa_valid"] = True
+
+    return RedirectResponse("/", status_code=303)

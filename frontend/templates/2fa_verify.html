@@ -1,0 +1,36 @@
+<!--
+===============================================================================
+Project   : gratulo
+Template  : 2fa_verify.html
+Created   : 15.10.2025
+Author    : Florian
+Purpose   : This Template provides a form for users to verify their 2FA token.
+===============================================================================
+-->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-20 bg-white p-8 rounded-lg shadow">
+  <h1 class="text-2xl font-bold text-gray-800 mb-4">Zwei-Faktor-Authentifizierung</h1>
+  <p class="text-gray-600 mb-6">
+    Hallo <strong>{{ username }}</strong>, bitte gib den 6-stelligen Code aus deiner Authenticator-App ein.
+  </p>
+
+  {% if error %}
+  <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded mb-4">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form action="/2fa-verify" method="post" class="space-y-4">
+    <input type="text" name="token" maxlength="6" pattern="[0-9]{6}" required
+           autofocus
+           class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-center tracking-widest text-lg">
+    <button type="submit" class="btn btn-blue w-full">Bestätigen</button>
+  </form>
+
+  <div class="mt-4 text-center text-sm text-gray-500">
+    <a href="/login" class="underline text-gray-600 hover:text-gray-800">Zurück zum Login</a>
+  </div>
+</div>
+{% endblock %}

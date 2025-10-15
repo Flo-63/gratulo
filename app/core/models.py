@@ -14,7 +14,7 @@ Purpose   : This module provides database models for the Gratulo application.
 
 
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Boolean, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
@@ -26,17 +26,19 @@ from sqlalchemy.types import TypeDecorator, Integer
 
 class SQLiteBoolean(TypeDecorator):
     """
-    Custom TypeDecorator for SQLite to handle boolean-like values.
+    Type decorator that maps Python's boolean values to SQLite's integer type for
+    database storage and retrieval.
 
-    This class extends TypeDecorator from SQLAlchemy to provide a custom implementation
-    for handling boolean-like values in SQLite, which does not have a native BOOLEAN type.
-    It overrides the binding and result processing to ensure proper storage and retrieval
-    of boolean values as integers, while maintaining compatibility with Python's
-    True/False.
+    This class ensures that Python boolean values (`True` and `False`) are
+    correctly interpreted and stored as SQLite integers (`1` and `0` respectively)
+    and that SQLite integers are properly converted back to Python booleans upon
+    retrieval.
 
     Attributes:
-        impl (TypeEngine): The SQLAlchemy implementation type, in this case, Integer.
-        cache_ok (bool): Indicates if the type decorator is safe to cache. It is set to True.
+        impl (TypeEngine): Specifies that the underlying database storage will use
+            SQLite's Integer type.
+        cache_ok (bool): Indicates whether the type decorator is safe for result
+            caching.
     """
     impl = Integer
     cache_ok = True
@@ -56,17 +58,16 @@ class SQLiteBoolean(TypeDecorator):
 
 class Template(Base):
     """
-    Represents a template entity used for storing template-related metadata
-    and content.
+    Represents a template with unique name and associated HTML content.
 
-    This class is typically associated with a database table for managing
-    templates effectively. It includes attributes such as an identifier,
-    name, and HTML content of the template.
+    The Template class is used to define and store information about specific
+    templates, including their unique names and corresponding HTML content. It is
+    also mapped to a database table for persistence.
 
     Attributes:
-        id (int): Unique identifier for the template.
-        name (str): Unique name of the template.
-        content_html (str): HTML content of the template.
+        id (int): The unique identifier for each template.
+        name (str): The unique name of the template, which serves as its identifier.
+        content_html (str): The HTML content associated with the template.
     """
     __tablename__ = "templates"
 
@@ -76,27 +77,23 @@ class Template(Base):
 
 class Member(Base):
     """
-    Represents a member of a group with personal and group-related attributes.
+    Represents a member entity in the database.
 
-    This class is used to model a member's information, including personal details,
-    group associations, and data deletion status. It supports features such as
-    encrypted fields for personal data, soft deletion, and relationships to other
-    entities. It is designed to work with SQLAlchemy for database interactions.
+    The class models a member with personal details and group association,
+    with attributes to manage GDPR-compliant soft deletion functionality.
 
     Attributes:
-        id (int): The unique identifier for the member.
-        firstname (EncryptedType): The member's first name, stored as encrypted data.
-        lastname (EncryptedType): The member's last name, stored as encrypted data.
-        email (EncryptedType): The member's email address, stored as encrypted data,
-            required to be unique.
-        birthdate (Date): The member's date of birth.
-        gender (str): The member's gender, represented as a one-character string.
-            Values include 'm' for male, 'w' for female, and 'd' for diverse.
-        member_since (Date): The date the member joined, which is optional and may be null.
-        group_id (int): The foreign key reference to the associated group's ID.
-        group (Group): The associated group object for the member.
-        is_deleted (SQLiteBoolean): Indicates whether the member has been soft-deleted.
-        deleted_at (DateTime): The timestamp of when the member was marked as deleted.
+        id (int): Unique identifier for the member.
+        firstname (EncryptedType): First name of the member, stored in an encrypted format.
+        lastname (EncryptedType): Last name of the member, stored in an encrypted format.
+        email (EncryptedType): Email address of the member, stored in an encrypted format and must be unique.
+        birthdate (Date): Birthdate of the member.
+        gender (str): Gender of the member represented by a single character ('m', 'w', 'd').
+        member_since (Date): Date on which the member joined, optional field.
+        group_id (int): Identifier for the group the member is associated with, optional field.
+        group (Group): Relationship to the associated group entity.
+        is_deleted (bool): Indicates whether the member has been marked as deleted for GDPR compliance.
+        deleted_at (DateTime): Timestamp for when the member was marked as deleted, optional field.
     """
     __tablename__ = "members"
 
@@ -124,17 +121,17 @@ class Member(Base):
 
 class ImportMeta(Base):
     """
-    Represents metadata about an import operation.
+    Represents metadata related to imports.
 
-    This class is used to store information about the most recent import,
-    including the timestamp of when it was last performed. It provides a
-    localized version of the last imported timestamp as a convenient
-    property.
+    This class maintains information about imports, including their
+    timestamps. It provides mechanisms to retrieve metadata related
+    to the import process and offers utilities for timezone
+    conversion. Primarily used for tracking and auditing purposes.
 
     Attributes:
-        id (int): The primary key of the import metadata.
-        last_imported (datetime): The timestamp of the last import, stored
-            in UTC.
+        id (int): The unique identifier for the import metadata record.
+        last_imported (datetime): The timestamp of the last import in
+            UTC timezone.
     """
     __tablename__ = "import_meta"
 
@@ -149,29 +146,30 @@ class ImportMeta(Base):
 
 class MailerJob(Base):
     """
-    Represents a mailer job for scheduling and managing email campaigns.
+    Represents a mailer job entity for defining email jobs with scheduling and
+    related configurations.
 
-    The MailerJob class is used to define email jobs with specific templates,
-    scheduling options, and groups. This is part of a system that manages
-    scheduled or event-driven email tasks. Each mailer job is linked to a
-    template and optionally associated with a specific group. The class also
-    supports scheduling via cron expressions or a specific date/time. Logs
-    related to mailer jobs are tracked and managed.
+    This class is used to store information about a specific mailer job, such
+    as its associated template, scheduling details, and related group data.
+    MailerJob provides relationships to related tables like Template, Group,
+    and MailerJobLog, enabling data to be organized efficiently.
 
     Attributes:
         id (int): Unique identifier for the mailer job.
-        name (str): Name of the mailer job. Must be unique.
-        template_id (int): Foreign key to the associated email template.
-        template (Template): Relationship to the template used by the mailer job.
-        subject (str): Subject line for the email.
-        selection (str): Specifies selection criteria (e.g., "birthday" or "entry").
-        group_id (int): Foreign key linking the job to a specific group.
-        group (Group): Relationship to the group associated with the mailer job.
-        cron (str): Cron expression for scheduling recurring jobs.
-        once_at (datetime): Specific date and time for one-time jobs.
-        created_at (datetime): When the mailer job was created (UTC time).
-        updated_at (datetime): Last update time of the mailer job (UTC time).
-        logs (list[MailerJobLog]): Logs related to this mailer job.
+        name (str): Name of the mailer job, must be unique.
+        template_id (int): Foreign key referencing the associated email template.
+        template (Template): Relationship to the Template entity.
+        subject (str): Subject line for the email, optional field.
+        selection (str): Criteria for job selection, e.g., "birthday" or "entry".
+        group_id (int): Foreign key referencing the associated group, optional.
+        group (Group): Relationship to the Group entity.
+        cron (str): Cron string for scheduling the email job, optional field.
+        once_at (datetime): Specific date and time for a one-time email job,
+            optional field.
+        created_at (datetime): UTC timestamp when the job was created.
+        updated_at (datetime): UTC timestamp when the job was last updated.
+        logs (list[MailerJobLog]): Relationship to MailerJobLog entities, with
+            cascading delete-orphan behavior.
     """
     __tablename__ = "mailer_jobs"
 
@@ -222,27 +220,25 @@ class MailerJob(Base):
 
 class MailerJobLog(Base):
     """
-    Represents a log entry for a mailer job.
+    Represents a log entry for a specific mailer job.
 
-    This class captures detailed information about individual executions of
-    mailer jobs, including execution time, status, performance metrics, and
-    any associated error counts. It supports relationships with the parent
-    `MailerJob` entity and provides utility properties for local timezone
-    conversion and human-readable cron expressions.
+    This class captures detailed information regarding the execution of a mailer
+    job, including timestamps, execution status, and performance metrics. It is
+    linked to a mailer job instance to maintain an audit trail of operations and
+    their respective outcomes.
 
     Attributes:
-        id (int): Unique identifier for the log entry.
-        job_id (int): Foreign key that references the associated mailer job.
-        job (MailerJob): Relationship to the mailer job that owns this log.
-        executed_at (datetime): Timestamp when the mailer job was executed
-            (in UTC).
-        logical_date (date): Business or logical date for the log entry's
-            execution.
-        status (str): Status of the execution, e.g., "ok", "failed", etc.
-        details (str): Additional details or notes about the execution.
-        duration_ms (int): Duration of the execution in milliseconds.
-        mails_sent (int): Number of emails successfully sent during execution.
-        errors_count (int): Number of errors encountered during execution.
+        id (int): Unique identifier of the mailer job log entry.
+        job_id (int): Identifier linking the log entry to a specific mailer job.
+        job (MailerJob): Relationship mapping to the corresponding MailerJob entity.
+        executed_at (datetime): Timestamp indicating when the job log was created.
+        logical_date (date, optional): Logical date associated with the log entry,
+            used for grouping or scheduling purposes.
+        status (str): Status of the execution, typically indicating success or failure.
+        details (str, optional): Detailed description or notes about the job execution.
+        duration_ms (int, optional): Duration of the job execution in milliseconds.
+        mails_sent (int, optional): Number of mails successfully sent during the execution.
+        errors_count (int, optional): Number of errors encountered during the execution.
     """
     __tablename__ = "mailer_job_logs"
 
@@ -277,37 +273,38 @@ class MailerJobLog(Base):
 
 class MailerConfig(Base):
     """
-    Represents the configuration settings for a mailer system.
+    Represents the configuration settings for a mailer service.
 
-    This class defines the necessary attributes required to configure and manage
-    a mailer, such as SMTP settings, authentication methods, OAuth configurations,
-    and administrative email management. It is designed to support flexible setup
-    for both standard email login and OAuth-based authentication methods.
+    This class is part of the database model and contains all necessary
+    attributes required for configuring both standard SMTP settings as
+    well as OAuth-based email settings. It supports features like TLS,
+    credential encryption, and storage for administrative email addresses.
 
     Attributes:
-        id (int): Unique identifier for the mailer configuration.
+        id (int): Primary key for the mailer configuration record.
 
-        smtp_host: The SMTP host used for email transmission.
-        smtp_port (int): The SMTP port used; defaults to 587.
-        smtp_user: The username for the SMTP server authentication.
-        smtp_password: The password for the SMTP server authentication.
-        use_tls (bool): Indicates whether TLS is used for the SMTP connection.
-        from_address: The email address used as the sender in outgoing emails.
+        smtp_host (EncryptedType): The SMTP server hostname or IP address.
+        smtp_port (int): The port used for SMTP communication. Defaults to 587.
+        smtp_user (EncryptedType): The username to authenticate with the
+            SMTP server.
+        smtp_password (EncryptedType): The password used for SMTP authentication.
+        use_tls (bool): Indicates whether TLS encryption is used during SMTP
+            communication. Defaults to True.
+        from_address (EncryptedType): The email address used as the sender address
+            in outgoing emails.
 
-        auth_method (str): The authentication method; defaults to "email".
-            Could be "email" for standard email login or "oauth" for OAuth-based
-            authentication.
+        auth_method (str): The authentication method for sending emails, which
+            can be either "email" (default) or "oauth".
 
-        login_email: The email address used for standard email login authentication.
-        login_password (str): The password associated with the email address used
-            for login.
+        oauth_client_id (EncryptedType or None): The client ID used for OAuth
+            authentication, if applicable.
+        oauth_client_secret (EncryptedType or None): The client secret used for
+            OAuth authentication, if applicable.
+        oauth_provider_url (str or None): The URL for the OAuth provider.
+        oauth_redirect_uri (str or None): The redirect URI used for OAuth flows.
 
-        oauth_client_id: The OAuth client ID for authentication.
-        oauth_client_secret: The OAuth client secret for authentication.
-        oauth_provider_url (str): The URL of the OAuth provider.
-        oauth_redirect_uri (str): The URI used for OAuth redirection.
-
-        admin_emails (str): Comma-separated list of administrative email addresses.
+        admin_emails (str or None): A comma-separated list of administrative email
+            addresses for notifications or other purposes.
     """
     __tablename__ = "mailer_config"
 
@@ -324,10 +321,6 @@ class MailerConfig(Base):
     # Authentifizierung
     auth_method = Column(String(20), default="email", nullable=False)  # "email" oder "oauth"
 
-    # Email-Login
-    login_email = Column(EncryptedType, nullable=True)
-    login_password = Column(String, nullable=True)
-
     # OAuth-Konfiguration
     oauth_client_id = Column(EncryptedType, nullable=True)
     oauth_client_secret = Column(EncryptedType, nullable=True)
@@ -339,16 +332,16 @@ class MailerConfig(Base):
 
 class MailerJobLock(Base):
     """
-    Represents a lock for mailer jobs to manage concurrent processing.
+    Represents a lock for job scheduling in a mailing system.
 
-    The MailerJobLock model ensures that mailer jobs are executed in
-    a controlled manner, preventing multiple processes from acting
-    on the same job simultaneously. This class primarily tracks job
-    identifiers and the time at which the lock was acquired.
+    This class is designed to handle and manage job locks in a mailing system.
+    It tracks when a job lock is acquired and provides functionality to convert
+    the acquisition time to a local timezone.
 
     Attributes:
-        job_id (int): The unique identifier for the mailer job lock.
-        acquired_at (datetime): The UTC timestamp when the lock was acquired.
+        job_id (int): The unique identifier for the job lock.
+        acquired_at (datetime.datetime): The UTC timestamp when the job lock
+            was acquired.
     """
     __tablename__ = "mailer_job_locks"
     job_id = Column(Integer, primary_key=True)
@@ -361,19 +354,19 @@ class MailerJobLock(Base):
         return self.acquired_at.astimezone(LOCAL_TZ) if self.acquired_at else None
 
 class Group(Base):
-    """
-    Represents a group entity in the database.
+    """Represents a group entity within the system.
 
-    A class that defines a group which can consist of multiple members and can
-    be associated with various mailer jobs. It also provides attributes to
-    identify and manage groups, such as marking a group as default.
+    This class is used to define a group with unique attributes such as name and
+    default status. It also establishes relationships with other entities, such
+    as members and mailer jobs. A group serves as a container for organizing
+    related members and their associated activities.
 
     Attributes:
-        id (int): Unique identifier for the group.
-        name (str): The name of the group. Must be unique.
-        members (List[Member]): The list of members associated with the group.
-        mailer_jobs (List[MailerJob]): The list of mailer jobs associated with the group.
-        is_default (bool): Indicates whether this group is the default group.
+        id (int): The unique identifier of the group.
+        name (str): The name of the group, must be unique and not null.
+        members (list): A list of members associated with the group.
+        mailer_jobs (list): A list of mailer jobs associated with the group.
+        is_default (bool): Indicates if the group is a default group.
     """
     __tablename__ = "groups"
 
@@ -386,3 +379,41 @@ class Group(Base):
     is_default = Column(Boolean, default=False, nullable=False)
 
 
+class AdminUser(Base):
+    """Represents an admin user in the system with authentication and metadata.
+
+    This class is used to define the database schema and interaction for
+    admin users. It includes fields for authentication credentials,
+    two-factor authentication support, and metadata such as creation time
+    and last login. The `AdminUser` class inherits from `Base` and represents
+    the `admin_users` table in the database.
+
+    Attributes:
+        id (int): The unique identifier for the admin user.
+        username (str): The unique username for the admin user.
+        password_hash (str): The hashed password of the admin user.
+        is_2fa_enabled (bool): Indicates if two-factor authentication is enabled.
+        created_at (datetime): The timestamp when the admin user was created.
+        last_login_at (datetime): The timestamp of the last login of the admin user.
+        is_active (bool): Indicates if the admin user account is active.
+    """
+    __tablename__ = "admin_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+
+    # 2FA-Felder
+    totp_secret = Column(String(64), nullable=True)
+    is_2fa_enabled = Column(SQLiteBoolean, nullable=False, default=False, server_default="0")
+    backup_codes = Column(JSON, nullable=True)
+
+    # Metadaten
+    created_at = Column(DateTime(timezone=True),
+                        default=lambda: datetime.now(timezone.utc),
+                        nullable=False)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+    is_active = Column(SQLiteBoolean, nullable=False, default=True, server_default="1")
+
+    def __repr__(self):
+        return f"<AdminUser(username={self.username!r}, active={self.is_active})>"

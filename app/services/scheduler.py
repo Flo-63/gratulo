@@ -20,8 +20,11 @@ from typing import Optional
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
-from app.services.mailer_service import execute_job_by_id  # schlanker Orchestrations-Call
+from app.services.mailer_service import execute_job_by_id
 from app.core import models
+
+from app.services.mail_queue import process_mail_queue
+from app.core.constants import MAIL_QUEUE_INTERVAL_SECONDS
 
 logger = logging.getLogger(__name__)
 _scheduler: Optional[BackgroundScheduler] = None
@@ -65,21 +68,24 @@ def _on_job_event(event) -> None:
 def start_scheduler() -> None:
     """
     Starts the task scheduler.
-
-    This function retrieves the scheduler instance and starts it if it is not
-    already running. Upon starting the scheduler, an informational log message
-    is generated.
-
-    Raises:
-        None
-
-    Returns:
-        None
     """
     sched = _get_scheduler()
     if not sched.running:
         sched.start()
         logger.info("[Scheduler] gestartet")
+
+        # 📨 Mail-Queue-Worker hinzufügen
+        try:
+            sched.add_job(
+                process_mail_queue,
+                "interval",
+                seconds=MAIL_QUEUE_INTERVAL_SECONDS,
+                id="mail_queue_worker",
+                replace_existing=True,
+            )
+            logger.info(f"[Scheduler] Mail-Queue-Worker alle {MAIL_QUEUE_INTERVAL_SECONDS}s aktiviert.")
+        except Exception as e:
+            logger.error(f"[Scheduler] Fehler beim Starten des Mail-Queue-Workers: {e}")
 
 
 def stop_scheduler() -> None:
@@ -208,3 +214,9 @@ def resync_all_jobs(jobs: list[models.MailerJob]) -> None:
     """
     for j in jobs:
         register_job(j)
+
+def get_scheduler() -> BackgroundScheduler:
+    """
+    Returns the active global BackgroundScheduler instance, initializing it if necessary.
+    """
+    return _get_scheduler()

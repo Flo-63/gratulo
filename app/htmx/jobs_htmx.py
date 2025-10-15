@@ -16,8 +16,8 @@ Purpose   : This module provides HTMX endpoints for managing jobs.
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 
-from datetime import timezone
-
+from datetime import timezone, datetime
+from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -27,6 +27,9 @@ from app.core import models
 from app.core.constants import LOCAL_TZ
 from app.helpers.cron_helper import cron_to_human
 from app.services.job_service import save_job
+from app.services.mail_queue import get_queue_status
+from app.core.constants import MAIL_QUEUE_INTERVAL_SECONDS, RATE_LIMIT_WINDOW
+from app.services.scheduler import get_scheduler
 
 
 jobs_htmx_router = APIRouter(
@@ -39,19 +42,18 @@ jobs_htmx_router = APIRouter(
 @jobs_htmx_router.get("/list", response_class=HTMLResponse)
 def jobs_list(request: Request, db: Session = Depends(get_db)):
     """
-    Fetches and displays a list of mailer jobs from the database. The jobs are ordered
-    by their creation time in descending order. Each job's details are processed to
-    enhance the representation (e.g., converting cron expressions to human-readable
-    format, adjusting timestamps to local timezone), and the enriched data is used
-    to render an HTML template for displaying the list.
+    Fetches and renders a list of jobs in a human-readable format.
+
+    This function queries the database for all mailer jobs, orders them by the creation time
+    in descending order, converts certain fields (such as cron schedules and timestamps) into
+    more human-readable formats, and then uses a Jinja2 template to render and return the result.
 
     Args:
-        request (Request): The HTTP request object.
-        db (Session): The database session dependency used to query the database.
+        request: The HTTP request object.
+        db: The database session provided by FastAPI dependency injection.
 
     Returns:
-        HTMLResponse: Renders a template with the list of jobs and their enriched
-        details.
+        HTMLResponse: Rendered HTML content displaying the list of jobs.
     """
     jobs = db.query(models.MailerJob).order_by(models.MailerJob.created_at.desc()).all()
 
@@ -97,36 +99,33 @@ async def save_job_endpoint(
     weekday: str | None = Form(None),
     monthday: str | None = Form(None),
 ):
-    """Handles the creation or update of a job entity and saves it to the database.
-
-    This endpoint processes the form data submitted through an HTML form and performs
-    necessary validations, including validating the provided template ID and group
-    selection. If no group is explicitly provided, it defaults to a pre-defined group.
-    Upon successful validation, the job entity is saved to the database.
-
-    Raises:
-        HTTPException: If the template ID is invalid or no valid group is found.
-        HTTPException: Returns with a status code 400 when validations fail.
-        HTTPException: Generated if Group cannot be resolved or retrieved.
+    """
+    Handles saving of a job based on provided form data and validates input parameters. Ensures association
+    with a valid group and performs required database operations. Returns a response upon successful
+    completion.
 
     Args:
-        request (Request): The incoming HTTP request object.
-        db (Session): The database session dependency injection for ORM operations.
-        id (int | None): The ID of the job to update; None if creating a new job.
-        name (str): The name of the job.
-        subject (str | None): The subject line for the job; optional.
-        template_id (str): The ID of the template associated with the job, as a string.
-        mode (str): The mode of the job, such as 'once' or 'recurring'.
-        once_at (str | None): The specific timestamp for a one-time job creation, optional.
-        selection (str | None): Additional job selection parameter, optional.
-        group_id (int | None): The group ID associated with the job, optional.
-        interval_type (str | None): Type of interval, such as 'weekly' or 'monthly', optional.
-        time (str | None): The time of the job execution, optional.
-        weekday (str | None): The day of the week for execution, optional.
-        monthday (str | None): The day of the month for execution, optional.
+        request: The inbound HTTP request object.
+        db: Database session dependency.
+        id: Optional job ID to identify an existing job for update.
+        name: Name of the job; required form field.
+        subject: Optional subject of the job.
+        template_id: Template identifier as a form field; required field and validated as an integer.
+        mode: Mode of the job (e.g., scheduling type); required form field.
+        once_at: Optional string form field for one-time schedule.
+        selection: Optional string for selection criteria.
+        group_id: Optional group ID for assigning the job to a specific group.
+        interval_type: Optional interval type for scheduling, if applicable.
+        time: Optional time string for scheduling.
+        weekday: Optional weekday string for scheduling weekly intervals.
+        monthday: Optional monthday string for scheduling monthly intervals.
+
+    Raises:
+        HTTPException: If template_id is invalid or not provided.
+        HTTPException: If no valid group is found or specified.
 
     Returns:
-        Response: A response object with status code 200 and optional redirect headers.
+        Response: An HTTP 200 response with a redirect header for successful operation.
     """
 
     # Validierung Template
@@ -164,20 +163,24 @@ async def save_job_endpoint(
 @jobs_htmx_router.delete("/{job_id}", response_class=HTMLResponse)
 def delete_job(job_id: int, request: Request, db: Session = Depends(get_db)):
     """
-    Deletes a job with the given job ID and updates the job list rendered in the
-    template. The function handles deletion of a job entry in the database, and it then fetches
-    all remaining jobs from the database to update the response.
+    Deletes a specific job by its ID and returns a response with updated job data.
+
+    This function retrieves a job using its unique ID. If the job is found, it deletes it
+    from the database, commits changes, and retrieves the list of all remaining jobs. The
+    jobs are formatted for a user-friendly display, including attributes such as the human-readable
+    cron string and timezone-aware timestamps. The resulting job list is then rendered using
+    a template response.
 
     Args:
-        job_id (int): ID of the job to be deleted.
-        request (Request): FastAPI request object.
-        db (Session): Database session dependency instance for executing queries.
-
-    Returns:
-        HTMLResponse: Rendered HTML template with the updated list of jobs.
+        job_id (int): ID of the job to delete.
+        request (Request): An incoming HTTP request object.
+        db (Session): Database session dependency injected using FastAPI's Depends.
 
     Raises:
-        HTTPException: If the job with the specified ID does not exist in the database.
+        HTTPException: Raised when a job with the given ID is not found, with a 404 status code.
+
+    Returns:
+        HTMLResponse: A rendered HTML response containing the updated list of jobs.
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:
@@ -213,20 +216,24 @@ def delete_job(job_id: int, request: Request, db: Session = Depends(get_db)):
 @jobs_htmx_router.get("/{job_id}/logs", response_class=HTMLResponse)
 def job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
     """
-    Fetch and display logs for a specific job.
+    Retrieve and display job logs.
 
-    This endpoint retrieves the logs related to a specific job identified by its job ID.
-    It queries the database to obtain job logs limited to the most recent 50 entries.
-    The logs are processed to ensure proper time zone handling before being displayed,
-    and the information is returned as an HTML response.
+    This function handles HTTP GET requests to fetch a specific job's logs by its job ID.
+    It retrieves the job details and associated logs from the database, formats their
+    timestamps to account for correct timezone information, and renders an HTML response
+    using a Jinja2 template.
 
     Args:
-        job_id (int): The unique identifier of the job for which logs are being requested.
-        request (Request): The HTTP request object to pass into the template context.
-        db (Session): The database session dependency to use for database queries.
+        job_id (int): The ID of the job for which logs are to be retrieved.
+        request (Request): The HTTP request object.
+        db (Session): The SQLAlchemy database session dependency.
+
+    Raises:
+        HTTPException: If the job with the given job_id does not exist in the database.
 
     Returns:
-        HTMLResponse: An HTML response rendering the job logs modal.
+        HTMLResponse: Rendered HTML content containing the job logs, displayed using a
+        Jinja2 template.
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:
@@ -250,24 +257,27 @@ def job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
     )
 @jobs_htmx_router.delete("/{job_id}/logs", response_class=HTMLResponse)
 def delete_job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
-    """Deletes the logs associated with a specific job.
+    """
+    Deletes the logs associated with the specified job ID and returns a refreshed
+    HTML modal with an empty log list for the corresponding job.
 
-    This function deletes all log entries related to a given job by its `job_id`
-    from the database. If the specified job does not exist, it raises an HTTP 404
-    error. After deleting the logs, it re-renders the modal with an empty log list.
+    This endpoint removes all logs for a specific job from the database and
+    renders an updated template to reflect the deletion.
 
     Args:
-        job_id (int): The ID of the job whose logs are to be deleted.
-        request (Request): The HTTP request object containing request details.
-        db (Session): The database session used for querying and updating records.
-
-    Returns:
-        HTMLResponse: A rendered HTML response for the updated modal with an empty
-        log list.
+        job_id (int): The unique identifier of the job for which logs need to be
+            deleted.
+        request (Request): The HTTP request instance.
+        db (Session): The database session dependency used to interact with the
+            database.
 
     Raises:
-        HTTPException: If the job with the given `job_id` is not found, an
-        exception with a 404 status code is raised.
+        HTTPException: If the job with the specified job ID is not found in the
+            database.
+
+    Returns:
+        HTMLResponse: The rendered HTML template response for the modal with an
+            empty job log list.
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:
@@ -281,3 +291,81 @@ def delete_job_logs(job_id: int, request: Request, db: Session = Depends(get_db)
         "partials/job_logs_modal.html",
         context(request, job=job, logs=[], local_tz=LOCAL_TZ)
     )
+# ---------------------------------------------------------------------------
+# Mailer Queue Status
+# ---------------------------------------------------------------------------
+
+@jobs_htmx_router.get("/queue-status", response_class=HTMLResponse)
+def queue_status(request: Request):
+    """
+    Fetches and renders the current status of the queue including the number of queued items,
+    remaining rate limit, time until the next run, and the time of the last dispatch.
+
+    Args:
+        request (Request): The incoming HTTP request object.
+
+    Returns:
+        str: A formatted HTML string representing the current queue status.
+    """
+    status = get_queue_status()
+    return f"""
+    <div id='queue-status' class='bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 flex justify-between items-center'>
+        <div class='flex items-center gap-3'>
+            <span>📨 <strong>{status['queued']}</strong> in Queue</span>
+            <span>🚀 <strong>{status['rate_limit_remaining']}</strong> frei</span>
+            <span>⏱️ Nächster Lauf: {status.get('next_run_in', '?')} s</span>
+        </div>
+        <div class='text-gray-500 text-xs'>
+            Letzter Versand: {status.get('last_sent', '-') or '-'}
+        </div>
+    </div>
+    """
+
+
+@jobs_htmx_router.get("/job-status", response_class=HTMLResponse)
+def job_status(request: Request):
+    """
+    Retrieves and renders the current status of a job queue, including the number of jobs
+    queued, the rate limit window, and the interval until the next scheduled job execution.
+
+    This endpoint returns an HTML response with information about mail queue scheduling
+    and rate limiting. The job queue status is fetched from the queue manager, and the time
+    remaining until the next scheduled job run is calculated. The retrieved data is rendered
+    into a template for display.
+
+    Args:
+        request (Request): The HTTP request object.
+
+    Returns:
+        HTMLResponse: Rendered HTML of the job status page.
+    """
+
+    scheduler = get_scheduler()
+    status = get_queue_status() or {}
+    status.setdefault("queued", 0)
+    status.setdefault("next_run_in", 0)
+    status.setdefault("rate_limit_window", RATE_LIMIT_WINDOW)
+
+    job = scheduler.get_job("mail_queue_worker")
+    next_run = job.next_run_time if job else None
+
+    tz = getattr(scheduler, "timezone", ZoneInfo("UTC"))
+    now = datetime.now(tz)
+
+    next_run_in = 0
+    if next_run:
+        delta = (next_run - now).total_seconds()
+        next_run_in = max(0, int(delta))
+
+    return jinja_templates.TemplateResponse(
+        "partials/job_status.html",
+        context(
+            request,
+            status={**status, "next_run_in": next_run_in},
+            rate_limit_window=RATE_LIMIT_WINDOW,
+            mail_queue_interval=MAIL_QUEUE_INTERVAL_SECONDS,
+        )
+    )
+
+
+
