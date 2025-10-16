@@ -20,7 +20,7 @@ Recipients and groups can be:
 - imported via CSV list,
 - or synchronized through the REST API.
 
-Template creation uses **TinyMCE** (free tier, registration required).
+Template editor uses **TinyMCE** (GPL Community Edition). 
 
 ---
 
@@ -41,34 +41,36 @@ Template creation uses **TinyMCE** (free tier, registration required).
 
 - **Automated congratulatory email generation** (birthdays, anniversaries, and more)
 - **Group & Member Management** – manually, via import, or through the API
-- **Template-based email creation** via **TinyMCE**
+- **Template-based email creation** via **TinyMCE** (Community Edition)
 - **Job Scheduler** powered by **APScheduler**
 - **Secure authentication** (JWT via `python-jose`)
+- **Configurable for 2FA with TOTP** for Admins, using **Google Authenticator** or similar 
 - **SQLite or PostgreSQL** support via SQLAlchemy
-- **Asynchronous mail delivery** using `aiosmtplib`
+- **Asynchronous mail delivery** using `aiosmtplib` via Redis queuing
+- **Mail throttle** with configurable rate limits
+- **Queue Status Monitoring and Job Logs** viewable directly in the admin interface
 - **Configurable mailer settings** through a dedicated UI section
-- **REST API** with interactive **Swagger** and **ReDoc** documentation built into the app
+- **REST API** (can be switched off) with interactive **Swagger** and **ReDoc** documentation built into the app
 - **Redis protection** against brute-force login attempts
 - **Encrypted storage** for all sensitive data (AES-based field-level encryption)
 - **GDPR-compliant deletion** – supports *soft delete* and *secure wipe*
 - **Jinja2-based templates** for consistent UI
-- **Job logs** viewable directly in the admin interface
 
 ---
 
 ## Tech Stack
 
-| Component | Technology |
-|------------|-------------|
-| **Backend** | FastAPI (Starlette) |
-| **Database** | SQLite (default) / PostgreSQL (optional) |
-| **ORM** | SQLAlchemy + Alembic |
-| **Templates** | Jinja2 |
-| **Scheduling** | APScheduler + cron-descriptor |
-| **Auth** | Passlib + bcrypt + python-jose |
-| **Email** | aiosmtplib + email-validator |
-| **Cache / Limiting** | Redis + fastapi-limiter |
-| **Frontend Editor** | TinyMCE |
+| Component                    | Technology |
+|------------------------------|-------------|
+| **Backend**                  | FastAPI (Starlette) |
+| **Database**                 | SQLite (default) / PostgreSQL (optional) |
+| **ORM**                      | SQLAlchemy + Alembic |
+| **Templates**                | Jinja2 |
+| **Scheduling**               | APScheduler + cron-descriptor |
+| **Auth**                     | Passlib + bcrypt + python-jose |
+| **Email**                    | aiosmtplib + email-validator |
+| **Cache / Queue / Limiting** | Redis + fastapi-limiter |
+| **Frontend Editor**          | TinyMCE |
 
 ---
 
@@ -119,9 +121,19 @@ HTTPS_ONLY=false                 # Enforce HTTPS cookies in production
 # Use this for Docker / Docker Compose (Redis as service)
 REDIS_URL=redis://redis:6379/0
 
+# Rate Limiter for mail send
+RATE_LIMIT_MAILS = 25       # max. Mails per window (Google accepts up to 50/minute)
+RATE_LIMIT_WINDOW = 60      # Window (seconds) for rate limit
+
+# Frequency for running mail processing queue
+MAIL_QUEUE_INTERVAL_SECONDS = 120
+
+
 # ---------------------------------------------------------------------
-# Service Authentication
+# REST / Service Authentication
 # ---------------------------------------------------------------------
+ENABLE_REST_API=True | False    # Allows to disable REST Endpoints if set to false. Default: True 
+
 SERVICE_USER_NAME=service_api
 SERVICE_USER_PASSWORD=supersecret123
 
@@ -143,9 +155,11 @@ This configuration defines:
 - Encryption key (APP_SECRET) for Fernet-based field encryption.
 - Session and HTTPS settings for cookie management.
 - Redis connection for rate limiting and brute-force protection.
+- Throttling mail send
 - JWT security tokens for API authentication.
 - Admin bootstrap credentials for first-time setup.
 - Base URL for link generation inside email templates and redirects.
+- Disable REST API
 
 When running via Docker Compose, the app automatically connects to the Redis service
 using the internal hostname redis (REDIS_URL=redis://redis:6379/0).
@@ -179,29 +193,29 @@ gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```bash
 docker build -t gratulo .
 docker run -d -p 8000:8000 --env-file .env gratulo
+```
 This starts the application inside a container on port 8000.
 The .env file from your project root provides configuration (e.g., database, SMTP, Redis).
-```
-## Build with Docker Compose
+
+### Build with Docker Compose
 ```bash
 docker compose build --no-cache
 or
 docker compose up -d --force-recreate
 ```
-## Run with Docker Compose
-```
-bash
-docker-compose up -d
+### Run with Docker Compose
+```bash
+docker compose up -d
 ```
 This uses the included docker-compose.yml file, which provides all required services.
 You can view logs with:
 
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 And stop all containers with:
 ```bash
-docker-compose down
+docker compose down
 ```
 ---
 
@@ -224,8 +238,8 @@ redoc UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 This project is licensed under the
 **[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/)**.
 You are free to use, modify, and share the code **for noncommercial purposes only**.
-Commercial use requires a separate license.  
-See [`COMMERCIAL_LICENSE_EN.md`](./COMMERCIAL_LICENSE_EN.md) or [`COMMERCIAL_LICENSE_DE.md`](./COMMERCIAL_LICENSE_DE.md) for details.
+In case, Commercial use requires a separate license.  
+See [`COMMERCIAL_LICENSE_EN.md`](./COMMERCIAL_LICENSE_EN.md) for details.
 
 ---
 
@@ -242,17 +256,12 @@ See [`COMMERCIAL_LICENSE_EN.md`](./COMMERCIAL_LICENSE_EN.md) or [`COMMERCIAL_LIC
   Support for “special” occasions such as *round birthdays* (e.g., 30th, 40th, 50th)  
   or long-term anniversaries (e.g., 10-year memberships).
 
-- **Mail Delivery Queue via Redis**  
-  Asynchronous message queuing for better delivery performance and retry handling.
-
 -  **Dashboard for Sending Statistics**  
   Visual overview of sent, pending, and failed messages with filtering options.
 
 - **Notification Center & Scheduling Overview**  
   Centralized interface for upcoming events, scheduled tasks, and mail history.
 
-- **Multi-Language Template Support**  
-  Allow users to define localized message templates (e.g., German, English).
 ---
 
  *gratulo – celebrating people, one email at a time.*

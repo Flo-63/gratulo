@@ -4,309 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Some enhancements of documentation">
-      <change afterPath="$PROJECT_DIR$/app/core/rate_limiter.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/htmx/admin_users_htmx.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/mail_queue.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/mail_queue_status.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/CHANGELOG.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/bower.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/composer.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/icons/default/icons.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/icons/default/icons.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/icons/default/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/license.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/models/dom/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/models/dom/model.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/models/dom/model.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/notices.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/accordion/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/accordion/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/accordion/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/advlist/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/advlist/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/advlist/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/anchor/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/anchor/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/anchor/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autolink/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autolink/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autolink/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autoresize/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autoresize/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autoresize/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autosave/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autosave/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/autosave/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/charmap/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/charmap/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/charmap/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/code/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/code/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/code/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/codesample/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/codesample/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/codesample/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/directionality/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/directionality/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/directionality/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/emoticons/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/emoticons/js/emojiimages.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/emoticons/js/emojiimages.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/emoticons/js/emojis.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/emoticons/js/emojis.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/emoticons/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/emoticons/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/fullscreen/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/fullscreen/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/fullscreen/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ar.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/bg-BG.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/bg_BG.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ca.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/cs.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/da.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/de.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/el.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/en.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/es.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/eu.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/fa.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/fi.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/fr-FR.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/fr_FR.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/he-IL.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/he_IL.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/hi.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/hr.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/hu-HU.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/hu_HU.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/id.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/it.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ja.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/kk.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ko-KR.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ko_KR.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ms.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/nb-NO.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/nb_NO.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/nl.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/pl.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/pt-BR.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/pt-PT.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/pt_BR.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/pt_PT.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ro.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/ru.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/sk.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/sl-SI.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/sl_SI.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/sv-SE.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/sv_SE.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/th-TH.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/th_TH.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/tr.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/uk.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/vi.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/zh-CN.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/zh-TW.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/zh_CN.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/js/i18n/keynav/zh_TW.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/help/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/image/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/image/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/image/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/importcss/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/importcss/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/importcss/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/insertdatetime/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/insertdatetime/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/insertdatetime/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/link/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/link/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/link/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/lists/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/lists/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/lists/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/media/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/media/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/media/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/nonbreaking/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/nonbreaking/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/nonbreaking/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/pagebreak/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/pagebreak/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/pagebreak/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/preview/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/preview/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/preview/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/quickbars/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/quickbars/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/quickbars/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/save/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/save/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/save/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/searchreplace/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/searchreplace/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/searchreplace/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/table/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/table/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/table/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/visualblocks/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/visualblocks/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/visualblocks/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/visualchars/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/visualchars/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/visualchars/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/wordcount/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/wordcount/plugin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/plugins/wordcount/plugin.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/dark/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/dark/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/dark/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/dark/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/dark/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/default/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/default/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/default/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/default/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/default/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/document/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/document/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/document/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/document/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/document/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5-dark/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5-dark/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5-dark/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5-dark/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5-dark/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/tinymce-5/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/writer/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/writer/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/writer/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/writer/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/content/writer/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.inline.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.inline.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.inline.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.inline.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.inline.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.shadowdom.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.shadowdom.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.shadowdom.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.shadowdom.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.shadowdom.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide-dark/skin.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.inline.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.inline.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.inline.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.inline.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.inline.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.shadowdom.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.shadowdom.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.shadowdom.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.shadowdom.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.shadowdom.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/oxide/skin.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.inline.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.inline.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.inline.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.inline.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.inline.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.shadowdom.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.shadowdom.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.shadowdom.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.shadowdom.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.shadowdom.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5-dark/skin.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.inline.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.inline.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.inline.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.inline.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.inline.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/content.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.shadowdom.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.shadowdom.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.shadowdom.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.shadowdom.min.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.shadowdom.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/skins/ui/tinymce-5/skin.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/themes/silver/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/themes/silver/theme.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/themes/silver/theme.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/tinymce.d.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/tinymce.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce/tinymce.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/2fa_verify.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/2fa_setup.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/admin_user_editor.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/admin_user_list.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/templates/partials/job_status.html" afterDir="false" />
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="- Added commercial License">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/deps.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/deps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/helpers/mailer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/mailer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/helpers/security_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/security_helper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/auth_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/auth_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/mailer_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/mailer_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/scheduler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/ui/auth_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/auth_ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/ui/jobs_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/jobs_ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/ui/mailer_config_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/mailer_config_ui.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/jobs.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/jobs.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/mailer_config.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/mailer_config.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/template_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/template_editor.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README_DE.md" beforeDir="false" afterPath="$PROJECT_DIR$/README_DE.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -437,7 +138,7 @@
       <workItem from="1759684900208" duration="15786000" />
       <workItem from="1760096424357" duration="81000" />
       <workItem from="1760466877289" duration="1682000" />
-      <workItem from="1760509114032" duration="39535000" />
+      <workItem from="1760509114032" duration="48118000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -463,7 +164,23 @@
       <option name="project" value="LOCAL" />
       <updated>1759699683517</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Enhancements:&#10;- Full Admin user model&#10;- 2FA with TOTP&#10;- Use Redis for mail queuing&#10;- Use Redis for throttling / limiting mail send&#10;- Introduce Queue Status Monitoring on Job Page&#10;- Allow Disable of REST API&#10;- Switch to TinyMCE Community (GPL-Licensed deploymnent)">
+      <option name="closed" value="true" />
+      <created>1760561378913</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1760561378913</updated>
+    </task>
+    <task id="LOCAL-00005" summary="- Added commercial License">
+      <option name="closed" value="true" />
+      <created>1760566198347</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1760566198347</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -484,7 +201,9 @@
     <MESSAGE value="First Complete Version" />
     <MESSAGE value="Version ready for upload" />
     <MESSAGE value="Some enhancements of documentation" />
-    <option name="LAST_COMMIT_MESSAGE" value="Some enhancements of documentation" />
+    <MESSAGE value="Enhancements:&#10;- Full Admin user model&#10;- 2FA with TOTP&#10;- Use Redis for mail queuing&#10;- Use Redis for throttling / limiting mail send&#10;- Introduce Queue Status Monitoring on Job Page&#10;- Allow Disable of REST API&#10;- Switch to TinyMCE Community (GPL-Licensed deploymnent)" />
+    <MESSAGE value="- Added commercial License" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Added commercial License" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -494,7 +213,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1760557815021" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1760562649373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>

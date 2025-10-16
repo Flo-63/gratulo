@@ -9,7 +9,7 @@ Es können verschiedene Vorlagen für unterschiedliche Ereignisse und Empfänger
 Die Anwendung ist insbesondere für Vereine, Organisationen und Gruppen geeignet, die regelmäßig Glückwünsche oder Informationsmails versenden möchten.
 
 Empfänger und Gruppen können manuell gepflegt, per CSV-Datei importiert oder über eine API synchronisiert werden.  
-Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der kostenfreien Version verwendet (Registrierung erforderlich).
+Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der GPL Community Edition verwendet.
 
 ---
 
@@ -17,34 +17,38 @@ Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der kostenfreien Ver
 
 - Automatischer Versand von Glückwunsch-E-Mails (Geburtstage, Jubiläen usw.)
 - Verwaltung von Mitgliedern und Gruppen über UI, Import oder API
-- Vorlagenbasierte E-Mail-Erstellung über TinyMCE
+- Vorlagenbasierte E-Mail-Erstellung über TinyMCE Community Edition
 - Zeitgesteuerter Versand mit APScheduler
 - Sichere Authentifizierung mit JWT (python-jose)
+- 2FA mit TOTP wählbar, Nutzung von Google Authenticator oder ähnlichen 
 - Unterstützung für SQLite und PostgreSQL
 - Asynchroner E-Mail-Versand über aiosmtplib
+- Mail Queue mit Rate-Limiter für E-Mail-Versand
 - Konfigurierbare Mailer-Einstellungen in der Benutzeroberfläche
+- REST Api zur Verwaltung von Adressaten und Gruppen (abschaltbar)
 - API-Dokumentation direkt in der Anwendung (Swagger und ReDoc)
 - Schutz vor Brute-Force-Anmeldeversuchen mit Redis
 - Verschlüsselte Speicherung aller sensiblen Daten
 - DSGVO-konforme Löschmechanismen (Soft-Delete und Wipe)
-- Ansicht von Job-Logs in der UI
-- Installation in Docker Container (dockerfile und docker-compose sind dabei)
+- Ansicht des Queue Status und der Job-Logs in der UI
+- Installation in Docker Container (dockerfile und docker-compose.yml sind enthalten)
 
 ---
 
 ## Technische Basis
 
-| Komponente | Technologie |
-|-------------|-------------|
-| Backend | FastAPI |
-| Datenbank | SQLite (Standard) / PostgreSQL (optional) |
-| ORM | SQLAlchemy + Alembic |
-| Templates | Jinja2 |
-| Scheduler | APScheduler + cron-descriptor |
-| Authentifizierung | Passlib + bcrypt + python-jose |
-| E-Mail | aiosmtplib + email-validator |
-| Schutzmechanismen | Redis + fastapi-limiter |
-| Template-Editor | TinyMCE |
+| Komponente               | Technologie                               |
+|--------------------------|-------------------------------------------|
+| Backend                  | FastAPI                                   |
+| Datenbank                | SQLite (Standard) / PostgreSQL (optional) |
+| ORM                      | SQLAlchemy + Alembic                      |
+| Templates                | Jinja2                                    |
+| Scheduler                | APScheduler + cron-descriptor             |
+| Authentifizierung        | Passlib + bcrypt + python-jose            |
+| E-Mail                   | aiosmtplib + email-validator              |
+| E-Mail Queue und Limiter | Redis                                     |
+| Schutzmechanismus Login  | Redis + fastapi-limiter                   |
+| Template-Editor          | TinyMCE (Community Edition)               |
 
 ---
 
@@ -96,9 +100,15 @@ HTTPS_ONLY=false                 # HTTPS erzwingen (Produktionsmodus)
 # Für Docker / Docker Compose (Redis als Service im Container-Netzwerk)
 REDIS_URL=redis://redis:6379/0
 
+# Rate Limiter für Mailversand
+RATE_LIMIT_MAILS = 25       # max. Mails pro Zeitfenster (Google akzeptiert bis zu 50/Minute)
+RATE_LIMIT_WINDOW = 60      # Zeitfenster für Linit (sekunden) 
+
 # ---------------------------------------------------------------------
-# Service-Authentifizierung
+# REST API, Service-Authentifizierung
 # ---------------------------------------------------------------------
+ENABLE_REST_API=True | False    # Einschalten / Aussschalten des REST Endpoints. Default: True 
+
 SERVICE_USER_NAME=service_api
 SERVICE_USER_PASSWORD=supersecret123
 
@@ -119,6 +129,7 @@ Diese Konfiguration enthält:
 - Verschlüsselungs-Token (APP_SECRET) für gespeicherte Daten
 - Sitzungsparameter und HTTPS-Optionen
 - Redis-Verbindung für Rate Limiting und Anmelde-Schutz
+- Steuerung der "Dosierung" des Mail Versand
 - JWT-Einstellungen für API-Authentifizierung
 - Admin-Standardkonto für den Erststart 
 - Basis-URL, z.B. zur Erzeugung von Links in E-Mail-Vorlagen
@@ -159,9 +170,18 @@ docker run -d -p 8000:8000 --env-file .env gratulo
 Damit wird die Anwendung in einem Container gestartet, der Port 8000 nach außen bereitstellt.
 Die Konfiguration erfolgt über die Datei .env im Projektverzeichnis.
 
-### Start mit Docker Compose
+
+### Bauen mit Docker Compose
 ```bash
-docker-compose up -d
+docker compose build --no-cache
+oderr
+docker compose up -d --force-recreate
+```
+So wird der Container komplett neu gebaut, mit no-cache wird der build-cache ebenfalls neu erstellt.  
+
+### Laufenlassen unter Docker Compose
+```bash
+docker compose up -d
 ```
 Die mitgelieferte Datei docker-compose.yml startet automatisch:
 - den gratulo-Container (FastAPI-Anwendung),
@@ -170,14 +190,13 @@ Die mitgelieferte Datei docker-compose.yml startet automatisch:
 
 ### Docker Logs anzeigen:
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 ### Container beenden:
 
 ```bash
-    docker-compose down
+    docker compose down
  ```
-
 ---
 
 ## API-Dokumentation
@@ -190,11 +209,9 @@ docker-compose logs -f
 ## Zukünftige Erweiterungen
 
 * Erweiterte Logik für besondere Geburtstage und Jubiläen (z. B. runde Geburtstage, langjährige Mitgliedschaften)
-* Warteschlange für den E-Mail-Versand über Redis
 * Dashboard mit Versandstatistiken und Fehleranalyse
 * Zentrale Benachrichtigungsübersicht für anstehende Ereignisse
 * Unterstützung mehrsprachiger Vorlagen
-
 
 ---
 
@@ -202,13 +219,17 @@ docker-compose logs -f
 
 Dieses Projekt steht unter der
 **[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/)**.
-Die Nutzung und Weitergabe ist ausschließlich zu **nicht-kommerziellen Zwecken** gestattet.
+Die Nutzung, Veränderung und Weitergabe des Codes ist **nur für nichtkommerzielle Zwecke** gestattet.
+Für eine Verwendung im kommerziellen oder organisatorischen Umfeld (z. B. innerhalb eines Unternehmens, im Rahmen von Dienstleistungen oder zur Unterstützung geschäftlicher Prozesse) ist eine gesonderte kommerzielle Lizenz erforderlich.
 
+Weitere Informationen finden Sie in der Datei
+[COMMERCIAL_LICENSE_DE.md](./COMMERCIAL_LICENSE_DE.md)
 ---
 
 ## Autor
 
-**Florian Mösch**
+*[Florian Mösch](florian@moesch.ws)*
+[GitHub Profile](https://github.com/flo-63)
 
 © 2025 Florian Mösch. Alle Rechte vorbehalten.
 
