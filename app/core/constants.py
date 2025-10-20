@@ -45,6 +45,31 @@ RATE_LIMIT_WINDOW = int(os.getenv("MAILER_RATE_WINDOW", 60))     # Sekunden
 
 MAIL_QUEUE_INTERVAL_SECONDS = int(os.getenv("MAIL_QUEUE_INTERVAL_SECONDS", 120))
 
+
+# ============================================================================
+# 🎂 Definition "runde Jubiläen" / "runde Geburtstage"
+# ============================================================================
+
+# Liste der Altersjahre, die als "rund" gelten
+ROUND_BIRTHDAY_YEARS = [
+    10, 20, 30, 40, 50, 60, 70, 75, 80, 85, 90, 95, 100
+]
+
+# Liste der Vereinszugehörigkeitsjahre (z. B. Eintrittsjubiläen), die als "rund" gelten
+ROUND_ENTRY_YEARS = [
+    5, 10, 25, 40, 50, 60, 70
+]
+
+def is_round_birthday(age: int) -> bool:
+    """Return True if the given age counts as a round-number birthday."""
+    return age in ROUND_BIRTHDAY_YEARS
+
+
+def is_round_entry(years: int) -> bool:
+    """Return True if the given membership duration counts as a round-number anniversary."""
+    return years in ROUND_ENTRY_YEARS
+
+
 # Initial-Admin aus .env (nur setzen, wenn beide Werte vorhanden und nicht leer)
 _env_user = os.getenv("INITIAL_ADMIN_USER", "").strip()
 _env_pw = os.getenv("INITIAL_PASSWORD", "").strip()

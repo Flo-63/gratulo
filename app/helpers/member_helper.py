@@ -23,7 +23,6 @@ from app.services import group_service
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
-
 def render_import_error(row_num: int, message: str) -> str:
     """
     Renders an import error message for a given row number and message.
@@ -41,7 +40,6 @@ def render_import_error(row_num: int, message: str) -> str:
         str: A formatted error message including the row number and the error message.
     """
     return f"Fehler in Zeile {row_num}: {message}"
-
 
 def parse_date_flexible(value: str, field_name: str, row_num: int) -> datetime.date:
     """
@@ -68,7 +66,6 @@ def parse_date_flexible(value: str, field_name: str, row_num: int) -> datetime.d
         return datetime.strptime(value.strip(), "%d.%m.%Y").date()
     except Exception:
         raise HTTPException(status_code=400, detail=render_import_error(row_num, f"{field_name} ungültig"))
-
 
 def parse_member_since(value: str, row_num: int) -> datetime.date:
     """
@@ -97,7 +94,6 @@ def parse_member_since(value: str, row_num: int) -> datetime.date:
     if dt > datetime.now().date():
         raise HTTPException(status_code=400, detail=render_import_error(row_num, "Eintritt in der Zukunft"))
     return dt
-
 
 def normalize_gender(value: str) -> str:
     """
@@ -162,7 +158,6 @@ def normalize_date(value) -> date | None:
         except ValueError as e:
             raise ValueError(f"Ungültiges Datumsformat '{value}': {e}")
     raise TypeError(f"Ungültiger Datentyp für Datum: {type(value)}")
-
 
 def validate_rows_old(rows: list[dict], db: Session) -> list[dict]:
     """

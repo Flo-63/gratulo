@@ -16,11 +16,13 @@ Purpose   : This module provides database configuration and session management f
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy.engine.url import make_url
 import os
 
 from app.core.deps import INSTANCE_DIR
 
-import os
+
 os.environ["PYTHONIOENCODING"] = "utf-8"
 os.environ["LC_ALL"] = "C.UTF-8"
 os.environ["LANG"] = "C.UTF-8"
@@ -74,3 +76,27 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def ensure_database_exists():
+    """
+    Ensures that the target database exists before connecting.
+
+    For SQLite: Automatically created by SQLAlchemy.
+    For Postgres/MySQL: Uses sqlalchemy_utils to create the DB if missing.
+    """
+    db_url = make_url(DATABASE_URL)
+
+    # SQLite → Datei wird bei Bedarf automatisch erstellt
+    if db_url.drivername.startswith("sqlite"):
+        db_dir = os.path.dirname(db_url.database or "")
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+        return
+
+    # PostgreSQL/MySQL → prüfen und ggf. erstellen
+    if not database_exists(db_url):
+        print(f"⚙️ Creating missing database: {db_url.database}")
+        create_database(db_url)
+    else:
+        print(f"✅ Database '{db_url.database}' already exists.")

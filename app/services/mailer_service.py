@@ -24,6 +24,7 @@ from app.core.models import MailerConfig, MailerJobLog
 from app.services.mail_queue import enqueue_mail
 from app.helpers.placeholders import resolve_placeholders
 from app.helpers.security_helper import anonymize, mask_email
+from app.core.constants import is_round_birthday, is_round_entry
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,6 @@ def execute_job_by_id(job_id: int, logical: date | None = None):
         logger.exception(f"❌ Fehler beim Ausführen des Mailer-Jobs {job_id}")
     finally:
         db.close()
-
 
 def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     """
@@ -107,7 +107,7 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
         db.commit()
         return
 
-    # ✅ MailerConfig laden
+    # MailerConfig laden
     config = db.query(MailerConfig).first()
     if not config:
         logger.error("❌ Keine Mailer-Konfiguration gefunden.")
@@ -176,17 +176,22 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
 
     for member in recipients:
         try:
-            html_out = resolve_placeholders(template.content_html, member)
-            subject = (job.subject or subject_fallback).strip()
+            tmpl_to_use, info, extra_ctx = _select_template(job, member, logical)
+            if info:
+                logger.debug(f"[MailerService] {info} für {mask_email(member.email)} verwendet.")
 
+            # Context für Platzhalter kombinieren
+            html_out = resolve_placeholders(tmpl_to_use.content_html, member, **extra_ctx)
+
+            subject = (job.subject or subject_fallback).strip()
             enqueue_mail(to_address=member.email, subject=subject, body=html_out)
             mails_sent += 1
-            logger.info(f"[MailerService] Mail an {mask_email(member.email)} in Queue gestellt.")
+
 
         except Exception:
             errors += 1
             failed_recipients.append(member.email)
-            logger.exception(f"[MailerService] ❌ Fehler beim Senden an {mask_email(member.email)}")
+            logger.exception(f"[MailerService] Fehler bei {mask_email(member.email)} mit Template {tmpl_to_use.name}")
 
 
     duration = int((time.perf_counter() - start_time) * 1000)
@@ -220,7 +225,40 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     db.add(log_entry)
     db.commit()
 
+def _select_template(job, member, logical):
+    """
+    Wählt das passende Template (Standard oder Rund) und gibt zusätzlich
+    Werte zurück, die im Template gerendert werden können (z. B. Alter, Mitgliedsjahre).
+    """
+    tmpl = job.template
+    ctx = {}
 
+    if job.selection == "birthdate" and job.round_template and member.birthdate:
+        age = _calculate_age(member.birthdate, logical)
+        ctx["age"] = age
+        if is_round_birthday(age):
+            return job.round_template, f"runde Geburtstagsvorlage (Alter {age})", ctx
+
+    elif job.selection == "entry" and job.round_template and member.member_since:
+        years = _calculate_membership_years(member.member_since, logical)
+        ctx["years"] = years
+        if is_round_entry(years):
+            return job.round_template, f"runde Jubiläumsvorlage ({years} Jahre)", ctx
+
+    # Wenn kein rundes Ereignis
+    return tmpl, None, ctx
+
+def _calculate_age(birthdate: date, ref_date: date) -> int:
+    """Berechnet das Alter zum gegebenen Referenzdatum."""
+    return ref_date.year - birthdate.year - (
+        (ref_date.month, ref_date.day) < (birthdate.month, birthdate.day)
+    )
+
+def _calculate_membership_years(entry_date: date, ref_date: date) -> int:
+    """Berechnet die Mitgliedsjahre zum gegebenen Referenzdatum."""
+    return ref_date.year - entry_date.year - (
+        (ref_date.month, ref_date.day) < (entry_date.month, entry_date.day)
+    )
 
 def _resolve_recipients(db: Session, job: models.MailerJob, logical: date):
     """

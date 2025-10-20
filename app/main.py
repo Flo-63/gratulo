@@ -26,7 +26,7 @@ from app.htmx import members_htmx, templates_htmx, jobs_htmx, admin_users_htmx
 from app.ui import main_ui, members_ui, templates_ui, jobs_ui, mailer_config_ui, auth_ui, legal_ui
 from app.api import members_api, groups_api, auth_api, docs_api
 from app.services.scheduler import start_scheduler
-from app.core.database import engine, Base
+from app.core.database import engine, Base, ensure_database_exists
 from app.core.deps import STATIC_DIR, UPLOADS_DIR
 from app.core.constants import ENABLE_REST_API
 from app.core.encryption import SECRET_KEY,SESSION_LIFETIME, HTTPS_ONLY
@@ -122,6 +122,7 @@ async def startup_event():
     logger = logging.getLogger("uvicorn")
 
     # Tabellen erzeugen
+    ensure_database_exists()
     Base.metadata.create_all(bind=engine)
     start_scheduler()
 

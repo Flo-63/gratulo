@@ -40,6 +40,7 @@ Template editor uses **TinyMCE** (GPL Community Edition).
 ## Features
 
 - **Automated congratulatory email generation** (birthdays, anniversaries, and more)
+- **Detection of "round" birthdays and anniversaries**
 - **Group & Member Management** – manually, via import, or through the API
 - **Template-based email creation** via **TinyMCE** (Community Edition)
 - **Job Scheduler** powered by **APScheduler**

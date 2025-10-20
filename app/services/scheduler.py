@@ -29,7 +29,6 @@ from app.core.constants import MAIL_QUEUE_INTERVAL_SECONDS
 logger = logging.getLogger(__name__)
 _scheduler: Optional[BackgroundScheduler] = None
 
-
 def _get_scheduler() -> BackgroundScheduler:
     """
     Initializes and returns a global `BackgroundScheduler` instance.
@@ -47,7 +46,6 @@ def _get_scheduler() -> BackgroundScheduler:
         _scheduler.add_listener(_on_job_event, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
     return _scheduler
 
-
 def _on_job_event(event) -> None:
     """
     Handles job events during the scheduler's runtime.
@@ -63,7 +61,6 @@ def _on_job_event(event) -> None:
         logger.error(f"[Scheduler] Job {event.job_id} fehlgeschlagen.")
     else:
         logger.info(f"[Scheduler] Job {event.job_id} erfolgreich beendet.")
-
 
 def start_scheduler() -> None:
     """
@@ -87,7 +84,6 @@ def start_scheduler() -> None:
         except Exception as e:
             logger.error(f"[Scheduler] Fehler beim Starten des Mail-Queue-Workers: {e}")
 
-
 def stop_scheduler() -> None:
     """
     Stops the currently running scheduler, if active, without waiting for tasks to complete.
@@ -105,7 +101,6 @@ def stop_scheduler() -> None:
         sched.shutdown(wait=False)
         logger.info("[Scheduler] gestoppt")
 
-
 def _job_id(job_id: int) -> str:
     """
     Constructs a string identifier for a job using the provided job ID.
@@ -117,7 +112,6 @@ def _job_id(job_id: int) -> str:
         str: The constructed job identifier string in the format "job_{job_id}".
     """
     return f"job_{job_id}"
-
 
 def unschedule(job_id: int) -> None:
     """
@@ -138,7 +132,6 @@ def unschedule(job_id: int) -> None:
     if job:
         sched.remove_job(job.id)
         logger.info(f"[Scheduler] Job {job_id} entfernt")
-
 
 def register_job(job: models.MailerJob) -> None:
     """
@@ -199,7 +192,6 @@ def register_job(job: models.MailerJob) -> None:
         return
 
     logger.info(f"[Scheduler] Job {job.id} hat weder cron noch once_at – nicht geplant.")
-
 
 def resync_all_jobs(jobs: list[models.MailerJob]) -> None:
     """

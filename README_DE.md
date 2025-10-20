@@ -16,6 +16,7 @@ Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der GPL Community Ed
 ## Funktionen
 
 - Automatischer Versand von Glückwunsch-E-Mails (Geburtstage, Jubiläen usw.)
+- Erkennung und Behandlung von "runden" Geburtstagen und Jubiläen
 - Verwaltung von Mitgliedern und Gruppen über UI, Import oder API
 - Vorlagenbasierte E-Mail-Erstellung über TinyMCE Community Edition
 - Zeitgesteuerter Versand mit APScheduler
@@ -174,7 +175,7 @@ Die Konfiguration erfolgt über die Datei .env im Projektverzeichnis.
 ### Bauen mit Docker Compose
 ```bash
 docker compose build --no-cache
-oderr
+oder
 docker compose up -d --force-recreate
 ```
 So wird der Container komplett neu gebaut, mit no-cache wird der build-cache ebenfalls neu erstellt.  
@@ -208,10 +209,10 @@ docker compose logs -f
 
 ## Zukünftige Erweiterungen
 
-* Erweiterte Logik für besondere Geburtstage und Jubiläen (z. B. runde Geburtstage, langjährige Mitgliedschaften)
 * Dashboard mit Versandstatistiken und Fehleranalyse
 * Zentrale Benachrichtigungsübersicht für anstehende Ereignisse
 * Unterstützung mehrsprachiger Vorlagen
+* Newsletter Funktionen
 
 ---
 

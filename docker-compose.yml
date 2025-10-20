@@ -16,13 +16,11 @@ services:
       - redis
 
   redis:
-    image: redis:8-alpine
+    image: redis:8.2-alpine
     container_name: mailer_redis
     restart: unless-stopped
     expose:
       - "6379"
-
-
 volumes:
   app_data:
 

@@ -177,7 +177,11 @@ class MailerJob(Base):
     name = Column(String(200), nullable=False, unique=True)
 
     template_id = Column(Integer, ForeignKey("templates.id"), nullable=False)
-    template = relationship("Template", backref="jobs")
+    round_template_id = Column(Integer, ForeignKey("templates.id"), nullable=True)
+
+    template = relationship("Template", foreign_keys=[template_id], backref="jobs")
+    round_template = relationship("Template", foreign_keys=[round_template_id])
+
     subject = Column(String(200), nullable=True)
 
     selection = Column(String(20), nullable=False)  # "birthday" oder "entry"

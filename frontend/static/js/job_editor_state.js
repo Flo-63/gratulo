@@ -12,7 +12,7 @@ Purpose   : [Describe the purpose of this module.]
 ===============================================================================
 */
 
-export function jobEditorState(modeInit, cron) {
+window.jobEditorState = function(modeInit, cron) {
   return {
     mode: modeInit || "regular",
     intervalType: "daily",
@@ -40,4 +40,4 @@ export function jobEditorState(modeInit, cron) {
       }
     },
   };
-}
+};

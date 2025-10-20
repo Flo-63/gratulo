@@ -12,33 +12,32 @@ Purpose   : This module defines functions for resolving placeholders in HTML tem
 ===============================================================================
 """
 
-
-
 from datetime import datetime
 from app.core.models import Member
 
 
-def resolve_placeholders(template_html: str, member: Member) -> str:
+def resolve_placeholders(template_html: str, member: Member, **extra) -> str:
     """
-    Replaces placeholders in a template string with member-specific information.
+    Replaces placeholders in a template string with member-specific information
+    and optional extra variables such as "age" (for birthdays) or "years"
+    (for membership anniversaries).
 
-    This function takes a template HTML string and a Member object, replacing predefined
-    placeholders within the template with corresponding details from the Member object. The
-    placeholders include variables for the member's personal information like their name,
-    gender-specific titles, email, birthdate, and membership information. It supports gender
-    distinctions (male, female, or diverse) for proper salutations.
+    This function supports gender-based salutations, date formatting,
+    and dynamic extension via keyword arguments for custom placeholders.
 
     Args:
-        template_html (str): A string containing placeholders to be replaced with member
-            information.
-        member (Member): An object containing properties such as firstname, lastname, email,
-            gender, birthdate, and member_since to populate the placeholders.
+        template_html (str): The HTML template string containing placeholders.
+        member (Member): The member object providing user-specific data.
+        **extra: Optional key-value pairs that extend the available placeholders,
+                 e.g. age=40 or years=25.
 
     Returns:
-        str: The generated string where all placeholders in the template have been replaced
-            with the corresponding member-specific data.
+        str: The template string with all placeholders replaced.
     """
 
+    # -----------------------------------------------------------------------
+    # Gender-specific text setup
+    # -----------------------------------------------------------------------
     gender = (member.gender or "d").lower()
 
     if gender == "m":
@@ -60,6 +59,9 @@ def resolve_placeholders(template_html: str, member: Member) -> str:
         pronomen = "sie"
         possessiv = "ihr"
 
+    # -----------------------------------------------------------------------
+    # Derived member data
+    # -----------------------------------------------------------------------
     geburtstag = ""
     geburtstag_nummer = ""
     if member.birthdate:
@@ -70,6 +72,9 @@ def resolve_placeholders(template_html: str, member: Member) -> str:
     if member.member_since:
         mitglied_seit = str(member.member_since.year)
 
+    # -----------------------------------------------------------------------
+    # Default placeholder mapping
+    # -----------------------------------------------------------------------
     mapping = {
         "{{Vorname}}": member.firstname or "",
         "{{Nachname}}": member.lastname or "",
@@ -84,7 +89,19 @@ def resolve_placeholders(template_html: str, member: Member) -> str:
         "{{MitgliedSeit}}": mitglied_seit,
     }
 
+    # -----------------------------------------------------------------------
+    # Extend mapping dynamically with optional extra context
+    # -----------------------------------------------------------------------
+    if "age" in extra and extra["age"] is not None:
+        mapping["{{Alter}}"] = str(extra["age"])
+    if "years" in extra and extra["years"] is not None:
+        mapping["{{Jahre}}"] = str(extra["years"])
+
+    # -----------------------------------------------------------------------
+    # Perform replacements
+    # -----------------------------------------------------------------------
     html = template_html
     for key, val in mapping.items():
         html = html.replace(key, val)
+
     return html
