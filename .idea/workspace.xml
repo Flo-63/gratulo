@@ -5,9 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="- Added commercial License">
+      <change afterPath="$PROJECT_DIR$/app/core/middleware_fastapi.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/css/tailwind.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/alpine.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/htmx.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/htmx_alpine_init.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/job_editor_state.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/notification.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/template_editor.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/tinymce_init.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README_DE.md" beforeDir="false" afterPath="$PROJECT_DIR$/README_DE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/COMMERCIAL_LICENSE_DE.md" beforeDir="false" afterPath="$PROJECT_DIR$/COMMERCIAL_LICENSE_DE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/COMMERCIAL_LICENSE_EN.md" beforeDir="false" afterPath="$PROJECT_DIR$/COMMERCIAL_LICENSE_EN.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/logging.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/logging.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/auth_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/auth_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/mailer_config_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/mailer_config_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/main_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/main_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/members_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/members_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/templates_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/templates_ui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/job_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/job_editor.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/mailer_config.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/mailer_config.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/template_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/template_editor.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,10 +41,10 @@
       <list>
         <option value="FastAPI main" />
         <option value="FastAPI test_main" />
-        <option value="CSS File" />
         <option value="Dockerfile" />
-        <option value="Python Script" />
         <option value="HTML File" />
+        <option value="CSS File" />
+        <option value="Python Script" />
         <option value="JavaScript File" />
       </list>
     </option>
@@ -61,7 +83,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Python/gratulo&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Python/gratulo/app/core&quot;,
     &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -74,11 +96,11 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Python\gratulo\app\core" />
+      <recent name="D:\Python\gratulo\frontend\static\js" />
       <recent name="D:\Python\birthday_mailer\app\data\uploads" />
       <recent name="D:\Python\birthday_mailer\app\data\instance" />
       <recent name="D:\Python\birthday_mailer\frontend\static\images" />
-      <recent name="D:\Python\birthday_mailer\app\helpers" />
-      <recent name="D:\Python\birthday_mailer\app\core" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\Python\gratulo\frontend\static\js" />
@@ -139,6 +161,10 @@
       <workItem from="1760096424357" duration="81000" />
       <workItem from="1760466877289" duration="1682000" />
       <workItem from="1760509114032" duration="48118000" />
+      <workItem from="1760685011526" duration="1653000" />
+      <workItem from="1760942824323" duration="623000" />
+      <workItem from="1760944616451" duration="6710000" />
+      <workItem from="1760959418832" duration="2225000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -213,7 +239,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1760562649373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1760961651875" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>

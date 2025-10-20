@@ -16,15 +16,15 @@ Purpose   : THis module provides the UI for managing mailer configuration.
 
 from fastapi import APIRouter, Request, Depends, Form, HTTPException
 from fastapi.responses import RedirectResponse
-from fastapi.exceptions import RequestValidationError
 from sqlalchemy.orm import Session
 from email_validator import validate_email, EmailNotValidError
 
 from app.core.database import get_db
 from app.core.models import MailerConfig
 from app.core.deps import jinja_templates, context
+from app.core.auth import require_admin
 from app.helpers.security_helper import set_password
-mailer_config_ui_router = APIRouter(include_in_schema=False)
+mailer_config_ui_router = APIRouter(include_in_schema=False,  dependencies=[Depends(require_admin)])
 
 
 @mailer_config_ui_router.get("/mailer-config")

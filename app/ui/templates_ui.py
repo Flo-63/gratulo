@@ -18,9 +18,10 @@ from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 from app.core.database import get_db
 from app.core.deps import jinja_templates, context
+from app.core.auth import require_admin
 from app.services import template_service
 
-templates_ui_router = APIRouter(prefix="/templates", include_in_schema=False)
+templates_ui_router = APIRouter(prefix="/templates", include_in_schema=False,  dependencies=[Depends(require_admin)])
 
 
 @templates_ui_router.get("", response_class=HTMLResponse)

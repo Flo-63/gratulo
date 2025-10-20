@@ -1,6 +1,6 @@
 # Commercial Use License (Addendum to the Polyform Noncommercial License 1.0.0)
 
-**Software:** Gratula  
+**Software:** Gratulo  
 
 ---
 

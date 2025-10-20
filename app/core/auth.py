@@ -83,6 +83,15 @@ def require_admin(
         .filter(AdminUser.username == user.get("username").lower())
         .first()
     )
+    username = user.get("username", "").lower()
+
+    if INITIAL_ADMIN_USER and username == INITIAL_ADMIN_USER.lower():
+        return {
+            "id": None,
+            "username": INITIAL_ADMIN_USER,
+            "is_env_admin": True,
+            "is_2fa_enabled": False,
+        }
 
     # Wenn kein Benutzer oder inaktiv → ablehnen
     if not db_user or not db_user.is_active:

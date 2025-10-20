@@ -23,7 +23,7 @@ from app.core.auth import require_admin
 from app.services import member_service, group_service
 
 
-members_ui_router = APIRouter(prefix="/members",include_in_schema=False)
+members_ui_router = APIRouter(prefix="/members",include_in_schema=False,  dependencies=[Depends(require_admin)])
 
 @members_ui_router.get("", response_class=HTMLResponse)
 async def members_page(request: Request, db: Session = Depends(database.get_db)):
@@ -69,7 +69,7 @@ async def members_list(request: Request, db: Session = Depends(database.get_db))
         context(request, members=members)
     )
 
-@members_ui_router.get("/new", response_class=HTMLResponse, dependencies=[Depends(require_admin)])
+@members_ui_router.get("/new", response_class=HTMLResponse )
 async def new_member_page(request: Request, db: Session = Depends(database.get_db)):
     """
     Handles the creation of a new member page.
@@ -89,7 +89,7 @@ async def new_member_page(request: Request, db: Session = Depends(database.get_d
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse("member_editor.html", context(request, member=None,  GROUPS=groups))
 
-@members_ui_router.get("/{member_id}/edit", response_class=HTMLResponse, dependencies=[Depends(require_admin)])
+@members_ui_router.get("/{member_id}/edit", response_class=HTMLResponse)
 async def edit_member_page(request: Request, member_id: int, db: Session = Depends(database.get_db)):
     """Handles the request to render the member editing page for a specific member.
 

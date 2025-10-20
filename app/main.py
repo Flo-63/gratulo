@@ -14,7 +14,7 @@ Purpose   : This is the main entry point for the Gratulo application.
 
 
 import os
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 import redis.asyncio as redis
@@ -30,11 +30,15 @@ from app.core.database import engine, Base
 from app.core.deps import STATIC_DIR, UPLOADS_DIR
 from app.core.constants import ENABLE_REST_API
 from app.core.encryption import SECRET_KEY,SESSION_LIFETIME, HTTPS_ONLY
-from app.core.logging import setup_logging, get_audit_logger
+from app.core.middleware_fastapi import CSPMiddleware
+from app.core.logging import setup_logging, get_audit_logger, get_csp_logger
+
+
 
 setup_logging()
 logger = logging.getLogger(__name__)
 audit_logger = get_audit_logger()
+csp_logger = get_csp_logger()
 
 app = FastAPI(
     title="Gratulo API",
@@ -52,10 +56,15 @@ app.add_middleware(
     https_only=HTTPS_ONLY,
 )
 
+app.add_middleware(
+    CSPMiddleware,
+    report_only=True,
+    oauth_authorize_url="https://accounts.google.com/o/oauth2/auth"
+)
+
 # Static mount
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
-
 
 
 if ENABLE_REST_API:
@@ -80,6 +89,21 @@ app.include_router(jobs_ui.jobs_ui_router , include_in_schema=False)
 app.include_router(mailer_config_ui.mailer_config_ui_router , include_in_schema=False)
 app.include_router(auth_ui.auth_ui_router , include_in_schema=False)
 app.include_router(legal_ui.legal_ui_router, include_in_schema=False)
+
+
+@app.post("/csp-report")
+async def csp_report(request: Request):
+    """
+    Receives browser Content Security Policy (CSP) violation reports.
+    """
+    try:
+        data = await request.json()
+        csp_logger.warning(f"CSP Violation Report: {data}")
+    except Exception as e:
+        csp_logger.error(f"Invalid CSP report: {e}")
+    return {"status": "ok"}
+
+
 
 @app.on_event("startup")
 async def startup_event():

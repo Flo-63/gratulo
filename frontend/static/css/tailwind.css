@@ -1,0 +1,12 @@
+/*
+===============================================================================
+Project   : gratulo
+Stylesheet: tailwind.css
+Created   : 20.10.2025
+Author    : Florian
+Purpose   : [Describe the purpose of this stylesheet.]
+===============================================================================
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

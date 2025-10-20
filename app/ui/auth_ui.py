@@ -13,7 +13,7 @@ Purpose   : This module provides authentication-related user interface (UI) endp
 """
 
 
-from fastapi import APIRouter, Request, Form, Depends
+from fastapi import APIRouter, Request, Depends
 from fastapi_limiter.depends import RateLimiter
 from fastapi.responses import HTMLResponse, RedirectResponse
 
@@ -29,9 +29,35 @@ from app.core.constants import INITIAL_ADMIN_USER, INITIAL_PASSWORD
 auth_ui_router = APIRouter(include_in_schema=False)
 
 
-# ---------------------------
-# Login POST
-# ---------------------------
+@auth_ui_router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request, db: Session = Depends(get_db)):
+    """
+    Renders the login page with the correct authentication method.
+    Determines whether .env-based login (INITIAL_ADMIN_USER) or OAuth is active.
+    """
+
+    config = db.query(MailerConfig).first()
+
+    if INITIAL_ADMIN_USER and INITIAL_PASSWORD:
+        auth_method = "email"
+        using_env_login = True
+    elif config and config.auth_method == "oauth":
+        auth_method = "oauth"
+        using_env_login = False
+    else:
+        auth_method = None
+        using_env_login = False
+
+    return jinja_templates.TemplateResponse(
+        "login.html",
+        context(
+            request,
+            auth_method=auth_method,
+            using_env_login=using_env_login,
+            error_message=None,
+        ),
+    )
+
 
 @auth_ui_router.post("/login", dependencies=[Depends(RateLimiter(times=5, seconds=600))])
 async def login_submit(

@@ -87,3 +87,28 @@ def get_audit_logger():
         audit_logger.propagate = False
 
     return audit_logger
+
+
+def get_csp_logger():
+    """
+    Get or create a dedicated CSP logger for security header and violation logging.
+
+    Returns:
+        logging.Logger: Configured CSP logger instance.
+    """
+    csp_logger = logging.getLogger("csp")
+    if not csp_logger.handlers:
+        log_dir = os.path.join("app", "data", "instance")
+        os.makedirs(log_dir, exist_ok=True)
+        csp_file = os.path.join(log_dir, "csp.log")
+
+        handler = logging.FileHandler(csp_file)
+        handler.setFormatter(logging.Formatter("%(asctime)s [CSP] %(levelname)s: %(message)s", DATE_FORMAT))
+        csp_logger.addHandler(handler)
+
+        # Inherit global level
+        global_level = logging.getLogger().level
+        csp_logger.setLevel(global_level)
+        csp_logger.propagate = False
+
+    return csp_logger

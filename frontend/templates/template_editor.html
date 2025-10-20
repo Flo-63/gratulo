@@ -12,7 +12,6 @@ Purpose   : Provides WYSIWYG editor for templates (TinyMCE)
 ===============================================================================
 -->
 
-
 {% extends "base.html" %}
 
 {% block title %}Template-Editor – Geburtstagsmailer{% endblock %}
@@ -21,182 +20,38 @@ Purpose   : Provides WYSIWYG editor for templates (TinyMCE)
 <div class="max-w-4xl mx-auto">
   <h2 class="text-2xl font-bold text-gray-800 mb-6">Template-Editor</h2>
 
-<form id="template-form"
-      hx-post="/htmx/templates/"
-      hx-swap="none"
-      onsubmit="tinymce.triggerSave()"
-      hx-on="htmx:beforeRequest: tinymce.triggerSave()"
-      class="space-y-4">
+  <form id="template-form"
+        hx-post="/htmx/templates/"
+        hx-swap="none"
+        class="space-y-4">
 
     <input type="hidden" name="id" value="{{ template.id if template else '' }}">
 
+    <!-- Template name -->
     <div>
-      <label class="block text-sm font-medium text-gray-700">Name</label>
-      <input type="text" name="name" id="name" value="{{ template.name if template else '' }}"
+      <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+      <input type="text" name="name" id="name"
+             value="{{ template.name if template else '' }}"
              class="w-full border rounded p-2" required>
     </div>
 
+    <!-- Template content -->
     <div>
-      <label class="block text-sm font-medium text-gray-700">Inhalt</label>
+      <label for="editor" class="block text-sm font-medium text-gray-700">Inhalt</label>
       <textarea name="content_html" id="editor">{{ template.content_html if template else '' }}</textarea>
     </div>
 
+    <!-- Action buttons -->
     <div class="flex gap-2 mt-4">
-      <button type="submit"
-              class="btn btn-blue">
-        Speichern
-      </button>
-      <a href="/templates" class="btn btn-gray">
-        Zurück
-      </a>
+      <button type="submit" class="btn btn-blue">Speichern</button>
+      <a href="/templates" class="btn btn-gray">Zurück</a>
     </div>
+
   </form>
 </div>
+
 <!-- TinyMCE lokal -->
-<script src="{{ url_for('static', path='js/tinymce//tinymce.min.js') }}"></script>
-{% raw %}
-<script>
-  tinymce.init({
-    selector: '#editor',
-    height: 400,
-    menubar: false,
-    license_key: 'gpl',
-    plugins: 'image link lists table code emoticons',
-    toolbar: 'undo redo | styles | bold italic underline | image | align | bullist numlist | link table | emoticons | logos | code | placeholders',
-    branding: false,
-
-    // Upload-Config
-    images_upload_url: '/htmx/templates/upload-image',
-    automatic_uploads: true,
-    file_picker_types: 'image',
-    image_advtab: true,
-
-    // Absolute URLs erzwingen
-    relative_urls: false,
-    remove_script_host: false,
-    convert_urls: true,
-
-    style_formats: [
-      { title: 'Bild mittig zum Text', selector: 'img', styles: { 'vertical-align': 'middle' } },
-      { title: 'Bild oben', selector: 'img', styles: { 'vertical-align': 'top' } },
-      { title: 'Bild unten', selector: 'img', styles: { 'vertical-align': 'bottom' } }
-    ],
-
-    // === Erweiterung: Bilderauswahl ===
-    file_picker_callback: function(callback, value, meta) {
-      if (meta.filetype === 'image') {
-        fetch('/htmx/templates/list-images')
-          .then(res => res.json())
-          .then(images => {
-            // kleines Auswahl-Fenster öffnen
-            let win = window.open("", "Image Picker", "width=400,height=400");
-
-            // 🟢 Reset des Dokuments, damit keine alten Inhalte bleiben
-            win.document.open();
-            win.document.write("<h3>Bild auswählen</h3>");
-
-            images.forEach(url => {
-              win.document.write(
-                `<div style="margin:5px;cursor:pointer;display:inline-block;">
-                   <img src="${url}" style="max-width:120px;max-height:120px;"
-                        onclick="window.opener.postMessage('${url}','*');window.close();">
-                 </div>`
-              );
-            });
-
-            // 🟢 Schließen des Streams, damit Browser den Inhalt neu rendert
-            win.document.close();
-          });
-      }
-    },
-
-
-    setup: function (editor) {
-      // Empfang der Bildauswahl aus Popup
-      window.addEventListener("message", (event) => {
-        if (event.data.startsWith("/uploads/")) {
-          editor.insertContent(`<img src="${event.data}" alt="">`);
-        }
-      });
-
-      // Platzhalter-Menü
-        editor.ui.registry.addMenuButton('placeholders', {
-          text: 'Platzhalter',
-          fetch: function (callback) {
-            callback([
-              {
-                type: 'menuitem',
-                text: 'Vorname',
-                onAction: () => editor.insertContent('{{Vorname}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Nachname',
-                onAction: () => editor.insertContent('{{Nachname}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Email',
-                onAction: () => editor.insertContent('{{Email}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Anrede (Liebe, Lieber)',
-                onAction: () => editor.insertContent('{{Anrede}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Anrede (Sehr geehrter / Sehr geehrte)',
-                onAction: () => editor.insertContent('{{AnredeLang}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Bezeichnung (Herr / Frau)',
-                onAction: () => editor.insertContent('{{Bezeichnung}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Pronomen (er / sie)',
-                onAction: () => editor.insertContent('{{Pronomen}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Possessivpronomen (sein / ihr)',
-                onAction: () => editor.insertContent('{{Possessiv}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Geburtstag (Datum)',
-                onAction: () => editor.insertContent('{{Geburtstag}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Wievielter Geburtstag',
-                onAction: () => editor.insertContent('{{GeburtstagNummer}}')
-              },
-              {
-                type: 'menuitem',
-                text: 'Mitglied seit',
-                onAction: () => editor.insertContent('{{MitgliedSeit}}')
-              },
-            ]);
-          }
-        });
-
-
-      // Logos-Menü
-      editor.ui.registry.addMenuButton('logos', {
-        text: 'Logos',
-        fetch: function (callback) {
-          callback([
-            { type: 'menuitem', text: 'RCB-Logo weiß', onAction: () => editor.insertContent('<img src="/static/images/logo-white-tiny.png" alt="Vereinslogo" style="max-width:200px;">') },
-            { type: 'menuitem', text: 'RCB-Logo blau', onAction: () => editor.insertContent('<img src="/static/images/logo-blue-small.png" alt="Vereinslogo" style="max-width:200px;">') },
-            { type: 'menuitem', text: 'Banner', onAction: () => editor.insertContent('<img src="/static/images/banner.png" alt="Banner" style="max-width:400px;">') }
-          ]);
-        }
-      });
-    }
-  });
-</script>
-{% endraw %}
+<script src="{{ url_for('static', path='js/tinymce/tinymce.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/tinymce_init.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/template_editor.js') }}" defer nonce="{{ csp_nonce }}"></script>
 {% endblock %}
