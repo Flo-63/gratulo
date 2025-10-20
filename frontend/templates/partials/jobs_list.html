@@ -46,7 +46,13 @@ Purpose   : Dynamic template to show the list of jobs
           {% if job.cron_human %}
             {{ job.cron_human }}
           {% elif job.once_at %}
-            Einmalig am {{ job.once_at_local.strftime('%d.%m.%Y %H:%M') }}
+            {% if job.once_at_local is defined %}
+              Einmalig am {{ job.once_at_local.strftime('%d.%m.%Y %H:%M') }}
+            {% elif job.once_at %}
+              Einmalig am {{ job.once_at.strftime('%d.%m.%Y %H:%M') }}
+            {% else %}
+              Einmalig – kein Datum gesetzt
+            {% endif %}
           {% else %}-{% endif %}
         </td>
         <td class="px-6 py-4 text-right">

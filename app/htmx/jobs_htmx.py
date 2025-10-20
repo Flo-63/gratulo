@@ -89,7 +89,8 @@ async def save_job_endpoint(
     id: int | None = Form(None),
     name: str = Form(...),
     subject: str | None = Form(None),
-    template_id: str = Form(...),  # kommt als String
+    template_id: str = Form(...),
+    round_template_id: str | None = Form(None),
     mode: str = Form(...),
     once_at: str | None = Form(None),
     selection: str | None = Form(None),
@@ -146,6 +147,7 @@ async def save_job_endpoint(
         name=name,
         subject=subject,
         template_id=int(template_id),
+        round_template_id=int(round_template_id) if round_template_id else None,
         mode=mode,
         once_at=once_at,
         selection=selection,

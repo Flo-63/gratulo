@@ -1,23 +1,14 @@
-<!--
-===============================================================================
-Project   : gratulo
-Module    : frontend/templates/job_editor.html
-Created   : 2025-10-05
-Author    : Florian
-Purpose   : Template to edit a job
-
-@docstyle: google
-@language: english
-@voice: imperative
-===============================================================================
--->
-
 {% extends "base.html" %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto mt-10 space-y-8">
   <h1 class="text-2xl font-bold text-gray-800">
     {% if job %}Job bearbeiten{% else %}Neuen Job anlegen{% endif %}
+    {% set cron_parts = job.cron.split(' ') if job and job.cron else [] %}
+    {% set minute = cron_parts[0] if cron_parts|length > 0 else '0' %}
+    {% set hour = cron_parts[1] if cron_parts|length > 1 else '6' %}
+    {% set day_of_month = cron_parts[2] if cron_parts|length > 2 else '*' %}
+    {% set day_of_week = cron_parts[4] if cron_parts|length > 4 else '*' %}
   </h1>
 
   {% set initial_mode = 'once' if job and job.once_at else 'regular' %}
@@ -28,7 +19,16 @@ Purpose   : Template to edit a job
     hx-swap="none"
     x-data="{
       mode: '{{ initial_mode }}',
-      intervalType: '{{ job.interval_type if job else 'daily' }}',
+      intervalType:
+        {% if day_of_month == '*' and day_of_week == '*' %}
+          'daily'
+        {% elif day_of_week != '*' %}
+          'weekly'
+        {% elif day_of_month != '*' %}
+          'monthly'
+        {% else %}
+          'daily'
+        {% endif %},
       selection: '{{ job.selection if job else 'all' }}'
     }"
     class="space-y-8"
@@ -88,8 +88,6 @@ Purpose   : Template to edit a job
               </option>
             {% endfor %}
           </select>
-          <p class="text-xs text-gray-500 mt-1">
-          </p>
         </div>
       </div>
 
@@ -147,7 +145,8 @@ Purpose   : Template to edit a job
       </div>
 
       <!-- Regelmäßig -->
-      <div x-show="mode === 'regular'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div x-show="mode === 'regular'" x-data="{ showWeekly: false, showMonthly: false }" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Intervall -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Intervall</label>
           <select name="interval_type" x-model="intervalType"
@@ -157,27 +156,31 @@ Purpose   : Template to edit a job
             <option value="monthly">Monatlich</option>
           </select>
         </div>
+
+        <!-- Uhrzeit -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Uhrzeit</label>
-          <input type="time" name="time" value="06:00"
+          <input type="time" name="time"
+                 value="{{ '%02d:%02d' | format(hour|int, minute|int) if job and job.cron else '06:00' }}"
                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
         </div>
+
+        <!-- Wochentag -->
         <div x-show="intervalType === 'weekly'">
           <label class="block text-sm font-medium text-gray-700">Wochentag</label>
           <select name="weekday"
                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option value="1">Montag</option>
-            <option value="2">Dienstag</option>
-            <option value="3">Mittwoch</option>
-            <option value="4">Donnerstag</option>
-            <option value="5">Freitag</option>
-            <option value="6">Samstag</option>
-            <option value="0">Sonntag</option>
+            {% for i, name in [(1,'Montag'),(2,'Dienstag'),(3,'Mittwoch'),(4,'Donnerstag'),(5,'Freitag'),(6,'Samstag'),(0,'Sonntag')] %}
+              <option value="{{ i }}" {% if day_of_week|int == i %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
           </select>
         </div>
+
+        <!-- Monatstag -->
         <div x-show="intervalType === 'monthly'">
           <label class="block text-sm font-medium text-gray-700">Tag im Monat</label>
-          <input type="number" name="monthday" min="1" max="28" value="1"
+          <input type="number" name="monthday" min="1" max="28"
+                 value="{{ day_of_month if day_of_month != '*' else 1 }}"
                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
         </div>
       </div>

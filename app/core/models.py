@@ -184,7 +184,7 @@ class MailerJob(Base):
 
     subject = Column(String(200), nullable=True)
 
-    selection = Column(String(20), nullable=False)  # "birthday" oder "entry"
+    selection = Column(String(20), nullable=True)
 
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
     group = relationship("Group", back_populates="mailer_jobs")

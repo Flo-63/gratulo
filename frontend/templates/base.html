@@ -88,14 +88,18 @@ Purpose   : Base template for the gratulo frontend
     </div>
   </div>
 
-<!-- Alpine & HTMX -->
-<script src="{{ url_for('static', path='js/alpine.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<!-- HTMX zuerst laden -->
 <script src="{{ url_for('static', path='js/htmx.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
 
-<!-- App Scripts -->
-<script src="{{ url_for('static', path='js/mail_queue_status.js') }}" defer nonce="{{ csp_nonce }}"></script>
-<script src="{{ url_for('static', path='js/notification.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
+<!-- Dann Alpine -->
+<script src="{{ url_for('static', path='js/alpine.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
+
+<!-- Danach die Alpine-Komponenten -->
+<script src="{{ url_for('static', path='js/mail_queue_status.js') }}"  nonce="{{ csp_nonce }}"></script>
+
+<!-- Und zuletzt Initialisierungen / Module -->
 <script src="{{ url_for('static', path='js/htmx_alpine_init.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/notification.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
 
 </body>
 

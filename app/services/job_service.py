@@ -13,15 +13,18 @@ Purpose   : This module provides services for managing mail jobs.
 """
 
 
-from datetime import datetime
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+
 
 from app.core import models
 from app.helpers.cron_helper import build_cron
 from app.services.scheduler import register_job
 
+
+from datetime import datetime
 
 def save_job(
     db: Session,
@@ -29,6 +32,7 @@ def save_job(
     name: str,
     subject: str | None,
     template_id: int,
+    round_template_id: str | None,
     mode: str,                       # "once" | "regular"
     once_at: str | None,             # "%Y-%m-%dT%H:%M"
     selection: str | None,           # "birthdate" | "entry" | "all" | "list"
@@ -38,49 +42,19 @@ def save_job(
     monthday: str | None,            # "1".."28"
     group_id: int | None = None,
 ) -> models.MailerJob:
-    """
-    Saves a mailing job to the database with the provided parameters and properly registers
-    it in the scheduler. This function handles both creation and updates of the job, ensuring
-    validation of parameters and managing uniqueness constraints in the database.
 
-    Args:
-        db (Session): Database session for querying and persisting data.
-        id (int | None): Job ID for identifying an existing job; None for creating a new job.
-        name (str): Name of the job. Must be unique and not empty.
-        subject (str | None): Subject of the mail.
-        template_id (int): ID of the mail template to be associated with the job.
-        mode (str): Mode of execution for the job, either "once" or "regular".
-        once_at (str | None): Date and time for a one-time job in the format "%Y-%m-%dT%H:%M".
-        selection (str | None): Specifies the target audience; valid values are
-            "birthdate", "entry", "all", or "list".
-        interval_type (str | None): Interval type for regular jobs; valid values are "daily", "weekly",
-            or "monthly".
-        time (str | None): Time for regular jobs in "HH:MM" format.
-        weekday (str | None): Day of the week for weekly jobs; values range from "0" (Sunday) to "6"
-            (Saturday).
-        monthday (str | None): Day of the month for monthly jobs; values range from "1" to "28".
-        group_id (int | None): Id of the group to associate with the job. If None, a default group
-            will be used.
-
-    Returns:
-        models.MailerJob: The saved or updated mailing job instance.
-
-    Raises:
-        HTTPException: Raised in cases of validation failure, missing required parameters,
-            uniqueness conflicts, or database integrity issues.
-    """
     name_clean = (name or "").strip()
     if not name_clean:
         raise HTTPException(status_code=400, detail="Name darf nicht leer sein")
 
-    # Name muss unique sein (freundliche Vorprüfung)
+    # --- Eindeutigkeit prüfen ---
     q = db.query(models.MailerJob).filter(models.MailerJob.name == name_clean)
     if id:
         q = q.filter(models.MailerJob.id != id)
     if q.first():
         raise HTTPException(status_code=400, detail=f"Job-Name '{name_clean}' ist bereits vergeben")
 
-    # Laden oder neu anlegen
+    # --- Laden oder Neu anlegen ---
     job = db.query(models.MailerJob).get(id) if id else models.MailerJob()
     if id and not job:
         raise HTTPException(status_code=404, detail="Job nicht gefunden")
@@ -88,9 +62,9 @@ def save_job(
     job.name = name_clean
     job.subject = (subject or "").strip() if subject else None
     job.template_id = template_id
+    job.round_template_id = round_template_id
 
     # --- Gruppe prüfen ---
-
     if group_id:
         group = db.query(models.Group).filter(models.Group.id == group_id).first()
     else:
@@ -99,40 +73,48 @@ def save_job(
 
     if not group:
         raise HTTPException(status_code=400, detail="Keine gültige Gruppe gefunden")
+
     job.group_id = group.id
 
-    # --- Modus ---
-
+    # --- Modus: einmalig oder regelmäßig ---
     if mode == "once":
         if not once_at:
             raise HTTPException(status_code=400, detail="Zeitpunkt (Einmalig) fehlt")
-        try:
-            job.once_at = datetime.strptime(once_at, "%Y-%m-%dT%H:%M")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Ungültiges Datum/Zeit-Format (Einmalig)")
 
-        # Bei einmaligen Jobs erlaubst du "all" (und später "list")
-        job.selection = selection if selection in ("all", "list") else None
-        job.cron = None
+        parsed_once_at = None
+        for fmt in ("%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S"):
+            try:
+                parsed_once_at = datetime.strptime(once_at, fmt)
+                break
+            except ValueError:
+                continue
+
+        if not parsed_once_at:
+            raise HTTPException(status_code=400, detail=f"Ungültiges Datum/Zeit-Format: {once_at}")
+
+        # 🔹 einmaliger Job: kein CRON, keine Wiederholung
+        job.once_at = parsed_once_at
+        job.cron = None  # Wichtig: explizit löschen
+        job.selection = selection
 
     elif mode == "regular":
-        # Nur birthdatey/entry/all/list zulässig
         if selection not in ("birthdate", "entry", "all", "list"):
             raise HTTPException(status_code=400, detail="Selektion ungültig (birthdate|entry|all|list)")
 
-        # Exklusivität: pro (selection, group) nur 1 Job
+        # 🔹 Prüfe doppelte Selektionen für gleiche Gruppe
         if selection in ("birthdate", "entry"):
             q = db.query(models.MailerJob).filter(
                 models.MailerJob.selection == selection,
-                models.MailerJob.group_id == group.id
+                models.MailerJob.group_id == group.id,
             )
             if id:
                 q = q.filter(models.MailerJob.id != id)
             if q.first():
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Es existiert bereits ein Job mit der Selektion '{selection}' für Gruppe '{group.name}'"
+                    detail=f"Es existiert bereits ein Job mit der Selektion '{selection}' für Gruppe '{group.name}'",
                 )
+
         cron_expr = build_cron(interval_type or "", time or "", weekday, monthday)
         job.cron = cron_expr
         job.selection = selection
@@ -141,17 +123,17 @@ def save_job(
     else:
         raise HTTPException(status_code=400, detail="Ausführungsrhythmus ungültig (once|regular)")
 
+    # --- Speichern ---
     db.add(job)
     try:
         db.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Job konnte nicht gespeichert werden (DB-Constraint verletzt).")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job konnte nicht gespeichert werden (DB-Constraint verletzt: {str(e.orig)})",
+        )
 
     db.refresh(job)
-
-    # Nach erfolgreichem Speichern im Scheduler (re-)registrieren
     register_job(job)
-
     return job
-

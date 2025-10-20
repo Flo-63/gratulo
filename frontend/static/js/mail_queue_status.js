@@ -1,49 +1,49 @@
-window.mailQueueStatus = function (nextRunIn, queueInterval, rateLimitWindow) {
+// ============================================================================
+// Mail Queue Status Alpine Component
+// SICHERE Initialisierung: sofort verfügbar, kein Race Condition mit Alpine.
+// ============================================================================
+
+// Direktes Setup, damit mailQueueStatus() synchron existiert
+window.mailQueueStatus = function (nextRunIn = 0, queueInterval = 15, rateLimitWindow = 60) {
   return {
-    nextRunIn: nextRunIn,
-    queueInterval: queueInterval,
-    rateLimitWindow: rateLimitWindow,
     seconds: nextRunIn,
-    elapsed: queueInterval - nextRunIn,
-    interval: null,
-
-    start() {
-      if (this.interval) clearInterval(this.interval);
-      this.interval = setInterval(() => this.tick(), 1000);
-    },
-
-    tick() {
-      if (this.seconds > 0) {
-        this.seconds--;
-        this.elapsed++;
-      } else {
-        // Zyklus abgeschlossen → nächste Queue-Runde
-        this.seconds = this.queueInterval;
-        this.elapsed = 0;
-      }
-    },
-
-    sync(newNextRun, newQueueInterval, newRateLimit) {
-      // Werte übernehmen, ohne Animation zu resetten
-      this.nextRunIn = newNextRun;
-      this.queueInterval = newQueueInterval;
-      this.rateLimitWindow = newRateLimit;
-
-      // Nur Sekunden neu setzen, wenn sich etwas geändert hat
-      if (this.seconds !== newNextRun) {
-        this.seconds = newNextRun;
-        this.elapsed = Math.max(0, this.queueInterval - newNextRun);
-      }
-    },
+    queueInterval,
+    rateLimitWindow,
+    timer: null,
 
     get progressWidth() {
-      const pct = Math.min((this.elapsed / this.queueInterval) * 100, 100);
-      return `width: ${pct}%;`;
+      const pct = ((this.queueInterval - this.seconds) / this.queueInterval) * 100;
+      return `width: ${Math.min(Math.max(pct, 0), 100)}%`;
+    },
+
+    start() {
+      if (this.timer) clearInterval(this.timer);
+      this.timer = setInterval(() => {
+        if (this.seconds > 0) this.seconds--;
+      }, 1000);
+    },
+
+    stop() {
+      if (this.timer) clearInterval(this.timer);
+    },
+
+    destroy() {
+      this.stop();
     },
   };
 };
 
-// --- Synchronisierung nach HTMX-Update (ohne DOM-Swap!) ---
+// --- Alpine-Integration ---
+document.addEventListener("alpine:init", () => {
+  if (!window.Alpine) return;
+  if (!window.__MAIL_QUEUE_REGISTERED__) {
+    window.Alpine.data("mailQueueStatus", window.mailQueueStatus);
+    window.__MAIL_QUEUE_REGISTERED__ = true;
+    console.info("[mail_queue_status] Alpine.data('mailQueueStatus') registered (sync + async)");
+  }
+});
+
+// --- Synchronisierung nach HTMX-Update ---
 document.addEventListener("htmx:afterOnLoad", (e) => {
   const el = document.querySelector("#job-status");
   if (!el || !el.__x) return;
@@ -52,5 +52,13 @@ document.addEventListener("htmx:afterOnLoad", (e) => {
   const queueInt = parseInt(el.dataset.queueInterval || 15);
   const rateLimit = parseInt(el.dataset.rateLimit || 60);
 
-  el.__x.$data.sync(nextRun, queueInt, rateLimit);
+  // Falls Komponente neu initialisiert werden muss
+  if (!el.__x.$data || typeof el.__x.$data.seconds === "undefined") {
+    window.Alpine.initTree(el);
+    return;
+  }
+
+  el.__x.$data.seconds = nextRun;
+  el.__x.$data.queueInterval = queueInt;
+  el.__x.$data.rateLimitWindow = rateLimit;
 });

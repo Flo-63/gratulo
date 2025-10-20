@@ -4,15 +4,13 @@ Project   : gratulo
 Module    : frontend/static/js/tinymce_init.js
 Created   : 2025-10-20
 Author    : Florian
-Purpose   : [Describe the purpose of this module.]
+Purpose   : Initialisierung von TinyMCE mit sicherem File Picker & Fallback-Logik
 
 @docstyle: google
-@language: english
+@language: german
 @voice: imperative
 ===============================================================================
 */
-
-
 
 document.addEventListener("DOMContentLoaded", function () {
   if (typeof tinymce === "undefined") {
@@ -47,84 +45,142 @@ document.addEventListener("DOMContentLoaded", function () {
       { title: "Bild unten", selector: "img", styles: { "vertical-align": "bottom" } },
     ],
 
+    // ------------------------------------------
+    // FILE PICKER
+    // ------------------------------------------
     file_picker_callback: function (callback, value, meta) {
       if (meta.filetype === "image") {
         fetch("/htmx/templates/list-images")
           .then((res) => res.json())
           .then((images) => {
-            const win = window.open("", "Image Picker", "width=400,height=400");
-            win.document.open();
-            win.document.write("<h3>Bild auswählen</h3>");
+            const picker = window.open("", "Image Picker", "width=400,height=400");
+            picker.document.open();
+            picker.document.write("<h3>Bild auswählen</h3><div style='display:flex;flex-wrap:wrap;gap:10px;'></div>");
+            const container = picker.document.querySelector("div");
+
             images.forEach((url) => {
-              const div = win.document.createElement("div");
-              div.style.margin = "5px";
-              div.style.cursor = "pointer";
-              div.style.display = "inline-block";
-              const img = win.document.createElement("img");
+              const img = picker.document.createElement("img");
               img.src = url;
               img.style.maxWidth = "120px";
               img.style.maxHeight = "120px";
+              img.style.cursor = "pointer";
+              img.title = url;
+
               img.addEventListener("click", () => {
-                window.opener.postMessage(url, "*");
-                win.close();
+                try {
+                  // ---------------------
+                  // Normaler Popup-Modus
+                  // ---------------------
+                  if (window.opener && typeof window.opener.postMessage === "function") {
+                    window.opener.postMessage(url, "*");
+                    picker.close();
+                    return;
+                  }
+
+                  // ---------------------
+                  // Inline-/Modal-Modus (kein window.opener)
+                  // ---------------------
+                  if (window.parent && window.parent.tinymce) {
+                    const editor = window.parent.tinymce.activeEditor;
+                    if (editor) {
+                      editor.insertContent(`<img src="${url}" alt="">`);
+                      // Versuch, Dialog zu schließen (TinyMCE-Modal)
+                      if (editor.windowManager) {
+                        try {
+                          editor.windowManager.close();
+                        } catch {
+                          console.debug("TinyMCE windowManager.close() not available.");
+                        }
+                      }
+                    }
+                  } else {
+                    console.warn("Kein Fenster-Opener und kein TinyMCE-Fenster gefunden.");
+                  }
+
+                  // ---------------------
+                  // Sicheres Selbstschließen (Fallback)
+                  // ---------------------
+                  setTimeout(() => {
+                    try {
+                      picker.open("", "_self");
+                      picker.close();
+                    } catch (e) {
+                      console.debug("Browser blockiert self-close:", e);
+                    }
+                  }, 200);
+                } catch (e) {
+                  console.error("Fehler beim Verarbeiten des Bildklicks:", e);
+                }
               });
-              div.appendChild(img);
-              win.document.body.appendChild(div);
+
+              container.appendChild(img);
             });
-            win.document.close();
-          });
+
+            picker.document.close();
+          })
+          .catch((err) => console.error("Fehler beim Laden der Bilder:", err));
       }
     },
 
+    // ------------------------------------------
+    // SETUP
+    // ------------------------------------------
     setup: function (editor) {
+      // Empfängt Bild-URLs von Pop-up Fenstern
       window.addEventListener("message", (event) => {
-        if (event.data.startsWith("/uploads/")) {
+        if (typeof event.data === "string" && event.data.startsWith("/uploads/")) {
           editor.insertContent(`<img src="${event.data}" alt="">`);
         }
       });
 
+      // Platzhalter-Menü
       editor.ui.registry.addMenuButton("placeholders", {
-        text: "Platzhalter",
-        fetch: function (callback) {
-          callback([
-            { text: "Vorname", onAction: () => editor.insertContent("{{Vorname}}") },
-            { text: "Nachname", onAction: () => editor.insertContent("{{Nachname}}") },
-            { text: "Email", onAction: () => editor.insertContent("{{Email}}") },
-            { text: "Anrede (Liebe, Lieber)", onAction: () => editor.insertContent("{{Anrede}}") },
-            { text: "Anrede (Sehr geehrter / Sehr geehrte)", onAction: () => editor.insertContent("{{AnredeLang}}") },
-            { text: "Bezeichnung (Herr / Frau)", onAction: () => editor.insertContent("{{Bezeichnung}}") },
-            { text: "Pronomen (er / sie)", onAction: () => editor.insertContent("{{Pronomen}}") },
-            { text: "Possessivpronomen (sein / ihr)", onAction: () => editor.insertContent("{{Possessiv}}") },
-            { text: "Geburtstag (Datum)", onAction: () => editor.insertContent("{{Geburtstag}}") },
-            { text: "Wievielter Geburtstag", onAction: () => editor.insertContent("{{GeburtstagNummer}}") },
-            { text: "Mitglied seit", onAction: () => editor.insertContent("{{MitgliedSeit}}") },
-          ]);
-        },
-      });
+      text: "Platzhalter",
+      fetch: function (callback) {
+        callback([
+          { type: "menuitem", text: "Vorname", onAction: () => editor.insertContent("{{Vorname}}") },
+          { type: "menuitem", text: "Nachname", onAction: () => editor.insertContent("{{Nachname}}") },
+          { type: "menuitem", text: "Email", onAction: () => editor.insertContent("{{Email}}") },
+          { type: "menuitem", text: "Anrede (Liebe, Lieber)", onAction: () => editor.insertContent("{{Anrede}}") },
+          { type: "menuitem", text: "Anrede (Sehr geehrter / Sehr geehrte)", onAction: () => editor.insertContent("{{AnredeLang}}") },
+          { type: "menuitem", text: "Bezeichnung (Herr / Frau)", onAction: () => editor.insertContent("{{Bezeichnung}}") },
+          { type: "menuitem", text: "Pronomen (er / sie)", onAction: () => editor.insertContent("{{Pronomen}}") },
+          { type: "menuitem", text: "Possessivpronomen (sein / ihr)", onAction: () => editor.insertContent("{{Possessiv}}") },
+          { type: "menuitem", text: "Geburtstag (Datum)", onAction: () => editor.insertContent("{{Geburtstag}}") },
+          { type: "menuitem", text: "Wievielter Geburtstag", onAction: () => editor.insertContent("{{GeburtstagNummer}}") },
+          { type: "menuitem", text: "Mitglied seit", onAction: () => editor.insertContent("{{MitgliedSeit}}") },
+        ]);
+      },
+    });
 
-      editor.ui.registry.addMenuButton("logos", {
-        text: "Logos",
-        fetch: function (callback) {
-          callback([
-            {
-              text: "RCB-Logo weiß",
-              onAction: () =>
-                editor.insertContent('<img src="/static/images/logo-white-tiny.png" alt="Vereinslogo" style="max-width:200px;">'),
-            },
-            {
-              text: "RCB-Logo blau",
-              onAction: () =>
-                editor.insertContent('<img src="/static/images/logo-blue-small.png" alt="Vereinslogo" style="max-width:200px;">'),
-            },
-            {
-              text: "Banner",
-              onAction: () =>
-                editor.insertContent('<img src="/static/images/banner.png" alt="Banner" style="max-width:400px;">'),
-            },
-          ]);
-        },
-      });
+
+      // Logos-Menü
+     editor.ui.registry.addMenuButton("logos", {
+      text: "Logos",
+      fetch: function (callback) {
+        callback([
+          {
+            type: "menuitem",
+            text: "RCB-Logo weiß",
+            onAction: () =>
+              editor.insertContent('<img src="/static/images/logo-white-tiny.png" alt="Vereinslogo" style="max-width:200px;">'),
+          },
+          {
+            type: "menuitem",
+            text: "RCB-Logo blau",
+            onAction: () =>
+              editor.insertContent('<img src="/static/images/logo-blue-small.png" alt="Vereinslogo" style="max-width:200px;">'),
+          },
+          {
+            type: "menuitem",
+            text: "Banner",
+            onAction: () =>
+              editor.insertContent('<img src="/static/images/banner.png" alt="Banner" style="max-width:400px;">'),
+          },
+        ]);
+      },
+    });
+
     },
   });
 });
-
