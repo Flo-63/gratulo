@@ -183,6 +183,7 @@ class MailerJob(Base):
     round_template = relationship("Template", foreign_keys=[round_template_id])
 
     subject = Column(String(200), nullable=True)
+    bcc_address = Column(EncryptedType, nullable=True)
 
     selection = Column(String(20), nullable=True)
 

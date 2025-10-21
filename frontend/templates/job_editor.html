@@ -41,6 +41,7 @@
     <div class="bg-white shadow rounded-lg p-6">
       <h2 class="text-lg font-semibold text-gray-700 mb-4">Job-Informationen</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Name -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Name</label>
           <input type="text" name="name" value="{{ job.name if job else '' }}"
@@ -48,14 +49,26 @@
                  required
                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
         </div>
+
+        <!-- Betreff -->
         <div>
           <label class="block text-sm font-medium text-gray-700">Betreff</label>
           <input type="text" name="subject" value="{{ job.subject if job else '' }}"
                  placeholder="z. B. Herzlichen Glückwunsch!"
                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
         </div>
+
+        <!-- 🆕 BCC-Adresse -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700">BCC-Empfänger (optional)</label>
+          <input type="email" name="bcc_address" value="{{ job.bcc_address if job and job.bcc_address else '' }}"
+                 placeholder="z. B. archiv@example.com"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+          <!-- <p class="text-xs text-gray-500 mt-1">Optional: Eine zusätzliche E-Mail-Adresse, die Kopien aller versendeten Mails erhält.</p> -->
+        </div>
       </div>
     </div>
+
 
     <!-- 🟩 Zielgruppe -->
     <div class="bg-white shadow rounded-lg p-6">

@@ -41,6 +41,7 @@ def save_job(
     weekday: str | None,             # "0".."6"
     monthday: str | None,            # "1".."28"
     group_id: int | None = None,
+    bcc_address: str | None = None,
 ) -> models.MailerJob:
 
     name_clean = (name or "").strip()
@@ -63,6 +64,7 @@ def save_job(
     job.subject = (subject or "").strip() if subject else None
     job.template_id = template_id
     job.round_template_id = round_template_id
+    job.bcc_address = (bcc_address or "").strip() or None
 
     # --- Gruppe prüfen ---
     if group_id:
