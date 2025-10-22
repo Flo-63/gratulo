@@ -17,6 +17,7 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 import redis.asyncio as redis
 from fastapi_limiter import FastAPILimiter
 
@@ -61,6 +62,7 @@ app.add_middleware(
     report_only=True,
     oauth_authorize_url="https://accounts.google.com/o/oauth2/auth"
 )
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # Static mount
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

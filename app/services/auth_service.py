@@ -121,7 +121,7 @@ def verify_login(db: Session, email: str, password: str) -> Tuple[bool, str | No
     return True, None
 
 # --------------------------------------------------------------------------------------
-# Service user (unverändert)
+# Service user
 # --------------------------------------------------------------------------------------
 
 def authenticate_service_user(username: str, password: str) -> bool:
