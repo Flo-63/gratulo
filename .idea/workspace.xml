@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Fixes for Kamal deployment" />
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Fixes for Kamal deployment (2)">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/mailer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/mailer.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -139,7 +142,7 @@
       <workItem from="1760942824323" duration="623000" />
       <workItem from="1760944616451" duration="6710000" />
       <workItem from="1760959418832" duration="37858000" />
-      <workItem from="1761131799627" duration="19701000" />
+      <workItem from="1761131799627" duration="20744000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -229,7 +232,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761153338067</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Fixes for Kamal deployment (2)">
+      <option name="closed" value="true" />
+      <created>1761153554340</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1761153554340</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -258,7 +269,8 @@
     <MESSAGE value="- Added optional BCC per Job&#10;- Cleanup of Job List Partial&#10;- Added missing localized framework modules to git&#10;- Added Initial defaults in db" />
     <MESSAGE value="Allows other purposes than gratulation:&#10;-  Both dates can be defined with different names&#10;- Dates can be of type Anniversary or Event&#10;- Dates of type Event can have a recurrency of n months&#10;These settings currently live in .env." />
     <MESSAGE value="Fixes for Kamal deployment" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes for Kamal deployment" />
+    <MESSAGE value="Fixes for Kamal deployment (2)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixes for Kamal deployment (2)" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -268,7 +280,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761153410231" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761153536271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>

@@ -157,13 +157,23 @@ def send_mail(config: MailerConfig, to_address: str, subject: str, body: str, bc
             logger.debug(f"📡 Verbinde per STARTTLS mit {config.smtp_host}:{config.smtp_port}")
             with smtplib.SMTP(config.smtp_host, config.smtp_port) as server:
                 server.starttls(context=context)
-                if config.smtp_user and config.smtp_password:
+                if (
+                        config.smtp_user
+                        and config.smtp_password
+                        and config.smtp_user not in ("-", "", None)
+                        and config.smtp_password not in ("-", "", None)
+                ):
                     server.login(config.smtp_user, config.smtp_password)
                 server.sendmail(config.from_address, recipients, msg.as_string())
         else:
             logger.debug(f"📡 Verbinde per SSL mit {config.smtp_host}:{config.smtp_port}")
             with smtplib.SMTP_SSL(config.smtp_host, config.smtp_port, context=context) as server:
-                if config.smtp_user and config.smtp_password:
+                if (
+                        config.smtp_user
+                        and config.smtp_password
+                        and config.smtp_user not in ("-", "", None)
+                        and config.smtp_password not in ("-", "", None)
+                ):
                     server.login(config.smtp_user, config.smtp_password)
                 server.sendmail(config.from_address, recipients, msg.as_string())
 
