@@ -24,24 +24,20 @@ from app.core.models import MailerConfig, MailerJobLog
 from app.services.mail_queue import enqueue_mail
 from app.helpers.placeholders import resolve_placeholders
 from app.helpers.security_helper import anonymize, mask_email
-from app.core.constants import is_round_birthday, is_round_entry
+from app.core.constants import is_round_birthday, is_round_entry, LABELS
 
 logger = logging.getLogger(__name__)
 
 
 def execute_job_by_id(job_id: int, logical: date | None = None):
     """
-    Executes a mailer job for the specified job ID and logical date.
-
-    This function initiates a database session, determines the logical date if not
-    provided, logs the execution process, and invokes the mailer job. Logs errors
-    if the execution process fails and ensures the database session is closed
-    after execution.
+    Executes a mailer job based on the provided job ID and logical date. This function initializes a
+    database session, logs the start of the job, runs the job processing logic, and logs its completion
+    or any exception encountered during execution. If no logical date is provided, the current date is used.
 
     Args:
-        job_id (int): The unique identifier of the job to be executed.
-        logical (date | None): The logical date for executing the job. If None,
-            the current date will be used.
+        job_id (int): The identifier of the mailer job to be executed.
+        logical (date | None): The date for job execution logic. Defaults to the current date if not specified.
     """
     from app.core.database import SessionLocal
 
@@ -58,20 +54,23 @@ def execute_job_by_id(job_id: int, logical: date | None = None):
 
 def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     """
-    Executes a mailer job based on the given job ID and logical date, sending emails to
-    determined recipients using the specified templates, and logs the execution details
-    and results in the database.
+    Executes a mailer job and logs the outcome in the database.
 
-    This function queries the database to locate the mailer job and associated template
-    using the given job ID. If the template or mailer configuration is missing, or if no
-    recipients can be resolved, the function logs appropriate information and terminates.
-    For valid jobs with recipients, it attempts to send emails, tracks success and failures,
-    computes execution duration, and updates the database with the results.
+    This function attempts to execute a mailer job identified by `job_id` using the database session `db`.
+    It first validates the presence of the mailer job, associated template, and mail configuration.
+    If recipients are resolved, it processes them, rendering the email content and sending it out.
+    The progress and results (success or errors) of the operation are recorded as a log entry.
 
     Args:
-        db (Session): Database session for querying and committing database changes.
-        job_id (int): Identifier of the mailer job to be executed.
-        logical (date): Logical date associated with the mail execution.
+        db: A database session used for querying and persisting job execution data.
+        job_id: The unique identifier of the mailer job to execute.
+        logical: The logical execution date of the mailer job, usually used for filtering.
+
+    Raises:
+        None
+
+    Returns:
+        None
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:
@@ -184,7 +183,7 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
             html_out = resolve_placeholders(tmpl_to_use.content_html, member, **extra_ctx)
 
             subject = (job.subject or subject_fallback).strip()
-            enqueue_mail(to_address=member.email, subject=subject, body=html_out)
+            enqueue_mail(to_address=member.email, subject=subject, body=html_out, bcc_address=job.bcc_address)
             mails_sent += 1
 
 
@@ -227,82 +226,163 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
 
 def _select_template(job, member, logical):
     """
-    Wählt das passende Template (Standard oder Rund) und gibt zusätzlich
-    Werte zurück, die im Template gerendert werden können (z. B. Alter, Mitgliedsjahre).
+    Selects the appropriate template and populates the context for a given job and member selection.
+
+    This function determines the appropriate template to use based on the job's parameters and the
+    member's attributes, specifically those mapped by the predefined selection criteria. It supports
+    handling anniversaries or events by calculating or retrieving relevant dates and contextual
+    information.
+
+    Args:
+        job: A job object containing template specifications and selection criteria.
+        member: A member object with associated attributes such as dates.
+        logical: A logical object providing date and time context.
+
+    Returns:
+        tuple: A tuple where the first element is either the original or selected template,
+        the second is a textual description of the selection (if applicable),
+        and the third is a dictionary with context for the selected template.
+
     """
     tmpl = job.template
     ctx = {}
 
-    if job.selection == "birthdate" and job.round_template and member.birthdate:
-        age = _calculate_age(member.birthdate, logical)
-        ctx["age"] = age
-        if is_round_birthday(age):
-            return job.round_template, f"runde Geburtstagsvorlage (Alter {age})", ctx
+    # 🟩 Mapping: date1/date2 → echte Model-Felder
+    field_map = {
+        "date1": "birthdate",
+        "date2": "member_since",
+    }
 
-    elif job.selection == "entry" and job.round_template and member.member_since:
-        years = _calculate_membership_years(member.member_since, logical)
+    if job.selection not in field_map:
+        return tmpl, None, ctx
+
+    field_name = field_map[job.selection]
+    label_type = LABELS.get(f"{job.selection}_type", "ANNIVERSARY").upper()
+    field = getattr(member, field_name, None)
+
+    if not field:
+        return tmpl, None, ctx
+
+    # Anniversary → jährliche Jubiläen mit Rundenerkennung
+    if label_type == "ANNIVERSARY":
+        years = logical.year - field.year - (
+            (logical.month, logical.day) < (field.month, field.day)
+        )
         ctx["years"] = years
-        if is_round_entry(years):
-            return job.round_template, f"runde Jubiläumsvorlage ({years} Jahre)", ctx
 
-    # Wenn kein rundes Ereignis
+        if job.round_template:
+            # Verwende Jubiläumsvorlage nur bei runden Jahren
+            if is_round_birthday(years) or is_round_entry(years):
+                return job.round_template, f"Runde Jubiläumsvorlage ({years} Jahre)", ctx
+
+    # Event → einmalige Ereignisse, kein Jubiläum
+    elif label_type == "EVENT":
+        ctx["event_date"] = field.strftime("%d.%m.%Y")
+
     return tmpl, None, ctx
 
 def _calculate_age(birthdate: date, ref_date: date) -> int:
-    """Berechnet das Alter zum gegebenen Referenzdatum."""
+    """
+    Calculates the age based on the given birth date and a reference date.
+
+    This function computes the age of a person or entity by comparing the provided
+    birth date with the reference date. It accounts for whether the current
+    reference date is before or after the birth date in the current year.
+
+    Args:
+        birthdate (date): The birth date to calculate the age from.
+        ref_date (date): The reference date from which to calculate the age.
+
+    Returns:
+        int: The calculated age based on the input dates.
+    """
     return ref_date.year - birthdate.year - (
         (ref_date.month, ref_date.day) < (birthdate.month, birthdate.day)
     )
 
 def _calculate_membership_years(entry_date: date, ref_date: date) -> int:
-    """Berechnet die Mitgliedsjahre zum gegebenen Referenzdatum."""
+    """
+    Calculates the total membership years by determining the difference between
+    the reference date and the entry date while accounting for incomplete years.
+
+    Args:
+        entry_date (date): The date the membership started.
+        ref_date (date): The reference date to calculate the membership years.
+
+    Returns:
+        int: The total number of completed membership years.
+    """
     return ref_date.year - entry_date.year - (
         (ref_date.month, ref_date.day) < (entry_date.month, entry_date.day)
     )
 
 def _resolve_recipients(db: Session, job: models.MailerJob, logical: date):
     """
-    Resolves a list of recipients for a given mailer job based on selection criteria
-    and group associations.
+    Resolves the recipients for a mailing job based on group and selection criteria.
 
-    This function determines the intended recipients for a given mailer job,
-    taking into account selection rules like "all", "birthdate", or "entry" while
-    respecting group-specific logic. For the default group, members are processed
-    differently than those from other groups, which are checked for conflicts with
-    existing jobs.
+    This function determines the list of recipients for a mailing job by applying
+    group-specific or default group rules. Selection criteria based on the job's
+    configuration such as specific date or member-related attributes are dynamically
+    applied. Additionally, the function handles cases where some groups do not
+    have their own associated mailing jobs.
 
     Args:
-        db (Session): The database session used to query for members and jobs.
-        job (models.MailerJob): The mailer job specifying criteria for recipient
-            selection.
-        logical (date): The logical reference date used for filtering based on
-            "birthdate" or "entry" selection criteria.
+        db (Session): Database session used to query member and group information.
+        job (models.MailerJob): The mailing job containing configuration such as selection criteria,
+            group information, and other settings.
+        logical (date): The logical date that serves as a reference for filtering members,
+            anniversaries, or other criteria.
 
     Returns:
-        list: A list of member entities matching the selection criteria for the
-        specified mailer job.
+        List[models.Member]: A list of members who fulfill the criteria specified
+            by the job configuration.
     """
-
     def apply_selection(query):
-        """Filtert Query nach job.selection."""
+        """Filtert Query dynamisch nach job.selection und Label-Typ."""
         if job.selection == "all":
             return query.all()
 
-        if job.selection == "birthdate":
+        # 🟩 Mapping: date1/date2 auf echte Model-Felder
+        field_map = {
+            "date1": "birthdate",
+            "date2": "member_since",
+        }
+
+        if job.selection not in field_map:
+            logger.warning(f"[MailerService] Unbekannte Selektion '{job.selection}' für Job {job.id}")
+            return []
+
+        field_name = field_map[job.selection]
+        label_type = LABELS.get(f"{job.selection}_type", "ANNIVERSARY").upper()
+        field = getattr(models.Member, field_name, None)
+
+        if not field:
+            logger.warning(f"[MailerService] Feld {field_name} existiert nicht im Member-Modell.")
+            return []
+
+        if label_type == "ANNIVERSARY":
             return query.filter(
-                models.Member.birthdate != None,
-                extract("month", models.Member.birthdate) == logical.month,
-                extract("day", models.Member.birthdate) == logical.day,
+                field.isnot(None),
+                extract("month", field) == logical.month,
+                extract("day", field) == logical.day,
             ).all()
 
-        if job.selection == "entry":
+        elif label_type == "EVENT":
+            # Monatliche / jährliche Erinnerungsfrequenz (z. B. 6, 12, 24)
+            freq_months = int(LABELS.get(f"{job.selection}_frequency_months", 12))
+
+            # Wir berechnen alle Mitglieder, deren Datum so alt ist wie freq_months
+            target_year = logical.year
+            target_month = logical.month
+            target_day = logical.day
+
             return query.filter(
-                models.Member.member_since != None,
-                extract("month", models.Member.member_since) == logical.month,
-                extract("day", models.Member.member_since) == logical.day,
+                field.isnot(None),
+                extract("year", field) * 12 + extract("month", field) + freq_months ==
+                target_year * 12 + target_month,
+                extract("day", field) == target_day
             ).all()
 
-        logger.warning(f"[MailerService] Unbekannte Selektion '{job.selection}' für Job {job.id}")
         return []
 
     # ---------------------------
@@ -338,4 +418,5 @@ def _resolve_recipients(db: Session, job: models.MailerJob, logical: date):
             recipients.extend(apply_selection(q))
 
     return recipients
+
 

@@ -4,20 +4,34 @@ Project   : gratulo
 Module    : frontend/templates/partials/member_editor_partial.html
 Created   : 2025-10-05
 Author    : Florian
-Purpose   : Dynamic template used to edit a member - provide the inner container
-@docstyle: google
-@language: english
-@voice: imperative
+Purpose   : Dynamic template used to edit an entity (formerly member)
 ===============================================================================
 -->
 
+{% set article_nom =
+  'Neue' if LABELS_DISPLAY.entity_gender == 'f'
+  else 'Neuer' if LABELS_DISPLAY.entity_gender == 'm'
+  else 'Neues'
+%}
 
+{% set article_acc =
+  'Neue' if LABELS_DISPLAY.entity_gender == 'f'
+  else 'Neuen' if LABELS_DISPLAY.entity_gender == 'm'
+  else 'Neues'
+%}
 
 <div id="member-form-container" class="max-w-3xl mx-auto mt-10 space-y-8">
+
+  <!-- 🟦 Überschrift -->
   <h2 class="text-2xl font-bold text-gray-800">
-    {{ 'Mitglied bearbeiten' if member else 'Neues Mitglied anlegen' }}
+    {% if member %}
+      {{ LABELS_DISPLAY.entity_singular }} bearbeiten
+    {% else %}
+      {{ article_acc }} {{ LABELS_DISPLAY.entity_singular }} anlegen
+    {% endif %}
   </h2>
 
+  <!-- 🟥 Fehlermeldungen -->
   {% if errors %}
     <div class="bg-red-100 border border-red-300 text-red-700 p-3 rounded">
       <ul class="list-disc list-inside">
@@ -28,5 +42,6 @@ Purpose   : Dynamic template used to edit a member - provide the inner container
     </div>
   {% endif %}
 
+  <!-- 🟩 Formular -->
   {% include "partials/member_editor_form.html" %}
 </div>

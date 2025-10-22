@@ -28,7 +28,7 @@ from app.api import members_api, groups_api, auth_api, docs_api
 from app.services.scheduler import start_scheduler
 from app.core.database import engine, Base, ensure_database_exists, ensure_default_data
 from app.core.deps import STATIC_DIR, UPLOADS_DIR
-from app.core.constants import ENABLE_REST_API
+from app.core.constants import ENABLE_REST_API, LABELS, LABELS_DISPLAY
 from app.core.encryption import SECRET_KEY,SESSION_LIFETIME, HTTPS_ONLY
 from app.core.middleware_fastapi import CSPMiddleware
 from app.core.logging import setup_logging, get_audit_logger, get_csp_logger
@@ -90,7 +90,6 @@ app.include_router(mailer_config_ui.mailer_config_ui_router , include_in_schema=
 app.include_router(auth_ui.auth_ui_router , include_in_schema=False)
 app.include_router(legal_ui.legal_ui_router, include_in_schema=False)
 
-
 @app.post("/csp-report")
 async def csp_report(request: Request):
     """
@@ -102,8 +101,6 @@ async def csp_report(request: Request):
     except Exception as e:
         csp_logger.error(f"Invalid CSP report: {e}")
     return {"status": "ok"}
-
-
 
 @app.on_event("startup")
 async def startup_event():
@@ -139,8 +136,6 @@ async def startup_event():
     except Exception as e:
         logger.error(f"❌ Redis connection failed: {e}")
         logger.warning("Rate limiting disabled until Redis is reachable.")
-
-
 
 @app.on_event("shutdown")
 async def shutdown_event():

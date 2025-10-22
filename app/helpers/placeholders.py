@@ -4,7 +4,8 @@ Project   : gratulo
 Module    : app/helpers/placeholders.py
 Created   : 2025-10-05
 Author    : Florian
-Purpose   : This module defines functions for resolving placeholders in HTML templates.
+Purpose   : Resolves dynamic placeholders in email templates based on member data
+            and configurable labels (ANNIVERSARY / EVENT).
 
 @docstyle: google
 @language: english
@@ -13,33 +14,33 @@ Purpose   : This module defines functions for resolving placeholders in HTML tem
 """
 
 from datetime import datetime
-from app.core.models import Member
+from app.core.constants import LABELS
 
 
-def resolve_placeholders(template_html: str, member: Member, **extra) -> str:
+def resolve_placeholders(template_html: str, member, **extra) -> str:
     """
-    Replaces placeholders in a template string with member-specific information
-    and optional extra variables such as "age" (for birthdays) or "years"
-    (for membership anniversaries).
-
-    This function supports gender-based salutations, date formatting,
-    and dynamic extension via keyword arguments for custom placeholders.
+    Replaces placeholders in an HTML template string with corresponding values based on
+    a provided member object and dynamic context. Handles case-insensitive matching and
+    spacing tolerance for placeholder replacements.
 
     Args:
-        template_html (str): The HTML template string containing placeholders.
-        member (Member): The member object providing user-specific data.
-        **extra: Optional key-value pairs that extend the available placeholders,
-                 e.g. age=40 or years=25.
+        template_html (str): The HTML template string containing placeholders to be resolved.
+        member: The member object containing information such as gender, name, email,
+            and other attributes used for placeholder substitutions.
+        **extra: Additional dynamic context as key-value pairs to be included
+            in the placeholder mapping.
 
     Returns:
-        str: The template string with all placeholders replaced.
+        str: The HTML string with placeholders resolved to their corresponding values.
     """
 
-    # -----------------------------------------------------------------------
-    # Gender-specific text setup
-    # -----------------------------------------------------------------------
-    gender = (member.gender or "d").lower()
+    html = template_html or ""
+    mapping = {}
 
+    # --------------------------------------------------------------------
+    # 🟩 Base member fields (always available)
+    # --------------------------------------------------------------------
+    gender = (member.gender or "d").lower()
     if gender == "m":
         anrede = "Lieber"
         anrede_lang = "Sehr geehrter"
@@ -52,56 +53,96 @@ def resolve_placeholders(template_html: str, member: Member, **extra) -> str:
         bezeichnung = "Frau"
         pronomen = "sie"
         possessiv = "ihr"
-    else:  # divers/neutral
+    else:
         anrede = "Liebe*r"
         anrede_lang = "Sehr geehrte*r"
-        bezeichnung = "Mitglied"
+        bezeichnung = LABELS.get("entity_singular", "Mitglied")
         pronomen = "sie"
         possessiv = "ihr"
 
-    # -----------------------------------------------------------------------
-    # Derived member data
-    # -----------------------------------------------------------------------
-    geburtstag = ""
-    geburtstag_nummer = ""
-    if member.birthdate:
-        geburtstag = member.birthdate.strftime("%d.%m.%Y")
-        geburtstag_nummer = str(datetime.now().year - member.birthdate.year)
+    mapping.update({
+        "Vorname": member.firstname or "",
+        "Nachname": member.lastname or "",
+        "Email": member.email or "",
+        "Anrede": anrede,
+        "AnredeLang": anrede_lang,
+        "Bezeichnung": bezeichnung,
+        "Pronomen": pronomen,
+        "Possessiv": possessiv,
+    })
 
-    mitglied_seit = ""
-    if member.member_since:
-        mitglied_seit = str(member.member_since.year)
+    # --------------------------------------------------------------------
+    # 🟨 Standard placeholders (legacy support)
+    # --------------------------------------------------------------------
+    if getattr(member, "birthdate", None):
+        birthdate = member.birthdate.strftime("%d.%m.%Y")
+        mapping["Geburtstag"] = birthdate
+        mapping["geburtstag"] = birthdate
+        years = datetime.now().year - member.birthdate.year - (
+            (datetime.now().month, datetime.now().day) < (member.birthdate.month, member.birthdate.day)
+        )
+        mapping["Geburtstagsnummer"] = str(years)
+        mapping["geburtstagsnummer"] = str(years)
 
-    # -----------------------------------------------------------------------
-    # Default placeholder mapping
-    # -----------------------------------------------------------------------
-    mapping = {
-        "{{Vorname}}": member.firstname or "",
-        "{{Nachname}}": member.lastname or "",
-        "{{Email}}": member.email or "",
-        "{{Anrede}}": anrede,
-        "{{AnredeLang}}": anrede_lang,
-        "{{Bezeichnung}}": bezeichnung,
-        "{{Pronomen}}": pronomen,
-        "{{Possessiv}}": possessiv,
-        "{{Geburtstag}}": geburtstag,
-        "{{GeburtstagNummer}}": geburtstag_nummer,
-        "{{MitgliedSeit}}": mitglied_seit,
+    if getattr(member, "member_since", None):
+        entry_date = member.member_since.strftime("%d.%m.%Y")
+        mapping["Eintritt"] = entry_date
+        mapping["eintritt"] = entry_date
+        years = datetime.now().year - member.member_since.year - (
+            (datetime.now().month, datetime.now().day) < (member.member_since.month, member.member_since.day)
+        )
+        mapping["Eintrittsnummer"] = str(years)
+        mapping["eintrittsnummer"] = str(years)
+
+    # --------------------------------------------------------------------
+    # 🟦 Dynamic date labels from environment (e.g. Servicebeginn, Geburtstag)
+    # --------------------------------------------------------------------
+    label_field_map = {
+        "date1": "birthdate",
+        "date2": "member_since",
     }
 
-    # -----------------------------------------------------------------------
-    # Extend mapping dynamically with optional extra context
-    # -----------------------------------------------------------------------
-    if "age" in extra and extra["age"] is not None:
-        mapping["{{Alter}}"] = str(extra["age"])
-    if "years" in extra and extra["years"] is not None:
-        mapping["{{Jahre}}"] = str(extra["years"])
+    for key, field_name in label_field_map.items():
+        label = LABELS.get(key, key.capitalize())
+        label_type = LABELS.get(f"{key}_type", "ANNIVERSARY").upper()
+        value = getattr(member, field_name, None)
 
-    # -----------------------------------------------------------------------
-    # Perform replacements
-    # -----------------------------------------------------------------------
-    html = template_html
+        if not value:
+            continue
+
+        value_str = value.strftime("%d.%m.%Y")
+        mapping[label] = value_str
+        mapping[label.lower()] = value_str
+
+        # Add numeric form (e.g. ServicebeginnNummer)
+        if label_type == "ANNIVERSARY":
+            years = datetime.now().year - value.year - (
+                (datetime.now().month, datetime.now().day) < (value.month, value.day)
+            )
+            mapping[f"{label}Nummer"] = str(years)
+            mapping[f"{label.lower()}nummer"] = str(years)
+
+    # --------------------------------------------------------------------
+    # 🟧 Additional dynamic context (from _select_template etc.)
+    # --------------------------------------------------------------------
+    for k, v in (extra or {}).items():
+        if not k:
+            continue
+        mapping[k] = str(v)
+        mapping[k.lower()] = str(v)
+
+    # --------------------------------------------------------------------
+    # 🟥 Perform replacements (case-insensitive, tolerant for spacing)
+    # --------------------------------------------------------------------
     for key, val in mapping.items():
-        html = html.replace(key, val)
+        if not isinstance(val, str):
+            val = str(val)
+
+        html = (
+            html.replace(f"{{{{{key}}}}}", val)
+            .replace(f"{{{{ {key} }}}}", val)
+            .replace(f"{{{{{key.lower()}}}}}", val)
+            .replace(f"{{{{ {key.lower()} }}}}", val)
+        )
 
     return html

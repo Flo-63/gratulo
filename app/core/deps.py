@@ -16,6 +16,8 @@ from pathlib import Path
 from datetime import datetime
 from fastapi.templating import Jinja2Templates
 from app.core.constants import ENABLE_REST_API
+from app.core import constants
+
 
 # Basis-Verzeichnis: eine Ebene höher als "app"
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -39,21 +41,52 @@ UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 jinja_templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 jinja_templates.env.globals["ENABLE_REST_API"] = ENABLE_REST_API
 
+# Globale Variablen für Templates
+jinja_templates.env.globals.update({
+    "LABELS": constants.LABELS,
+    "LABELS_DISPLAY": constants.LABELS_DISPLAY,
+    "BASE_URL": constants.BASE_URL,
+    "LOCAL_TZ": constants.LOCAL_TZ,
+    "CLUB_FOUNDATION_DATE": constants.CLUB_FOUNDATION_DATE,
+})
+
+
 jinja_templates.env.cache = {}
 jinja_templates.env.auto_reload = True
 
 
-def context(request, **kwargs):
+from fastapi import Request
+
+def context(request: Request, **kwargs):
     """
-    Generates a context dictionary containing the provided request, the current year,
-    and any additional keyword arguments.
+    Generates a context dictionary including a Content Security Policy (CSP) nonce.
+
+    This function retrieves or generates a CSP nonce and prepares a context dictionary
+    that includes the incoming request, the current year, the CSP nonce, and any additional
+    keyword arguments passed to it. The CSP nonce is used for security headers to permit
+    specific inline scripts.
 
     Args:
-        request: The HTTP request object.
-        **kwargs: Arbitrary keyword arguments to include in the returned dictionary.
+        request (Request): The incoming HTTP request object, which may contain a `csp_nonce`
+            within the state attribute.
+        **kwargs: Additional key-value pairs to include in the resulting context dictionary.
 
     Returns:
-        dict: A context dictionary containing the request, current year, and the
-        additional keyword arguments.
+        dict: A dictionary containing the request, the current year, a CSP nonce, and
+            any additional keyword arguments passed to the function.
     """
-    return {"request": request, "year": datetime.now().year, **kwargs}
+    # Nonce aus Request holen (gesetzt von Middleware)
+    nonce = getattr(request.state, "csp_nonce", None)
+
+    # Sicherstellen, dass ein Nonce vorhanden ist
+    if not nonce:
+        import secrets
+        nonce = secrets.token_hex(16)
+        request.state.csp_nonce = nonce
+
+    return {
+        "request": request,
+        "year": datetime.now().year,
+        "csp_nonce": nonce,       # <--- hier wichtig!
+        **kwargs,
+    }

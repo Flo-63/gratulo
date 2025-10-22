@@ -4,11 +4,7 @@ Project   : gratulo
 Module    : frontend/static/js/tinymce_init.js
 Created   : 2025-10-20
 Author    : Florian
-Purpose   : Initialisierung von TinyMCE mit sicherem File Picker & Fallback-Logik
-
-@docstyle: google
-@language: german
-@voice: imperative
+Purpose   : Initialisierung von TinyMCE mit sicherem File Picker & dynamischen Platzhaltern
 ===============================================================================
 */
 
@@ -28,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "undo redo | styles | bold italic underline | image | align | bullist numlist | link table | emoticons | logos | code | placeholders",
     branding: false,
 
-    // Upload-Config
+    // Upload-Konfiguration
     images_upload_url: "/htmx/templates/upload-image",
     automatic_uploads: true,
     file_picker_types: "image",
@@ -68,23 +64,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
               img.addEventListener("click", () => {
                 try {
-                  // ---------------------
-                  // Normaler Popup-Modus
-                  // ---------------------
                   if (window.opener && typeof window.opener.postMessage === "function") {
                     window.opener.postMessage(url, "*");
                     picker.close();
                     return;
                   }
 
-                  // ---------------------
-                  // Inline-/Modal-Modus (kein window.opener)
-                  // ---------------------
                   if (window.parent && window.parent.tinymce) {
                     const editor = window.parent.tinymce.activeEditor;
                     if (editor) {
                       editor.insertContent(`<img src="${url}" alt="">`);
-                      // Versuch, Dialog zu schließen (TinyMCE-Modal)
                       if (editor.windowManager) {
                         try {
                           editor.windowManager.close();
@@ -97,9 +86,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     console.warn("Kein Fenster-Opener und kein TinyMCE-Fenster gefunden.");
                   }
 
-                  // ---------------------
-                  // Sicheres Selbstschließen (Fallback)
-                  // ---------------------
                   setTimeout(() => {
                     try {
                       picker.open("", "_self");
@@ -126,61 +112,94 @@ document.addEventListener("DOMContentLoaded", function () {
     // SETUP
     // ------------------------------------------
     setup: function (editor) {
-      // Empfängt Bild-URLs von Pop-up Fenstern
+      // Empfang von Bild-URLs aus Popup-Fenstern
       window.addEventListener("message", (event) => {
         if (typeof event.data === "string" && event.data.startsWith("/uploads/")) {
           editor.insertContent(`<img src="${event.data}" alt="">`);
         }
       });
 
-      // Platzhalter-Menü
+      // ------------------------------------------
+      // Dynamische Platzhalter mit Labels aus .env
+      // ------------------------------------------
       editor.ui.registry.addMenuButton("placeholders", {
-      text: "Platzhalter",
-      fetch: function (callback) {
-        callback([
-          { type: "menuitem", text: "Vorname", onAction: () => editor.insertContent("{{Vorname}}") },
-          { type: "menuitem", text: "Nachname", onAction: () => editor.insertContent("{{Nachname}}") },
-          { type: "menuitem", text: "Email", onAction: () => editor.insertContent("{{Email}}") },
-          { type: "menuitem", text: "Anrede (Liebe, Lieber)", onAction: () => editor.insertContent("{{Anrede}}") },
-          { type: "menuitem", text: "Anrede (Sehr geehrter / Sehr geehrte)", onAction: () => editor.insertContent("{{AnredeLang}}") },
-          { type: "menuitem", text: "Bezeichnung (Herr / Frau)", onAction: () => editor.insertContent("{{Bezeichnung}}") },
-          { type: "menuitem", text: "Pronomen (er / sie)", onAction: () => editor.insertContent("{{Pronomen}}") },
-          { type: "menuitem", text: "Possessivpronomen (sein / ihr)", onAction: () => editor.insertContent("{{Possessiv}}") },
-          { type: "menuitem", text: "Geburtstag (Datum)", onAction: () => editor.insertContent("{{Geburtstag}}") },
-          { type: "menuitem", text: "Wievielter Geburtstag", onAction: () => editor.insertContent("{{GeburtstagNummer}}") },
-          { type: "menuitem", text: "Mitglied seit", onAction: () => editor.insertContent("{{MitgliedSeit}}") },
-        ]);
-      },
-    });
+          text: "Platzhalter",
+          fetch: function (callback) {
+            const labels = {
+              date1: window.GRATULO_LABEL_DATE1 || "Geburtstag",
+              date1_type: window.GRATULO_LABEL_DATE1_TYPE || "ANNIVERSARY",
+              date2: window.GRATULO_LABEL_DATE2 || "Eintritt",
+              date2_type: window.GRATULO_LABEL_DATE2_TYPE || "ANNIVERSARY",
+              entity: window.GRATULO_LABEL_ENTITY_SINGULAR || "Mitglied",
+            };
+
+            const menu = [
+              { type: "menuitem", text: "Vorname", onAction: () => editor.insertContent("{{Vorname}}") },
+              { type: "menuitem", text: "Nachname", onAction: () => editor.insertContent("{{Nachname}}") },
+              { type: "menuitem", text: "Email", onAction: () => editor.insertContent("{{Email}}") },
+              { type: "menuitem", text: "Anrede (Liebe / Lieber)", onAction: () => editor.insertContent("{{Anrede}}") },
+              { type: "menuitem", text: "Anrede (Sehr geehrter / Sehr geehrte)", onAction: () => editor.insertContent("{{AnredeLang}}") },
+              { type: "menuitem", text: "Bezeichnung (Herr / Frau)", onAction: () => editor.insertContent("{{Bezeichnung}}") },
+              { type: "menuitem", text: "Pronomen (er / sie)", onAction: () => editor.insertContent("{{Pronomen}}") },
+              { type: "menuitem", text: "Possessivpronomen (sein / ihr)", onAction: () => editor.insertContent("{{Possessiv}}") },
+            ];
+
+            // === Dynamische Logik für DATE1 ===
+            if (labels.date1_type === "ANNIVERSARY") {
+              menu.push(
+                { type: "menuitem", text: `${labels.date1} (Datum)`, onAction: () => editor.insertContent(`{{${labels.date1}}}`) },
+                { type: "menuitem", text: `Wievielter ${labels.date1}`, onAction: () => editor.insertContent(`{{${labels.date1}Nummer}}`) }
+              );
+            } else {
+              menu.push({ type: "menuitem", text: `${labels.date1}`, onAction: () => editor.insertContent(`{{${labels.date1}}}`) });
+            }
+
+            // === Dynamische Logik für DATE2 ===
+            if (labels.date2_type === "ANNIVERSARY") {
+              menu.push(
+                { type: "menuitem", text: `${labels.date2} (Datum)`, onAction: () => editor.insertContent(`{{${labels.date2}}}`) },
+                { type: "menuitem", text: `Wievielter ${labels.date2}`, onAction: () => editor.insertContent(`{{${labels.date2}Nummer}}`) }
+              );
+            } else {
+              menu.push({ type: "menuitem", text: `${labels.date2}`, onAction: () => editor.insertContent(`{{${labels.date2}}}`) });
+            }
+
+            // === Entity ===
+            menu.push({ type: "menuitem", text: `${labels.entity}`, onAction: () => editor.insertContent(`{{${labels.entity}}}`) });
+
+            callback(menu);
+          },
+        });
 
 
-      // Logos-Menü
-     editor.ui.registry.addMenuButton("logos", {
-      text: "Logos",
-      fetch: function (callback) {
-        callback([
-          {
-            type: "menuitem",
-            text: "RCB-Logo weiß",
-            onAction: () =>
-              editor.insertContent('<img src="/static/images/logo-white-tiny.png" alt="Vereinslogo" style="max-width:200px;">'),
-          },
-          {
-            type: "menuitem",
-            text: "RCB-Logo blau",
-            onAction: () =>
-              editor.insertContent('<img src="/static/images/logo-blue-small.png" alt="Vereinslogo" style="max-width:200px;">'),
-          },
-          {
-            type: "menuitem",
-            text: "Banner",
-            onAction: () =>
-              editor.insertContent('<img src="/static/images/banner.png" alt="Banner" style="max-width:400px;">'),
-          },
-        ]);
-      },
-    });
-
+      // ------------------------------------------
+      // Logos-Menü (unverändert)
+      // ------------------------------------------
+      editor.ui.registry.addMenuButton("logos", {
+        text: "Logos",
+        fetch: function (callback) {
+          callback([
+            {
+              type: "menuitem",
+              text: "RCB-Logo weiß",
+              onAction: () =>
+                editor.insertContent('<img src="/static/images/logo-white-tiny.png" alt="Vereinslogo" style="max-width:200px;">'),
+            },
+            {
+              type: "menuitem",
+              text: "RCB-Logo blau",
+              onAction: () =>
+                editor.insertContent('<img src="/static/images/logo-blue-small.png" alt="Vereinslogo" style="max-width:200px;">'),
+            },
+            {
+              type: "menuitem",
+              text: "Banner",
+              onAction: () =>
+                editor.insertContent('<img src="/static/images/banner.png" alt="Banner" style="max-width:400px;">'),
+            },
+          ]);
+        },
+      });
     },
   });
 });

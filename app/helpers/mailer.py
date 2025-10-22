@@ -41,16 +41,15 @@ CID_PATTERN = re.compile(
 
 def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
     """
-    Prepares an HTML email body by embedding inline images as content IDs (CIDs) and wrapping
-    the email content in standard HTML email formatting. The function parses paths to inline
-    images from the email body and attaches them to the provided email message object.
+    Prepares an HTML email template by embedding image files as inline attachments and replacing their references
+    in the email body with corresponding Content-ID (cid) references.
 
     Args:
-        body (str): The HTML content of the email containing paths to inline images.
+        body (str): The HTML content of the email body containing image references to be embedded.
         msg (MIMEMultipart): The email message object to which the inline images will be attached.
 
     Returns:
-        str: The formatted email body with inline images replaced by their corresponding CIDs.
+        str: The modified HTML email body wrapped inside a standard structure with inline images referenced by Content-ID.
     """
     matches = CID_PATTERN.findall(body)
 
@@ -105,26 +104,26 @@ def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
 
     return wrapped
 
-
-def send_mail(config: MailerConfig, to_address: str, subject: str, body: str) -> None:
+def send_mail(config: MailerConfig, to_address: str, subject: str, body: str, bcc_address: str | None = None) -> None:
     """
-    Sends an email with the specified parameters using the provided mailer
-    configuration.
+    Sends an email using the specified configuration.
 
-    This function supports sending HTML emails with inline images and also ensures
-    rate limiting for mail dispatch. The email can be sent using either TLS or SSL
-    as defined in the mailer configuration.
+    This function constructs and sends an email using the provided configuration and
+    parameters. It handles both plain and HTML email formats and supports sending
+    BCC (Blind Carbon Copy) emails, if provided. The function also manages secure
+    connections using TLS or SSL based on the configuration settings.
 
     Args:
-        config (MailerConfig): Configuration object containing SMTP details and
-            authentication credentials.
-        to_address (str): Recipient email address.
-        subject (str): Subject of the email.
-        body (str): HTML content of the email body.
+        config (MailerConfig): Configuration object containing email sending parameters
+            such as SMTP server details, sender address, and authentication credentials.
+        to_address (str): The recipient email address.
+        subject (str): The subject line of the email.
+        body (str): The email message content, which will be embedded as HTML in the email.
+        bcc_address (str | None): An optional BCC recipient email address.
 
     Raises:
-        RuntimeError: If the mailer configuration is missing.
-        Exception: For any error encountered during the email-sending process.
+        RuntimeError: If the mailer configuration is missing or invalid.
+        Exception: For any errors that occur while sending the email.
     """
 
     if not config:
@@ -133,42 +132,48 @@ def send_mail(config: MailerConfig, to_address: str, subject: str, body: str) ->
     #  Rate Limiter prüfen
     wait_for_slot("mailer", limit=40, window=60)
 
-    # multipart/related erlaubt HTML + Bilder
     msg = MIMEMultipart("related")
     msg["Subject"] = subject
     msg["From"] = config.from_address
     msg["To"] = to_address
+    if bcc_address:
+        msg["Bcc"] = bcc_address  # 🟩 Header nur zur Info (nicht für SMTP nötig)
 
-    # multipart/alternative für Text+HTML-Body
-    msg_alternative = MIMEMultipart("alternative")
-    msg.attach(msg_alternative)
+    msg_alt = MIMEMultipart("alternative")
+    msg.attach(msg_alt)
 
-    # HTML vorbereiten (mit inline Bildern und Wrapper)
     html_out = prepare_template_for_mail(body, msg)
+    msg_alt.attach(MIMEText(html_out, "html", "utf-8"))
 
-    html_part = MIMEText(html_out, "html", "utf-8")
-    msg_alternative.attach(html_part)
-
+    # SMTP Versand
     try:
         context = ssl.create_default_context()
 
+        recipients = [to_address]
+        if bcc_address:
+            recipients.append(bcc_address)  # 🟩 Empfänger explizit ergänzen
+
         if config.use_tls:
-            logger.debug(f"Verbinde per STARTTLS mit {config.smtp_host}:{config.smtp_port}")
+            logger.debug(f"📡 Verbinde per STARTTLS mit {config.smtp_host}:{config.smtp_port}")
             with smtplib.SMTP(config.smtp_host, config.smtp_port) as server:
                 server.starttls(context=context)
                 if config.smtp_user and config.smtp_password:
                     server.login(config.smtp_user, config.smtp_password)
-                server.send_message(msg)
+                server.sendmail(config.from_address, recipients, msg.as_string())
         else:
-            logger.debug(f"📡 Verbinde ohne TLS mit {config.smtp_host}:{config.smtp_port}")
+            logger.debug(f"📡 Verbinde per SSL mit {config.smtp_host}:{config.smtp_port}")
             with smtplib.SMTP_SSL(config.smtp_host, config.smtp_port, context=context) as server:
                 if config.smtp_user and config.smtp_password:
                     server.login(config.smtp_user, config.smtp_password)
-                server.send_message(msg)
+                server.sendmail(config.from_address, recipients, msg.as_string())
 
-        logger.info(f"✅ Mail erfolgreich an {mask_email(to_address)} gesendet (Betreff: {subject})")
+        logger.info(
+            f"✅ Mail erfolgreich an {mask_email(to_address)}"
+            f"{' + BCC ' + mask_email(bcc_address) if bcc_address else ''} gesendet (Betreff: {subject})"
+        )
 
     except Exception as e:
         logger.exception(f"❌ Fehler beim Senden der Mail an {mask_email(to_address)}: {e}")
         raise
+
 

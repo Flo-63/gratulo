@@ -5,71 +5,72 @@ Module    : frontend/templates/members.html
 Created   : 2025-10-05
 Author    : Florian
 Purpose   : Provides the container for the dynamic list of members page
-
-@docstyle: google
-@language: english
-@voice: imperative
 ===============================================================================
 -->
-
 
 {% extends "base.html" %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto mt-10 space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-800">Verwaltung der Adressaten</h1>
-          <p><strong>Letzter CSV-Import:</strong>
-            {% if last_imported %}
-              {{ last_imported.strftime('%d.%m.%Y %H:%M') }}
-            {% else %}
-              noch nie
-            {% endif %}
-          </p>
-    </div>
 
-    <!-- CSV Import Bereich -->
-    <div class="bg-white shadow rounded-lg p-4">
-        <h2 class="text-xl font-semibold text-gray-700 mb-3">CSV Import</h2>
-        <form id="csv-import-form"
-              class="flex items-center gap-3"
-              hx-post="/htmx/members/import-validate"
-              hx-target="#import-area"
-              hx-encoding="multipart/form-data">
-            <input type="file" name="file" accept=".csv"
-                   class="border rounded p-2 text-sm flex-1" required>
-            <button class="btn btn-green">
-                CSV prüfen
-            </button>
-        </form>
-        <p class="mt-2 text-xs text-gray-500">
-            Hinweis: Es wird erwartet, dass die CSV die komplette Mitgliederliste enthält.
-            Beim späteren Speichern wird die bestehende Tabelle ersetzt.
-        </p>
-    </div>
+  <!-- 🟦 Kopfbereich -->
+  <div class="flex justify-between items-center">
+    <h1 class="text-3xl font-bold text-gray-800">
+      Verwaltung der {{ LABELS_DISPLAY.entity_plural }}
+    </h1>
+    <p>
+      <strong>Letzter CSV-Import:</strong>
+      {% if last_imported %}
+        {{ last_imported.strftime('%d.%m.%Y %H:%M') }}
+      {% else %}
+        noch nie
+      {% endif %}
+    </p>
+  </div>
 
-    <!-- Vorschau- und Fehlerbereich -->
-    <div id="import-area"></div>
+  <!-- 🟨 CSV Import Bereich -->
+  <div class="bg-white shadow rounded-lg p-4">
+    <h2 class="text-xl font-semibold text-gray-700 mb-3">CSV Import</h2>
 
-    <!-- Mitgliederliste -->
-    <div id="members-list"
-         hx-get="/members/list"
-         hx-trigger="load"
-         hx-target="#members-list"
-         hx-swap="innerHTML"
-         class="bg-white shadow rounded-lg p-4">
-        <!-- Hier wird die Liste durch HTMX geladen -->
-        <p class="text-gray-500">Mitglieder werden geladen...</p>
-    </div>
+    <form id="csv-import-form"
+          class="flex items-center gap-3"
+          hx-post="/htmx/members/import-validate"
+          hx-target="#import-area"
+          hx-encoding="multipart/form-data">
+      <input type="file" name="file" accept=".csv"
+             class="border rounded p-2 text-sm flex-1" required>
+      <button class="btn btn-green">
+        CSV prüfen
+      </button>
+    </form>
 
-    <!-- Gruppenliste -->
-    <div id="groups-list"
-         hx-get="/members/groups"
-         hx-trigger="load"
-         hx-target="#groups-list"
-         hx-swap="innerHTML"
-         class="bg-white shadow rounded-lg p-4 mt-6">
-      <p class="text-gray-500">Gruppen werden geladen...</p>
-    </div>
+    <p class="mt-2 text-xs text-gray-500">
+      Hinweis: Es wird erwartet, dass die CSV die komplette {{ LABELS_DISPLAY.entity_plural }}liste enthält.
+      Beim späteren Speichern wird die bestehende Tabelle ersetzt.
+    </p>
+  </div>
+
+  <!-- 🟧 Vorschau- und Fehlerbereich -->
+  <div id="import-area"></div>
+
+  <!-- 🟩 Liste der Entitäten -->
+  <div id="members-list"
+       hx-get="/members/list"
+       hx-trigger="load"
+       hx-target="#members-list"
+       hx-swap="innerHTML"
+       class="bg-white shadow rounded-lg p-4">
+    <p class="text-gray-500">{{ LABELS_DISPLAY.entity_plural }} werden geladen...</p>
+  </div>
+
+  <!-- 🟪 Gruppenliste -->
+  <div id="groups-list"
+       hx-get="/members/groups"
+       hx-trigger="load"
+       hx-target="#groups-list"
+       hx-swap="innerHTML"
+       class="bg-white shadow rounded-lg p-4 mt-6">
+    <p class="text-gray-500">Gruppen werden geladen...</p>
+  </div>
 </div>
 {% endblock %}

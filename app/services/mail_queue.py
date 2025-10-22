@@ -43,23 +43,29 @@ MAIL_LOG_KEY = "mailer:log"
 # -----------------------------------------------------------------------------
 # Enqueue Mail
 # -----------------------------------------------------------------------------
-def enqueue_mail(to_address: str, subject: str, body: str, config_id: Optional[int] = None):
-    """Queues an email message to be processed asynchronously.
+def enqueue_mail(to_address: str, subject: str, body: str, config_id: Optional[int] = None, bcc_address: Optional[str] = None,):
+    """
+    Enqueues an email message into a Redis-based mail queue for asynchronous sending.
 
-    This function prepares a payload with the email details and enqueues it into
-    a Redis queue for further processing. It also logs the queuing operation,
-    anonymizing sensitive information for security purposes.
+    This function prepares the email payload with the provided data and pushes it
+    to the mail queue for processing. The queued email data includes details such
+    as recipient address, subject, body content, optional BCC address, and
+    configuration ID, along with the current timestamp at which the email was
+    queued.
 
     Args:
-        to_address: Recipient's email address.
-        subject: Email subject line.
-        body: Body content of the email.
-        config_id: Optional ID for configuration or additional context.
+        to_address (str): The email address of the primary recipient.
+        subject (str): The subject of the email.
+        body (str): The content of the email body.
+        config_id (Optional[int]): Optional configuration ID related to the email
+            settings or account to use for sending the email.
+        bcc_address (Optional[str]): Optional BCC recipient email address.
     """
     payload = {
         "to": to_address,
         "subject": subject,
         "body": body,
+        "bcc": bcc_address,
         "config_id": config_id,
         "queued_at": datetime.utcnow().isoformat(),
     }
@@ -72,18 +78,20 @@ def enqueue_mail(to_address: str, subject: str, body: str, config_id: Optional[i
 # -----------------------------------------------------------------------------
 def process_mail_queue(max_batch: int = 40):
     """
-    Processes the mail queue by sending a limited number of emails from the queue
-    and sets the next run time.
+    Processes the mail queue to send pending emails in batches.
 
-    This function checks the number of pending emails in the queue and attempts
-    to process up to the specified `max_batch` number of emails. For each email,
-    it retrieves the email job details, sends the email, and logs the success or
-    failure. If an error occurs, the email is re-queued for a later attempt. The
-    function also sets the next scheduled runtime for the mail queue's processing,
-    even if no emails are processed.
+    This function retrieves pending email jobs from a Redis queue, processes them
+    in batches, and sends the emails using the configured mailer setup. If the mailer
+    configuration is not available or an error occurs during the process, the function
+    handles errors gracefully and logs the necessary information. Unprocessed or failed
+    emails are requeued for later attempts.
 
     Args:
-        max_batch (int): The maximum number of emails to process in a single run.
+        max_batch (int): The maximum number of emails to process in a single batch. Defaults
+            to 40.
+
+    Raises:
+        Exception: Catches and logs any exceptions that may occur during email sending.
     """
     pending = redis_client.llen(MAIL_QUEUE_KEY)
 
@@ -117,12 +125,14 @@ def process_mail_queue(max_batch: int = 40):
             to_address = job["to"]
             subject = job["subject"]
             body = job["body"]
+            bcc = job.get("bcc")
 
             send_mail(
                 config=config,
                 to_address=to_address,
                 subject=subject,
                 body=body,
+                bcc_address=bcc,
             )
 
             _log_success(to_address, subject)
@@ -139,22 +149,25 @@ def process_mail_queue(max_batch: int = 40):
 # -----------------------------------------------------------------------------
 # Logging helpers
 # -----------------------------------------------------------------------------
-def _log_success(address: str, subject: str):
+def _log_success(address: str, subject: str, bcc: Optional[str] = None):
     """
-    Logs a successful email delivery to the Redis logging system.
+    Logs the success of a sent email by recording details in a Redis list.
 
-    This function creates a log entry for a successfully sent email, including details
-    like the anonymized recipient address, the email subject, and the timestamp of
-    the delivery. The entry is pushed into a Redis list and maintains only the latest
-    500 log entries in the list.
+    This function logs details such as the recipient's anonymized address,
+    optional bcc anonymized address, subject of the email, and a timestamp
+    indicating when the email was sent. The log is stored in Redis for record-keeping
+    and consists of at most 500 recent entries, retaining only the most recent records.
 
     Args:
-        address (str): The recipient's email address.
-        subject (str): The email's subject line.
+        address (str): The recipient's email address to be logged.
+        subject (str): The subject of the sent email.
+        bcc (Optional[str]): An optional bcc email address to be logged if provided.
+
     """
     entry = {
         "status": "sent",
         "to_hash": anonymize(address),
+        "bcc_hash": anonymize(bcc) if bcc else None,
         "subject": subject,
         "timestamp": datetime.utcnow().isoformat(),
     }
@@ -163,20 +176,21 @@ def _log_success(address: str, subject: str):
 
 def _log_error(job: dict, error_msg: str):
     """
-    Logs an error entry to the mail log with job details and error message.
+    Logs an error entry for a given job to the Redis mail log.
 
-    The function anonymizes sensitive job data before creating a log entry
-    and appends this entry to a Redis list. It ensures the log stores only
-    the most recent 500 entries.
+    This function anonymizes sensitive details from the job dictionary and stores
+    the error information in a Redis list under the mail log key. It also ensures
+    that the list does not grow beyond the specified limit.
 
     Args:
-        job (dict): A dictionary containing details of the job which failed.
-            Expected keys include "to" and "subject".
-        error_msg (str): A description of the error that occurred.
+        job (dict): Dictionary containing details of the job such as "to", "bcc",
+            and "subject".
+        error_msg (str): Error message to be logged with the job details.
     """
     entry = {
         "status": "error",
         "to_hash": anonymize(job.get("to")),
+        "bcc_hash": anonymize(job.get("bcc")) if job.get("bcc") else None,
         "subject": job.get("subject"),
         "error": error_msg,
         "timestamp": datetime.utcnow().isoformat(),
@@ -189,26 +203,24 @@ def _log_error(job: dict, error_msg: str):
 # -----------------------------------------------------------------------------
 def get_queue_status() -> dict:
     """
-    Retrieves the current status of the mail queue from a Redis database.
+    Gets the current status of the mail queue.
 
-    The function communicates with Redis to fetch data about the number of emails
-    pending in the queue, details of the last sent email, and the time remaining
-    for the next scheduled mail dispatch. If an error occurs during these
-    operations, a fallback dictionary containing default values and the error
-    message is returned.
+    This function accesses the Redis mailing queue and log to determine the pending
+    queued mails, the last sent email's timestamp, rate limit details, and the time
+    until the next scheduled run. If any error occurs during this process, a
+    fallback status is provided with default values.
 
     Returns:
-        dict: A dictionary containing the status of the mail queue with the
-        following keys:
-        - "queued" (int): The number of emails currently in the queue.
-        - "rate_limit_remaining" (int): The number of emails that can still be sent
-          within the current rate limit.
-        - "last_sent" (Optional[str]): The timestamp of the most recently sent
-          email, if applicable.
-        - "next_run_in" (int): The time remaining in seconds until the next
-          scheduled mail dispatch.
-        - "error" (Optional[str]): An error message, if an exception occurs during
-          the operation; otherwise, omitted.
+        dict: A dictionary containing the following keys:
+            - queued (int): Count of pending mails in the mailing queue.
+            - rate_limit_remaining (int): Remaining allowed mails for the current
+              rate limit window.
+            - last_sent (Optional[str]): Timestamp of the last successfully sent
+              email. None if unavailable.
+            - next_run_in (int): Seconds remaining until the next scheduled run.
+              Defaults to the rate limit window if calculation fails.
+            - error (Optional[str]): Description of the error if one occurs. None
+              if the operation succeeds.
     """
     try:
         pending = redis_client.llen(MAIL_QUEUE_KEY)

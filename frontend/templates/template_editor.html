@@ -5,16 +5,12 @@ Module    : frontend/templates/template_editor.html
 Created   : 2025-10-05
 Author    : Florian
 Purpose   : Provides WYSIWYG editor for templates (TinyMCE)
-
-@docstyle: google
-@language: english
-@voice: imperative
 ===============================================================================
 -->
 
 {% extends "base.html" %}
 
-{% block title %}Template-Editor – Geburtstagsmailer{% endblock %}
+{% block title %}Template-Editor – {{ LABELS_DISPLAY.entity_singular }}-Mailer{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
@@ -52,6 +48,16 @@ Purpose   : Provides WYSIWYG editor for templates (TinyMCE)
 
 <!-- TinyMCE lokal -->
 <script src="{{ url_for('static', path='js/tinymce/tinymce.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
+
+<!-- CSP-konformer Label-Kontext -->
+<script nonce="{{ csp_nonce }}">
+    window.GRATULO_LABEL_DATE1 = {{ LABELS_DISPLAY.date1 | tojson }};
+    window.GRATULO_LABEL_DATE1_TYPE = {{ LABELS_DISPLAY.date1_type | tojson }};
+    window.GRATULO_LABEL_DATE2 = {{ LABELS_DISPLAY.date2 | tojson }};
+    window.GRATULO_LABEL_DATE2_TYPE = {{ LABELS_DISPLAY.date2_type | tojson }};
+    window.GRATULO_LABEL_ENTITY_SINGULAR = {{ LABELS_DISPLAY.entity_singular | tojson }};
+</script>
+
 <script src="{{ url_for('static', path='js/tinymce_init.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
 <script src="{{ url_for('static', path='js/template_editor.js') }}" defer nonce="{{ csp_nonce }}"></script>
 {% endblock %}

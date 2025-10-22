@@ -90,30 +90,60 @@
         </div>
 
         <!-- 🟡 Vorlage (Runde Jubiläen) -->
-        <div x-show="selection === 'birthdate' || selection === 'entry'">
-          <label class="block text-sm font-medium text-gray-700">Vorlage (Runde Jubiläen)</label>
-          <select name="round_template_id"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option value="">– Optional wählen –</option>
-            {% for t in templates %}
-              <option value="{{ t.id }}" {% if job and job.round_template_id == t.id %}selected{% endif %}>
-                {{ t.name }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
+        {% if labels.date1_type == "ANNIVERSARY" %}
+          <div x-show="selection === 'date1'">
+            <label class="block text-sm font-medium text-gray-700">Vorlage (Runde Jubiläen)</label>
+            <select name="round_template_id"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">– Optional wählen –</option>
+              {% for t in templates %}
+                <option value="{{ t.id }}" {% if job and job.round_template_id == t.id %}selected{% endif %}>
+                  {{ t.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
+
+        {% if labels.date2_type == "ANNIVERSARY" %}
+          <div x-show="selection === 'date2'">
+            <label class="block text-sm font-medium text-gray-700">Vorlage (Runde Jubiläen)</label>
+            <select name="round_template_id"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="">– Optional wählen –</option>
+              {% for t in templates %}
+                <option value="{{ t.id }}" {% if job and job.round_template_id == t.id %}selected{% endif %}>
+                  {{ t.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
+
+
 
       <!-- Selektion + Gruppe -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-gray-700">Selektion</label>
           <select name="selection" x-model="selection"
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            <option value="all" {% if job and job.selection == 'all' %}selected{% endif %}>Alle Mitglieder</option>
-            <option value="birthdate" {% if job and job.selection == 'birthdate' %}selected{% endif %}>Geburtstag</option>
-            <option value="entry" {% if job and job.selection == 'entry' %}selected{% endif %}>Eintritt</option>
-          </select>
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+              <option value="all" {% if job and job.selection == 'all' %}selected{% endif %}>
+                Alle {{ labels.entity_plural }}
+              </option>
+
+              {% if labels.date1 %}
+                <option value="date1" {% if job and job.selection == 'date1' %}selected{% endif %}>
+                  {{ labels.date1 }}
+                </option>
+              {% endif %}
+
+              {% if labels.date2 %}
+                <option value="date2" {% if job and job.selection == 'date2' %}selected{% endif %}>
+                  {{ labels.date2 }}
+                </option>
+              {% endif %}
+           </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Gruppe</label>

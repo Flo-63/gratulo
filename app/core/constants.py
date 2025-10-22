@@ -60,13 +60,105 @@ ROUND_ENTRY_YEARS = [
     5, 10, 25, 40, 50, 60, 70
 ]
 
+# ============================================================================
+# 🏷️ Custom Field Labels (konfigurierbar über .env)
+# ============================================================================
+
+# Diese Labels können in Templates / UI als Beschriftung für Spalten, Felder etc. verwendet werden
+# z. B. "Geburtstag" -> "Wartungstermin", "Eintritt" -> "Servicebeginn"
+
+LABELS = {
+    "date1": os.getenv("LABEL_DATE1", "Geburtstag"),
+    "date1_type": os.getenv("LABEL_DATE1_TYPE", "ANNIVERSARY").upper(),
+    "date1_frequency_months": int(os.getenv("LABEL_DATE1_FREQUENCY_MONTHS", "12")),
+    "date2": os.getenv("LABEL_DATE2", "Eintritt"),
+    "date2_type": os.getenv("LABEL_DATE2_TYPE", "ANNIVERSARY").upper(),
+    "date2_frequency_months": int(os.getenv("LABEL_DATE2_FREQUENCY_MONTHS", "12")),
+    "section2": os.getenv("LABEL_SECTION2", "Mitgliedschaft"),
+    "entity_singular": os.getenv("LABEL_ENTITY_SINGULAR", "Mitglied"),
+    "entity_plural": os.getenv("LABEL_ENTITY_PLURAL", "Mitglieder"),
+    "entity_gender": os.getenv("LABEL_ENTITY_GENDER", "n"),
+}
+if LABELS["entity_gender"].lower() not in ("m", "f", "n"):
+    LABELS["entity_gender"] = "n"
+
+
+def _label_with_suffix(base_label: str, suffix: str = "datum") -> str:
+    """
+    Generates a label by optionally appending a suffix to the given base label.
+
+    This function takes a base label and appends a suffix to it unless the base
+    label already contains specific keywords. The suffix is intelligently appended
+    to ensure proper grammatical structure.
+
+    Args:
+        base_label (str): The base string to which the suffix may be appended.
+        suffix (str, optional): The string to append to the base label. Defaults to "datum".
+
+    Returns:
+        str: The resulting label after appending the suffix (if applicable).
+    """
+    label_lower = base_label.lower()
+    if any(x in label_lower for x in ["datum", "termin", "beginn", "start"]):
+        return base_label
+    return f"{base_label}{'s' if not base_label.endswith('s') else ''}{suffix}"
+
+
+# Precompute “display labels” (i.e. human-readable)
+LABELS_DISPLAY = {
+    "date1": (
+        LABELS["date1"]
+        if LABELS["date1_type"].upper() == "ANNIVERSARY"
+        else _label_with_suffix(LABELS["date1"])
+    ),
+    "date1_type": LABELS["date1_type"],
+    "date1_frequency_months": LABELS["date1_frequency_months"],
+    "date2": (
+        LABELS["date2"]
+        if LABELS["date2_type"].upper() == "ANNIVERSARY"
+        else _label_with_suffix(LABELS["date2"])
+    ),
+    "date2_type": LABELS["date2_type"],
+    "date2_frequency_months": LABELS["date2_frequency_months"],
+    "section2": LABELS["section2"],
+    "entity_singular": LABELS["entity_singular"],
+    "entity_plural": LABELS["entity_plural"],
+    "entity_gender": LABELS["entity_gender"],
+}
+
 def is_round_birthday(age: int) -> bool:
-    """Return True if the given age counts as a round-number birthday."""
+    """
+    Determines if the given age corresponds to a round-numbered birthday.
+
+    A round-numbered birthday is defined as an age that appears in the
+    set ROUND_BIRTHDAY_YEARS. This function checks if the provided age
+    is in this set and returns a boolean result.
+
+    Args:
+        age: The age to check for a round-numbered birthday.
+
+    Returns:
+        bool: True if the age corresponds to a round-numbered birthday,
+        False otherwise.
+    """
     return age in ROUND_BIRTHDAY_YEARS
 
 
 def is_round_entry(years: int) -> bool:
-    """Return True if the given membership duration counts as a round-number anniversary."""
+    """
+    Determines whether a given year is part of the predefined round entry years.
+
+    This function checks if the provided year is included in the list
+    of ROUND_ENTRY_YEARS. It returns a boolean indicating the result of
+    this membership test.
+
+    Args:
+        years: The year to check for inclusion in the ROUND_ENTRY_YEARS
+            list.
+
+    Returns:
+        bool: True if the year is in ROUND_ENTRY_YEARS, False otherwise.
+    """
     return years in ROUND_ENTRY_YEARS
 
 
@@ -80,3 +172,4 @@ if _env_user and _env_pw:
 else:
     INITIAL_ADMIN_USER = None
     INITIAL_PASSWORD = None
+

@@ -5,24 +5,34 @@ Module    : frontend/templates/member_editor.html
 Created   : 2025-10-05
 Author    : Florian
 Purpose   : Provides the container for the dynamic member editor page
-
-@docstyle: google
-@language: english
-@voice: imperative
 ===============================================================================
 -->
 
-
 {% extends "base.html" %}
 
-{% block title %}Mitglied bearbeiten{% endblock %}
+{% block title %}
+  {{ LABELS_DISPLAY.entity_singular }} bearbeiten
+{% endblock %}
 
 {% block content %}
+  {% set article =
+    'Neue' if LABELS_DISPLAY.entity_gender == 'f'
+    else 'Neuer' if LABELS_DISPLAY.entity_gender == 'm'
+    else 'Neues'
+  %}
+
   <div id="member-form-container" class="max-w-3xl mx-auto mt-10 space-y-8">
+
+    <!-- 🟦 Überschrift dynamisch nach Kontext -->
     <h2 class="text-2xl font-bold text-gray-800">
-      {{ 'Mitglied bearbeiten' if member else 'Neues Mitglied anlegen' }}
+      {% if member %}
+        {{ LABELS_DISPLAY.entity_singular }} bearbeiten
+      {% else %}
+        {{ LABELS_DISPLAY.entity_singular }} anlegen
+      {% endif %}
     </h2>
 
+    <!-- 🟥 Fehlermeldungen -->
     {% if errors %}
       <div class="bg-red-100 border border-red-300 text-red-700 p-3 rounded">
         <ul class="list-disc list-inside">
@@ -33,6 +43,7 @@ Purpose   : Provides the container for the dynamic member editor page
       </div>
     {% endif %}
 
+    <!-- 🟩 Editor-Formular -->
     {% include "partials/member_editor_form.html" %}
   </div>
 {% endblock content %}

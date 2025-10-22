@@ -25,18 +25,21 @@
 
         <!-- Selektion (ohne Icons) -->
         <td class="px-4 py-3">
-          {% if job.selection == "birthdate" %}
+          {% if job.selection == "date1" %}
             <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 text-xs font-medium">
-              Geburtstag
+              {{ LABELS_DISPLAY.date1 or 'Datum 1' }}
             </span>
-          {% elif job.selection == "entry" %}
+
+          {% elif job.selection == "date2" %}
             <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
-              Eintritt
+              {{ LABELS_DISPLAY.date2 or 'Datum 2' }}
             </span>
+
           {% elif job.selection == "all" %}
             <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-green-100 text-green-800 text-xs font-medium">
-              Alle
+              Alle {{ LABELS_DISPLAY.entity_plural or 'Mitglieder' }}
             </span>
+
           {% else %}
             <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
               –
