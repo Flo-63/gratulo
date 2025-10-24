@@ -23,9 +23,9 @@ RUN mkdir -p /app/app/data/instance \
     && mkdir -p /app/app/data/logos \
     && chown -R appuser:appuser /app/app/data
 
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh"
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh"
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 USER appuser
 
