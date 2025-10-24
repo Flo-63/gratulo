@@ -17,17 +17,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY frontend ./frontend
 
-# Verzeichnisse vorbereiten
-RUN mkdir -p /app/app/data/instance \
-    && mkdir -p /app/app/data/uploads \
-    && mkdir -p /app/app/data/logos \
-    && chown -R appuser:appuser /app/app/data
+# Verzeichnisse vorbereiten und Rechte setzen
+RUN mkdir -p /app/app/data/{instance,uploads,logos} \
+    && chown -R appuser:appuser /app/app/data \
+    && chown -R appuser:appuser /app/frontend
 
+# entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
-ENTRYPOINT ["/app/entrypoint.sh"]
 
 USER appuser
+
+ENTRYPOINT ["/app/entrypoint.sh"]
 
 EXPOSE 8000
 
