@@ -4,12 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="-allow smtp send without login">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/license.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/license.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/privacy.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/privacy.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/terms.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/terms.html" afterDir="false" />
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="-minor bugfixes">
+      <change beforePath="$PROJECT_DIR$/frontend/static/images/Logo-tailwindblue.gif" beforeDir="false" afterPath="$PROJECT_DIR$/app/data/logos/Logo-tailwindblue.gif" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,11 +79,11 @@
       <recent name="D:\Python\birthday_mailer\app\data\instance" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Python\gratulo\app\data\logos" />
       <recent name="D:\Python\gratulo\frontend\static\js" />
       <recent name="D:\Python\gratulo\frontend\static\css" />
       <recent name="D:\Python\birthday_mailer" />
       <recent name="D:\Python\birthday_mailer\app\helpers" />
-      <recent name="D:\Python\birthday_mailer\frontend\templates" />
     </key>
   </component>
   <component name="RunManager">
@@ -145,7 +141,7 @@
       <workItem from="1760942824323" duration="623000" />
       <workItem from="1760944616451" duration="6710000" />
       <workItem from="1760959418832" duration="37858000" />
-      <workItem from="1761131799627" duration="24958000" />
+      <workItem from="1761131799627" duration="25431000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -251,7 +247,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761154487640</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="-minor bugfixes">
+      <option name="closed" value="true" />
+      <created>1761298758811</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1761298758811</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -282,7 +286,8 @@
     <MESSAGE value="Fixes for Kamal deployment" />
     <MESSAGE value="Fixes for Kamal deployment (2)" />
     <MESSAGE value="-allow smtp send without login" />
-    <option name="LAST_COMMIT_MESSAGE" value="-allow smtp send without login" />
+    <MESSAGE value="-minor bugfixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="-minor bugfixes" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -292,7 +297,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761153536271" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761298766633" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>
