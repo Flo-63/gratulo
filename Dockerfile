@@ -20,7 +20,12 @@ COPY frontend ./frontend
 # Verzeichnisse vorbereiten
 RUN mkdir -p /app/app/data/instance \
     && mkdir -p /app/app/data/uploads \
+    && mkdir -p /app/app/data/logos \
     && chown -R appuser:appuser /app/app/data
+
+# Stelle sicher, dass static/images existiert
+RUN mkdir -p /app/app/static/images && \
+    ln -s /app/app/data/logos /app/app/static/images || true
 
 
 USER appuser

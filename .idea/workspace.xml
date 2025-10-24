@@ -4,9 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Fixes for Kamal deployment (2)">
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="-allow smtp send without login">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/helpers/mailer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/mailer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/license.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/license.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/privacy.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/privacy.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/legal/terms.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/legal/terms.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -142,7 +145,7 @@
       <workItem from="1760942824323" duration="623000" />
       <workItem from="1760944616451" duration="6710000" />
       <workItem from="1760959418832" duration="37858000" />
-      <workItem from="1761131799627" duration="20744000" />
+      <workItem from="1761131799627" duration="24958000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -240,7 +243,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761153554340</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="-allow smtp send without login">
+      <option name="closed" value="true" />
+      <created>1761154487640</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1761154487640</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -270,7 +281,8 @@
     <MESSAGE value="Allows other purposes than gratulation:&#10;-  Both dates can be defined with different names&#10;- Dates can be of type Anniversary or Event&#10;- Dates of type Event can have a recurrency of n months&#10;These settings currently live in .env." />
     <MESSAGE value="Fixes for Kamal deployment" />
     <MESSAGE value="Fixes for Kamal deployment (2)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes for Kamal deployment (2)" />
+    <MESSAGE value="-allow smtp send without login" />
+    <option name="LAST_COMMIT_MESSAGE" value="-allow smtp send without login" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
