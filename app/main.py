@@ -70,7 +70,7 @@ class ForwardedProtoMiddleware(BaseHTTPMiddleware):
 app.add_middleware(ForwardedProtoMiddleware)
 
 # Static mount
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR, follow_symlinks=True), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 
