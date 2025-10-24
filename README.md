@@ -11,6 +11,7 @@
 
 **gratulo** is a modular FastAPI-based application for managing and sending personalized congratulatory emails —  
 for example, birthdays, anniversaries, or other special occasions.  
+It now includes flexible date configuration, allowing you to redefine what each tracked date represents — for example, a membership anniversary or recurring service event.
 
 It supports multiple customizable templates for different event types and recipient groups.  
 The app is particularly suited for **clubs, associations, and small organizations**.
@@ -41,6 +42,10 @@ Template editor uses **TinyMCE** (GPL Community Edition).
 
 - **Automated congratulatory email generation** (birthdays, anniversaries, and more)
 - **Detection of "round" birthdays and anniversaries**
+- **Two fully configurable date fields** for different use cases:
+  - Customizable field names (e.g. “Birthday”, “Club entry”, “Service Start”, “Maintenance Date”)
+  - Adjustable meaning of each field as either `ANNIVERSARY` (e.g. birthdays, memberships) or `EVENT` (e.g. recurring service or maintenance dates)
+  - Optional frequency setting (in months) for repeating events, e.g. every 6 or 12 months
 - **Group & Member Management** – manually, via import, or through the API
 - **Template-based email creation** via **TinyMCE** (Community Edition)
 - **Job Scheduler** powered by **APScheduler**
@@ -149,10 +154,34 @@ JWT_EXPIRE_MINUTES=60
 # Base URL (used for template links and redirects)
 # ---------------------------------------------------------------------
 BASE_URL=http://localhost:8000
+
+# ---------------------------------------------------------------------
+# Custom Labels and Date Fields
+# ---------------------------------------------------------------------
+LABEL_DATE1="Birthday"               # Label for first date field
+LABEL_DATE1_TYPE="ANNIVERSARY"       # Type: ANNIVERSARY or EVENT
+LABEL_DATE1_FREQUENCY_MONTHS=12      # For EVENT: repeat interval in months
+
+LABEL_DATE2="Entry"                  # Label for second date field
+LABEL_DATE2_TYPE="ANNIVERSARY"
+LABEL_DATE2_FREQUENCY_MONTHS=12
+
+# Section / Entity labels for UI
+LABEL_SECTION2="Membership"          # e.g. “Service Contract”, “Team Affiliation”
+LABEL_ENTITY_SINGULAR="Member"       # e.g. “Customer”, “Colleague”
+LABEL_ENTITY_PLURAL="Members"
+LABEL_ENTITY_GENDER="n"              # “m”, “f”, or “n”
+
 ```
 
 This configuration defines:
 
+The application now supports fully customizable field labels and event types.  
+This allows Gratulo to adapt to various domains beyond clubs — e.g. for company anniversaries, recurring service appointments, or customer relationship reminders.
+
+- `ANNIVERSARY` fields automatically detect *round* occasions (e.g., 10, 20, 25, 50 years)
+- `EVENT` fields use a recurring frequency (in months)
+- All UI captions (entity names, section titles, and grammatical gender) are configurable
 - Encryption key (APP_SECRET) for Fernet-based field encryption.
 - Session and HTTPS settings for cookie management.
 - Redis connection for rate limiting and brute-force protection.

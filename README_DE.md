@@ -3,7 +3,8 @@
 ## Überblick
 
 gratulo ist eine modulare Anwendung auf Basis von FastAPI zur Erstellung und zum Versand personalisierter Gratulations-E-Mails –  
-zum Beispiel zu Geburtstagen, Jubiläen oder anderen besonderen Anlässen.
+zum Beispiel zu Geburtstagen, Jubiläen oder anderen besonderen Anlässen. Durch die vollständige Anpassung der Datumsfelder und 
+Ereignislogik ermöglicht Gratulo eine flexibler Einsatz für verschiedene Domänen – z. B. Vereine, Firmen, Servicepläne oder Kundenbeziehungen.
 
 Es können verschiedene Vorlagen für unterschiedliche Ereignisse und Empfängergruppen verwendet werden.  
 Die Anwendung ist insbesondere für Vereine, Organisationen und Gruppen geeignet, die regelmäßig Glückwünsche oder Informationsmails versenden möchten.
@@ -15,12 +16,16 @@ Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der GPL Community Ed
 
 ## Funktionen
 
-- Automatischer Versand von Glückwunsch-E-Mails (Geburtstage, Jubiläen usw.)
+- Automatischer Versand von Glückwunsch-E-Mails (Geburtstage, Jubiläen usw.) oder Erinnerungen zu Terminen etc.
+- **Zwei vollständig konfigurierbare Datumsfelder** für unterschiedliche Anwendungsfälle:
+  - Frei benennbare Feldnamen (z. B. "Geburtstag", "Vereinseintritt", „Wartungstermin“, „Servicebeginn“ etc.)
+  - Einstellbare Bedeutung der Datumsfelder als `ANNIVERSARY` (z. B. Jubiläen) oder `EVENT` (z. B. regelmäßige Termine)
+  - Frequenzsteuerung für wiederkehrende Events in Monaten (z. B. alle 6 Monate)
 - Erkennung und Behandlung von "runden" Geburtstagen und Jubiläen
-- Verwaltung von Mitgliedern und Gruppen über UI, Import oder API
+- Verwaltung von Adressaten und Gruppen über UI, Import oder API
 - Vorlagenbasierte E-Mail-Erstellung über TinyMCE Community Edition
 - Zeitgesteuerter Versand mit APScheduler
-- Sichere Authentifizierung mit JWT (python-jose)
+- Sichere Admin-Authentifizierung mit JWT (python-jose)
 - 2FA mit TOTP wählbar, Nutzung von Google Authenticator oder ähnlichen 
 - Unterstützung für SQLite und PostgreSQL
 - Asynchroner E-Mail-Versand über aiosmtplib
@@ -124,16 +129,39 @@ JWT_EXPIRE_MINUTES=60
 # Basis-URL (z. B. für Links in Vorlagen und Weiterleitungen)
 # ---------------------------------------------------------------------
 BASE_URL=http://localhost:8000
+
+# ---------------------------------------------------------------------
+# Benutzerdefinierte Labels und Datumsfelder
+# ---------------------------------------------------------------------
+LABEL_DATE1="Geburtstag"             # Bezeichnung des ersten Datumsfelds
+LABEL_DATE1_TYPE="ANNIVERSARY"       # Typ: ANNIVERSARY oder EVENT
+LABEL_DATE1_FREQUENCY_MONTHS=12      # Nur bei EVENT relevant: Wiederholung alle X Monate
+
+LABEL_DATE2="Eintritt"               # Bezeichnung des zweiten Datumsfelds
+LABEL_DATE2_TYPE="ANNIVERSARY"
+LABEL_DATE2_FREQUENCY_MONTHS=12
+
+# Bereichs-/Entitätsbezeichnungen für UI
+LABEL_SECTION2="Mitgliedschaft"      # z. B. "Servicevertrag", "Teamzugehörigkeit"
+LABEL_ENTITY_SINGULAR="Mitglied"     # Singular: z. B. "Kunde", "Kollege"
+LABEL_ENTITY_PLURAL="Mitglieder"     # Pluralform
+LABEL_ENTITY_GENDER="n"              # "m", "f" oder "n"
+
 ```
 
 Diese Konfiguration enthält:
-- Verschlüsselungs-Token (APP_SECRET) für gespeicherte Daten
+- Alle Kernparameter für Laufzeit, Authentifizierung und API
+- Neue Konfigurationsoptionen für die Feldbezeichnungen und Feldtypen
+   → erlaubt flexible Anpassung der Anwendung für andere Domänen (z. B. Firmen, Vereine, Servicepläne)
+- Steuerung der Ereignislogik:
+  - ANNIVERSARY: erkennt automatisch runde Jubiläen
+  - EVENT: nutzt eine einstellbare Wiederholungsfrequenz in Monaten
+- Anpassung aller Beschriftungen in der UI (Einzahl, Mehrzahl, Gender)Verschlüsselungs-Token (APP_SECRET) für gespeicherte Daten
 - Sitzungsparameter und HTTPS-Optionen
 - Redis-Verbindung für Rate Limiting und Anmelde-Schutz
 - Steuerung der "Dosierung" des Mail Versand
 - JWT-Einstellungen für API-Authentifizierung
 - Admin-Standardkonto für den Erststart 
-- Basis-URL, z.B. zur Erzeugung von Links in E-Mail-Vorlagen
 
 Die Konfiguration des SMTP Servers sowie des Admin Accounts erfolgt in der Ui.
 
