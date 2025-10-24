@@ -24,8 +24,7 @@ RUN mkdir -p /app/app/data/instance \
     && chown -R appuser:appuser /app/app/data
 
 # Stelle sicher, dass static/images existiert
-RUN mkdir -p /app/app/static/images && \
-    ln -s /app/app/data/logos /app/frontend/static/images || true
+RUN  ln -sf /app/app/data/logos /app/frontend/static/images
 
 
 USER appuser
