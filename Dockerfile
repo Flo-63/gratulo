@@ -23,9 +23,9 @@ RUN mkdir -p /app/app/data/instance \
     && mkdir -p /app/app/data/logos \
     && chown -R appuser:appuser /app/app/data
 
-# Stelle sicher, dass static/images existiert
-RUN  ln -sf /app/app/data/logos /app/frontend/static/images
-
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh"
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 USER appuser
 
