@@ -25,7 +25,7 @@ RUN mkdir -p /app/app/data/instance \
 
 # Stelle sicher, dass static/images existiert
 RUN mkdir -p /app/app/static/images && \
-    ln -s /app/app/data/logos /app/app/static/images || true
+    ln -s /app/app/data/logos /app/frontend/static/images || true
 
 
 USER appuser
