@@ -69,17 +69,8 @@ class ForwardedProtoMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(ForwardedProtoMiddleware)
 
-import os
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
-
 # Static mount
-# Symlink-Resolver für ältere Starlette-Versionen
-static_dir = Path(STATIC_DIR)
-if static_dir.is_symlink():
-    static_dir = static_dir.resolve()
-
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 

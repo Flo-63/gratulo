@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Fix FollowSymLinks">
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Fix FollowSymLinks for elder starlett version">
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -141,7 +141,7 @@
       <workItem from="1760942824323" duration="623000" />
       <workItem from="1760944616451" duration="6710000" />
       <workItem from="1760959418832" duration="37858000" />
-      <workItem from="1761131799627" duration="30016000" />
+      <workItem from="1761131799627" duration="30318000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -319,7 +319,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761303712761</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Fix FollowSymLinks for elder starlett version">
+      <option name="closed" value="true" />
+      <created>1761303931488</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1761303931488</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -357,7 +365,8 @@
     <MESSAGE value="Minor bugfixes fix symlink in Dockerfile" />
     <MESSAGE value="Fix permissions" />
     <MESSAGE value="Fix FollowSymLinks" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix FollowSymLinks" />
+    <MESSAGE value="Fix FollowSymLinks for elder starlett version" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix FollowSymLinks for elder starlett version" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
