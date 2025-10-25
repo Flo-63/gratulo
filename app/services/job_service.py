@@ -1,3 +1,31 @@
+"""
+===============================================================================
+Project   : gratulo
+Module    : app/services/job_service.py
+Created   : 2025-10-05
+Author    : Florian
+Purpose   : This module provides services for managing mail jobs.
+
+@docstyle: google
+@language: english
+@voice: imperative
+===============================================================================
+"""
+
+
+
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
+
+
+from app.core import models
+from app.helpers.cron_helper import build_cron
+from app.services.scheduler import register_job
+
+
+from datetime import datetime
+
 def save_job(
     db: Session,
     id: int | None,
@@ -122,3 +150,4 @@ def save_job(
     db.refresh(job)
     register_job(job)
     return job
+
