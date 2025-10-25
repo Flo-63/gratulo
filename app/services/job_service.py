@@ -1,31 +1,3 @@
-"""
-===============================================================================
-Project   : gratulo
-Module    : app/services/job_service.py
-Created   : 2025-10-05
-Author    : Florian
-Purpose   : This module provides services for managing mail jobs.
-
-@docstyle: google
-@language: english
-@voice: imperative
-===============================================================================
-"""
-
-
-
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-
-
-from app.core import models
-from app.helpers.cron_helper import build_cron
-from app.services.scheduler import register_job
-
-
-from datetime import datetime
-
 def save_job(
     db: Session,
     id: int | None,
@@ -35,7 +7,7 @@ def save_job(
     round_template_id: str | None,
     mode: str,                       # "once" | "regular"
     once_at: str | None,             # "%Y-%m-%dT%H:%M"
-    selection: str | None,           # "birthdate" | "entry" | "all" | "list"
+    selection: str | None,           # "date1" | "date2" | "birthdate" | "entry" | "all" | "list"
     interval_type: str | None,       # "daily" | "weekly" | "monthly"
     time: str | None,                # "HH:MM"
     weekday: str | None,             # "0".."6"
@@ -96,17 +68,28 @@ def save_job(
 
         # 🔹 einmaliger Job: kein CRON, keine Wiederholung
         job.once_at = parsed_once_at
-        job.cron = None  # Wichtig: explizit löschen
+        job.cron = None
         job.selection = selection
 
     elif mode == "regular":
-        if selection not in ("birthdate", "entry", "all", "list"):
-            raise HTTPException(status_code=400, detail="Selektion ungültig (birthdate|entry|all|list)")
+        # ---------------------------------------------------------------
+        # 🔍 NEUE & ALTE SELEKTIONEN akzeptieren ("date1"/"birthdate")
+        # ---------------------------------------------------------------
+        legacy_to_new = {"birthdate": "date1", "entry": "date2"}
+        selection_mapped = legacy_to_new.get(selection, selection)
 
-        # 🔹 Prüfe doppelte Selektionen für gleiche Gruppe
-        if selection in ("birthdate", "entry"):
+        valid_selections = ("date1", "date2", "all", "list")
+        if selection_mapped not in valid_selections:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Selektion ungültig ({'|'.join(valid_selections)})"
+            )
+
+        # 🔹 Prüfe doppelte Selektionen für gleiche Gruppe (egal ob alt oder neu)
+        if selection_mapped in ("date1", "date2"):
             q = db.query(models.MailerJob).filter(
-                models.MailerJob.selection == selection,
+                models.MailerJob.selection.in_(["date1", "birthdate"]) if selection_mapped == "date1"
+                else models.MailerJob.selection.in_(["date2", "entry"]),
                 models.MailerJob.group_id == group.id,
             )
             if id:
@@ -114,12 +97,12 @@ def save_job(
             if q.first():
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Es existiert bereits ein Job mit der Selektion '{selection}' für Gruppe '{group.name}'",
+                    detail=f"Es existiert bereits ein Job mit der Selektion '{selection_mapped}' für Gruppe '{group.name}'",
                 )
 
         cron_expr = build_cron(interval_type or "", time or "", weekday, monthday)
         job.cron = cron_expr
-        job.selection = selection
+        job.selection = selection_mapped
         job.once_at = None
 
     else:

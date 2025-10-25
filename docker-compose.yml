@@ -1,27 +1,29 @@
+version: "3.9"
+
 services:
-  app:
-    build: .
-    container_name: mailer_app
+  gratulo:
+    image: florianmoesch/gratulo:latest
+    container_name: gratulo_app
     ports:
       - "8000:8000"
     env_file:
       - .env
     volumes:
       - app_data:/app/app/data
+      - frontend_images:/app/frontend/static/images
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     restart: unless-stopped
-    user: "1000:1000"
     depends_on:
       - redis
 
   redis:
     image: redis:8.2-alpine
-    container_name: mailer_redis
+    container_name: gratulo_redis
     restart: unless-stopped
     expose:
       - "6379"
+
 volumes:
   app_data:
-
-
+  frontend_images:
