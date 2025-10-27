@@ -89,36 +89,58 @@
           </select>
         </div>
 
-        <!-- 🟡 Vorlage (Runde Jubiläen) -->
-        {% if labels.date1_type == "ANNIVERSARY" %}
-          <div x-show="selection === 'date1'">
-            <label class="block text-sm font-medium text-gray-700">Vorlage (Runde Jubiläen)</label>
-            <select name="round_template_id"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-              <option value="">– Optional wählen –</option>
-              {% for t in templates %}
-                <option value="{{ t.id }}" {% if job and job.round_template_id == t.id %}selected{% endif %}>
-                  {{ t.name }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-        {% endif %}
+         <!-- 🟡 Vorlage (Runde Jubiläen) -->
+        <div class="relative min-h-[5.5rem]">
+          {% if labels.date1_type == "ANNIVERSARY" %}
+            <div
+              x-cloak
+              x-show="selection === 'date1'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-95"
+              x-transition:enter-end="opacity-100 scale-100"
+              x-transition:leave="transition ease-in duration-200"
+              x-transition:leave-start="opacity-100 scale-100"
+              x-transition:leave-end="opacity-0 scale-95"
+              class="absolute top-0 left-0 w-full origin-top"
+            >
+              <label class="block text-sm font-medium text-gray-700">Vorlage (Runde Jubiläen)</label>
+              <select name="round_template_id"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="">– Optional wählen –</option>
+                {% for t in templates %}
+                  <option value="{{ t.id }}" {% if job and job.round_template_id == t.id %}selected{% endif %}>
+                    {{ t.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          {% endif %}
 
-        {% if labels.date2_type == "ANNIVERSARY" %}
-          <div x-show="selection === 'date2'">
-            <label class="block text-sm font-medium text-gray-700">Vorlage (Runde Jubiläen)</label>
-            <select name="round_template_id"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-              <option value="">– Optional wählen –</option>
-              {% for t in templates %}
-                <option value="{{ t.id }}" {% if job and job.round_template_id == t.id %}selected{% endif %}>
-                  {{ t.name }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-        {% endif %}
+          {% if labels.date2_type == "ANNIVERSARY" %}
+            <div
+              x-cloak
+              x-show="selection === 'date2'"
+              x-transition:enter="transition ease-out duration-300"
+              x-transition:enter-start="opacity-0 scale-95"
+              x-transition:enter-end="opacity-100 scale-100"
+              x-transition:leave="transition ease-in duration-200"
+              x-transition:leave-start="opacity-100 scale-100"
+              x-transition:leave-end="opacity-0 scale-95"
+              class="absolute top-0 left-0 w-full origin-top"
+            >
+              <label class="block text-sm font-medium text-gray-700">Vorlage (Runde Jubiläen)</label>
+              <select name="round_template_id"
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="">– Optional wählen –</option>
+                {% for t in templates %}
+                  <option value="{{ t.id }}" {% if job and job.round_template_id == t.id %}selected{% endif %}>
+                    {{ t.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          {% endif %}
+        </div>
 
 
 
@@ -146,20 +168,34 @@
            </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Gruppe</label>
-          <select name="group_id" required
-                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-            {% for g in groups %}
-              <option value="{{ g.id }}"
-                {% if job and job.group_id == g.id %}
-                  selected
-                {% elif not job and g.is_default %}
-                  selected
-                {% endif %}>
-                {{ g.name }}{% if g.is_default %} (Standard){% endif %}
-              </option>
-            {% endfor %}
-          </select>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Gruppe</label>
+              <select name="group_id"
+                      required
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+
+                <!-- 🆕 Option: Alle Gruppen (nur sichtbar, wenn Auswahl = 'all') -->
+                <template x-if="selection === 'all'">
+                  <option value="all"
+                    {% if job and (job.group_id == SYSTEM_GROUP_ID_ALL or job.group_id is none) %}
+                      selected
+                    {% endif %}>
+                    Alle Gruppen
+                  </option>
+                </template>
+
+                {% for g in groups %}
+                  <option value="{{ g.id }}"
+                    {% if job and job.group_id == g.id %}
+                      selected
+                    {% elif not job and g.is_default %}
+                      selected
+                    {% endif %}>
+                    {{ g.name }}{% if g.is_default %} (Standard){% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
         </div>
       </div>
     </div>

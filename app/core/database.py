@@ -15,13 +15,12 @@ Purpose   : This module provides database configuration and session management f
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.engine.url import make_url
 import os
 
 from app.core.deps import INSTANCE_DIR
-
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
 os.environ["LC_ALL"] = "C.UTF-8"
@@ -107,24 +106,31 @@ def ensure_database_exists():
     else:
         print(f"✅ Database '{db_url.database}' already exists.")
 
-from app.core import models
-from sqlalchemy.orm import Session
 
 def ensure_default_data(db: Session):
     """
-    Ensures that the database contains necessary default data, such as a default group, an example email
-    template, and a dummy mailer configuration. If any of these entries are missing, they will be created
-    and added to the database.
-
-    Args:
-        db (Session): SQLAlchemy database session used to interact with the database.
+    Ensures that the database contains necessary default data, such as a default group,
+    a system group ('Alle Gruppen'), an example template, and a dummy mailer config.
     """
+    from app.core import models
+    from app.core.constants import SYSTEM_GROUP_ID_ALL, SYSTEM_GROUP_NAME_ALL
     # --- Standard-Gruppe ---
     default_group = db.query(models.Group).filter_by(is_default=True).first()
     if not default_group:
         default_group = models.Group(name="Standard", is_default=True)
         db.add(default_group)
         print("🆕 Created default group: 'Standard'")
+
+    # --- 🆕 Systemgruppe "Alle Gruppen" ---
+    all_groups_entry = db.query(models.Group).filter_by(id=SYSTEM_GROUP_ID_ALL).first()
+    if not all_groups_entry:
+        all_groups_entry = models.Group(
+            id=SYSTEM_GROUP_ID_ALL,
+            name=SYSTEM_GROUP_NAME_ALL,
+            is_default=False
+        )
+        db.add(all_groups_entry)
+        print(f"🆕 Created system group: '{SYSTEM_GROUP_NAME_ALL}' (ID={SYSTEM_GROUP_ID_ALL})")
 
     # --- Optional: Beispiel-Template ---
     if not db.query(models.Template).first():
@@ -149,3 +155,4 @@ def ensure_default_data(db: Session):
         print("🆕 Created dummy mailer config")
 
     db.commit()
+

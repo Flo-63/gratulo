@@ -19,16 +19,16 @@ from fastapi.responses import HTMLResponse, Response
 from datetime import timezone, datetime
 from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 
 from app.core.database import get_db
 from app.core.deps import jinja_templates, context
 from app.core.auth import require_admin
 from app.core import models
-from app.core.constants import LOCAL_TZ
+from app.core.constants import MAIL_QUEUE_INTERVAL_SECONDS, RATE_LIMIT_WINDOW, SYSTEM_GROUP_ID_ALL, LOCAL_TZ
 from app.helpers.cron_helper import cron_to_human
 from app.services.job_service import save_job
 from app.services.mail_queue import get_queue_status
-from app.core.constants import MAIL_QUEUE_INTERVAL_SECONDS, RATE_LIMIT_WINDOW
 from app.services.scheduler import get_scheduler
 
 
@@ -43,43 +43,37 @@ jobs_htmx_router = APIRouter(
 def jobs_list(request: Request, db: Session = Depends(get_db)):
     """
     Fetches and renders a list of mailer jobs, sorted by creation date in descending order.
-
-    The function retrieves all mailer job entries from the database, converts their attributes to
-    human-readable format where applicable, and renders them in the context of an HTML template.
-
-    Args:
-        request (Request): The HTTP request object.
-        db (Session): Database session object injected via dependency.
-
-    Returns:
-        HTMLResponse: Rendered HTML response containing the list of mailer jobs.
+    Adds human-readable cron expressions and resolves group names correctly, including
+    the special system group 'Alle Gruppen'.
     """
 
-    jobs = db.query(models.MailerJob).order_by(models.MailerJob.created_at.desc()).all()
+    # Lade alle Jobs inkl. verknüpfter Gruppen (Vermeidung von Lazy Loading)
+    jobs = (
+        db.query(models.MailerJob)
+        .options(joinedload(models.MailerJob.group))
+        .order_by(models.MailerJob.created_at.desc())
+        .all()
+    )
 
-    jobs_with_human = []
+    # Ergänze menschenlesbare Cron-Strings + Gruppenbezeichnung
     for j in jobs:
-        jobs_with_human.append({
-            "id": j.id,
-            "subject": j.subject,
-            "name": j.name,
-            "selection": j.selection,
-            "group_id": j.group_id,
-            "group_name": j.group.name if j.group else None,
-            "cron": j.cron,
-            "cron_human": cron_to_human(j.cron) if j.cron else None,
-            "once_at": j.once_at.astimezone(LOCAL_TZ) if j.once_at else None,
-            "created_at": j.created_at.astimezone(LOCAL_TZ) if j.created_at else None,
-            "updated_at": j.updated_at.astimezone(LOCAL_TZ) if j.updated_at else None,
-            "template": j.template,
-            "round_template": j.round_template,  # 🔹 Falls du sie in der Tabelle brauchst
-            "bcc_address": j.bcc_address,        # ✅ NEU: BCC-Adresse an Template übergeben
-        })
+        j.cron_human = cron_to_human(j.cron) if j.cron else None
 
+        # Fallback für Systemgruppe
+        if j.group_id == SYSTEM_GROUP_ID_ALL:
+            j.group_name = "Alle Gruppen"
+        elif j.group:
+            j.group_name = j.group.name
+        else:
+            j.group_name = None
+
+    # Übergib ORM-Objekte ans Template
     return jinja_templates.TemplateResponse(
         "partials/jobs_list.html",
-        context(request, jobs=jobs_with_human, local_tz=LOCAL_TZ)
+        context(request, jobs=jobs, local_tz=LOCAL_TZ)
     )
+
+
 
 
 
@@ -97,7 +91,7 @@ async def save_job_endpoint(
     mode: str = Form(...),
     once_at: str | None = Form(None),
     selection: str | None = Form(None),
-    group_id: int | None = Form(None),
+    group_id: str | None = Form(None),
     interval_type: str | None = Form(None),
     time: str | None = Form(None),
     weekday: str | None = Form(None),
@@ -141,12 +135,23 @@ async def save_job_endpoint(
         raise HTTPException(status_code=400, detail="Bitte ein gültiges Template auswählen")
 
     # 🧩 Gruppe prüfen
-    group = db.query(models.Group).filter(models.Group.id == group_id).first() if group_id else None
-    if not group:
-        from app.services import group_service
-        group = group_service.get_default_group(db)
-    if not group:
-        raise HTTPException(status_code=400, detail="Keine gültige Gruppe gefunden")
+    if group_id == "all":
+        # Spezialfall: "Alle Gruppen" (Systemgruppe)
+        if selection != "all":
+            raise HTTPException(
+                status_code=400,
+                detail="Die Auswahl 'Alle Gruppen' ist nur bei Selektion 'Alle Mitglieder' erlaubt."
+            )
+        resolved_group_id = "all"
+    else:
+        group = db.query(models.Group).filter(models.Group.id == group_id).first() if group_id else None
+        if not group:
+            from app.services import group_service
+            group = group_service.get_default_group(db)
+        if not group:
+            raise HTTPException(status_code=400, detail="Keine gültige Gruppe gefunden")
+
+        resolved_group_id = group.id
 
     # 🧠 MIGRATION / VALIDIERUNG DER SELECTION
     # Abwärtskompatibilität: alte Werte ("birthdate", "entry") auf neue ummappen
@@ -175,7 +180,7 @@ async def save_job_endpoint(
         time=time,
         weekday=weekday,
         monthday=monthday,
-        group_id=group.id,
+        group_id=resolved_group_id,
         bcc_address=bcc_address,
     )
 
@@ -213,26 +218,12 @@ def delete_job(job_id: int, request: Request, db: Session = Depends(get_db)):
     db.commit()
 
     jobs = db.query(models.MailerJob).order_by(models.MailerJob.created_at.desc()).all()
-
-    jobs_with_human = []
     for j in jobs:
-        jobs_with_human.append({
-            "id": j.id,
-            "name": j.name,
-            "selection": j.selection,
-            "group_id": j.group_id,
-            "group_name":j.group.name if j.group else None,
-            "cron": j.cron,
-            "cron_human": cron_to_human(j.cron) if j.cron else None,
-            "once_at": j.once_at.astimezone(LOCAL_TZ) if j.once_at else None,
-            "created_at": j.created_at.astimezone(LOCAL_TZ) if j.created_at else None,
-            "updated_at": j.updated_at.astimezone(LOCAL_TZ) if j.updated_at else None,
-            "template": j.template,
-        })
+        j.cron_human = cron_to_human(j.cron) if j.cron else None
 
     return jinja_templates.TemplateResponse(
         "partials/jobs_list.html",
-        context(request, jobs=jobs_with_human, local_tz=LOCAL_TZ)
+        context(request, jobs=jobs, local_tz=LOCAL_TZ)
     )
 
 
@@ -274,6 +265,7 @@ def job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
         "partials/job_logs_modal.html",
         context(request, job=job, logs=logs, local_tz=LOCAL_TZ)
     )
+
 @jobs_htmx_router.delete("/{job_id}/logs", response_class=HTMLResponse)
 def delete_job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
     """

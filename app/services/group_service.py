@@ -19,19 +19,28 @@ from sqlalchemy.orm import Session
 from sqlalchemy import update
 
 from app.core import models
+from app.core.constants import SYSTEM_GROUP_ID_ALL
 
 
 def list_groups(db: Session) -> list[models.Group]:
     """
     Fetches and returns a list of all groups from the database, sorted by the group's name.
 
+    System groups (like 'Alle Gruppen') are automatically excluded to avoid accidental user interaction.
+
     Args:
         db (Session): The database session used to interact with the database.
 
     Returns:
-        list[models.Group]: A list of group instances, ordered by their name.
+        list[models.Group]: A list of non-system group instances, ordered by their name.
     """
-    return db.query(models.Group).order_by(models.Group.name).all()
+    return (
+        db.query(models.Group)
+        .filter(models.Group.id != SYSTEM_GROUP_ID_ALL)
+        .order_by(models.Group.name)
+        .all()
+    )
+
 
 def get_default_group(db: Session) -> models.Group | None:
     """

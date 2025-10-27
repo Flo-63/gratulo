@@ -22,9 +22,10 @@ from sqlalchemy.exc import IntegrityError
 from app.core import models
 from app.helpers.cron_helper import build_cron
 from app.services.scheduler import register_job
+from app.core.constants import LABELS_DISPLAY, LOCAL_TZ, SYSTEM_GROUP_ID_ALL
 
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 def save_job(
     db: Session,
@@ -67,16 +68,33 @@ def save_job(
     job.bcc_address = (bcc_address or "").strip() or None
 
     # --- Gruppe prüfen ---
-    if group_id:
-        group = db.query(models.Group).filter(models.Group.id == group_id).first()
+    if group_id == "all":
+        # Spezialfall "Alle Gruppen" (Systemgruppe)
+        if selection != "all":
+            raise HTTPException(
+                status_code=400,
+                detail="Die Auswahl 'Alle Gruppen' ist nur bei Selektion 'Alle Mitglieder' erlaubt."
+            )
+        job.group_id = SYSTEM_GROUP_ID_ALL
+        group = None  # Kein echtes Group-Objekt nötig
     else:
-        from app.services import group_service
-        group = group_service.get_default_group(db)
+        # Normale Gruppe
+        if group_id:
+            try:
+                group_id_int = int(group_id)
+            except ValueError:
+                raise HTTPException(status_code=400, detail="Ungültige Gruppen-ID")
 
-    if not group:
-        raise HTTPException(status_code=400, detail="Keine gültige Gruppe gefunden")
+            group = db.query(models.Group).filter(models.Group.id == group_id_int).first()
+        else:
+            from app.services import group_service
+            group = group_service.get_default_group(db)
 
-    job.group_id = group.id
+        if not group:
+            raise HTTPException(status_code=400, detail="Keine gültige Gruppe gefunden")
+
+        job.group_id = group.id
+
 
     # --- Modus: einmalig oder regelmäßig ---
     if mode == "once":
@@ -94,10 +112,18 @@ def save_job(
         if not parsed_once_at:
             raise HTTPException(status_code=400, detail=f"Ungültiges Datum/Zeit-Format: {once_at}")
 
+        # 🕓 Lokale Zeitzone anfügen, falls keine vorhanden
+        if parsed_once_at.tzinfo is None:
+            parsed_once_at = parsed_once_at.replace(tzinfo=LOCAL_TZ)
+
+        # 🌍 In UTC speichern, damit Scheduler + DB konsistent sind
+        parsed_once_at_utc = parsed_once_at.astimezone(timezone.utc)
+
         # 🔹 einmaliger Job: kein CRON, keine Wiederholung
-        job.once_at = parsed_once_at
+        job.once_at = parsed_once_at_utc
         job.cron = None
         job.selection = selection
+
 
     elif mode == "regular":
         # ---------------------------------------------------------------
@@ -123,9 +149,11 @@ def save_job(
             if id:
                 q = q.filter(models.MailerJob.id != id)
             if q.first():
+                # 🔸 Menschlich lesbares Label einfügen
+                selection_label = LABELS_DISPLAY.get(selection_mapped, selection_mapped)
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Es existiert bereits ein Job mit der Selektion '{selection_mapped}' für Gruppe '{group.name}'",
+                    detail=f"Es existiert bereits ein Job mit der Selektion '{selection_label}' für Gruppe '{group.name}'",
                 )
 
         cron_expr = build_cron(interval_type or "", time or "", weekday, monthday)

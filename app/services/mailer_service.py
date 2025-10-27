@@ -24,7 +24,7 @@ from app.core.models import MailerConfig, MailerJobLog
 from app.services.mail_queue import enqueue_mail
 from app.helpers.placeholders import resolve_placeholders
 from app.helpers.security_helper import anonymize, mask_email
-from app.core.constants import is_round_birthday, is_round_entry, LABELS
+from app.core.constants import is_round_birthday, is_round_entry, LABELS, SYSTEM_GROUP_ID_ALL
 
 logger = logging.getLogger(__name__)
 
@@ -384,6 +384,15 @@ def _resolve_recipients(db: Session, job: models.MailerJob, logical: date):
             ).all()
 
         return []
+
+    # ---------------------------
+    # Fall 0: "Alle Gruppen" aktiv (group_id is None)
+    # ---------------------------
+    if job.group is SYSTEM_GROUP_ID_ALL:
+        logger.info(f"[MailerService] Job {job.id}: 'Alle Gruppen' aktiviert → sende an alle Gruppen.")
+        q = db.query(models.Member)
+        return apply_selection(q)
+
 
     # ---------------------------
     # Fall A: Gruppe nicht default

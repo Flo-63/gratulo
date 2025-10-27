@@ -221,7 +221,27 @@ class MailerJob(Base):
 
     @property
     def once_at_local(self):
-        return self.once_at.astimezone(LOCAL_TZ) if self.once_at else None
+        """
+        Returns the 'once_at' timestamp converted from UTC to LOCAL_TZ (e.g. Europe/Berlin),
+        even if the database value is stored without timezone information.
+        """
+        dt = self.once_at
+        if not dt:
+            return None
+
+        try:
+            # 🧩 Falls SQLAlchemy ein "naives" Datum liefert → als UTC interpretieren
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+
+            # 🔁 In lokale Zeitzone konvertieren
+            return dt.astimezone(LOCAL_TZ)
+
+        except Exception as e:
+            print("⚠️ Fehler in once_at_local:", e)
+            return None
+
+
 
 class MailerJobLog(Base):
     """

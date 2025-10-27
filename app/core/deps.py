@@ -48,6 +48,7 @@ jinja_templates.env.globals.update({
     "BASE_URL": constants.BASE_URL,
     "LOCAL_TZ": constants.LOCAL_TZ,
     "CLUB_FOUNDATION_DATE": constants.CLUB_FOUNDATION_DATE,
+    "SYSTEM_GROUP_ID_ALL": constants.SYSTEM_GROUP_ID_ALL,
 })
 
 

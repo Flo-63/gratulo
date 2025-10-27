@@ -4,30 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Bugfix II">
-      <change afterPath="$PROJECT_DIR$/QUICKSTART.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/QUICKSTART_DE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/.env.sample" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/.env.sample_de" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/README-DOCKER.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/README-DOCKER_DE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/compose.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/compose.sh" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/docker-compose.dev.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/docker-compose.public.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker/docker-compose.test.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/images/Logo-tailwindblue-outline.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/images/Logo-tailwindblue.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/images/Logo-tailwindblue.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/static/images/Logo-tailwindblue.svg" afterDir="false" />
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Full First Release &#10;- regression tested&#10;- Documentation updated and completed&#10;- automated docker compose build scenarios">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README_DE.md" beforeDir="false" afterPath="$PROJECT_DIR$/README_DE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/data/logos/Logo-tailwindblue.gif" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entrypoint.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/deps.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/deps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/group_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/group_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/job_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/job_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/mail_queue.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/mail_queue.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/mailer_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/mailer_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/job_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/job_editor.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/jobs_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/jobs_list.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,29 +59,29 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "FastAPI.birthday_mailer.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.Uvicorn.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHELLCHECK.PATH": "C:\\Users\\Florian\\AppData\\Roaming\\JetBrains\\PyCharm2025.2\\plugins\\Shell Script\\shellcheck.exe",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "D:/Python/gratulo/frontend/static/images",
-    "list.type.of.created.stylesheet": "CSS",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "fileTemplates",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;FastAPI.birthday_mailer.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.Uvicorn.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;C:\\Users\\Florian\\AppData\\Roaming\\JetBrains\\PyCharm2025.2\\plugins\\Shell Script\\shellcheck.exe&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Python/gratulo/frontend/static/images&quot;,
+    &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;fileTemplates&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\Python\gratulo\frontend\static\images" />
@@ -164,7 +153,9 @@
       <workItem from="1760942824323" duration="623000" />
       <workItem from="1760944616451" duration="6710000" />
       <workItem from="1760959418832" duration="37858000" />
-      <workItem from="1761131799627" duration="85092000" />
+      <workItem from="1761131799627" duration="87886000" />
+      <workItem from="1761583441087" duration="19000" />
+      <workItem from="1761583474096" duration="12272000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -382,7 +373,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761435366263</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Full First Release &#10;- regression tested&#10;- Documentation updated and completed&#10;- automated docker compose build scenarios">
+      <option name="closed" value="true" />
+      <created>1761571730977</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1761571730977</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -400,7 +399,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="First Complete Version" />
     <MESSAGE value="Version ready for upload" />
     <MESSAGE value="Some enhancements of documentation" />
     <MESSAGE value="Enhancements:&#10;- Full Admin user model&#10;- 2FA with TOTP&#10;- Use Redis for mail queuing&#10;- Use Redis for throttling / limiting mail send&#10;- Introduce Queue Status Monitoring on Job Page&#10;- Allow Disable of REST API&#10;- Switch to TinyMCE Community (GPL-Licensed deploymnent)" />
@@ -425,7 +423,8 @@
     <MESSAGE value="Updated READMEs" />
     <MESSAGE value="Bugfix: Update job_service to accept new Selection fields" />
     <MESSAGE value="Bugfix II" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bugfix II" />
+    <MESSAGE value="Full First Release &#10;- regression tested&#10;- Documentation updated and completed&#10;- automated docker compose build scenarios" />
+    <option name="LAST_COMMIT_MESSAGE" value="Full First Release &#10;- regression tested&#10;- Documentation updated and completed&#10;- automated docker compose build scenarios" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -435,7 +434,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761500199908" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761595807219" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>
