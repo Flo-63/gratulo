@@ -58,9 +58,9 @@
     <!-- Letzter Versand -->
     <div>
       <span class="block text-gray-500">Letzter Versand</span>
-      {% if last_sent %}
+      {% if status.last_sent_local %}
         <span class="text-gray-800 font-semibold">
-          {{ last_sent.split('.')[0].replace('T', ' ') if last_sent else '' }}
+          {{ status.last_sent_local.split('.')[0].replace('T', ' ') if status.last_sent_local else '' }}
         </span>
       {% else %}
         <span class="text-gray-400 font-semibold">–</span>

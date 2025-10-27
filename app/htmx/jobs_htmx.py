@@ -334,30 +334,37 @@ def queue_status(request: Request):
 
 @jobs_htmx_router.get("/job-status", response_class=HTMLResponse)
 def job_status(request: Request):
-    """
-    Fetches the current job status and returns an HTML response with the status details.
-
-    This function retrieves the queue status and scheduler job details, computes the
-    next runtime for the scheduled job, and formats the data to be rendered using
-    a Jinja2 template. The HTML response includes the current status of the job
-    queue, rate limit window, and the interval for the mail queue worker.
-
-    Args:
-        request (Request): The incoming HTTP request object.
-
-    Returns:
-        HTMLResponse: The rendered HTML response containing job status details.
-    """
-
     scheduler = get_scheduler()
     status = get_queue_status() or {}
     status.setdefault("queued", 0)
     status.setdefault("next_run_in", 0)
     status.setdefault("rate_limit_window", RATE_LIMIT_WINDOW)
 
+    # 🔧 Localize 'last_sent' if present
+    last_sent = status.get("last_sent")
+    if last_sent:
+        try:
+            if isinstance(last_sent, str):
+                dt = datetime.fromisoformat(last_sent.replace("Z", "+00:00"))
+            elif isinstance(last_sent, datetime):
+                dt = last_sent
+            else:
+                dt = None
+
+            if dt:
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                status["last_sent_local"] = dt.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                status["last_sent_local"] = "-"
+        except Exception:
+            status["last_sent_local"] = "-"
+    else:
+        status["last_sent_local"] = "-"
+
+    # Scheduler-Status
     job = scheduler.get_job("mail_queue_worker")
     next_run = job.next_run_time if job else None
-
     tz = getattr(scheduler, "timezone", ZoneInfo("UTC"))
     now = datetime.now(tz)
 

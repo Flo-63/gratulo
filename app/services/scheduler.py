@@ -14,7 +14,7 @@ Purpose   : This module provides functionality for scheduling and executing jobs
 
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -175,6 +175,11 @@ def register_job(job: models.MailerJob) -> None:
 
     if job.once_at:
         run_date = job.once_at
+
+        # Falls DB-naiv (keine tzinfo) → als UTC interpretieren
+        if run_date.tzinfo is None:
+            run_date = run_date.replace(tzinfo=timezone.utc)
+
         # Nur in der Zukunft planen
         if run_date <= datetime.now(run_date.tzinfo or None):
             logger.info(f"[Scheduler] Once-Job {job.id} liegt in der Vergangenheit – nicht geplant.")

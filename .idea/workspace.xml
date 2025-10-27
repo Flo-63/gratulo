@@ -4,19 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="Full First Release &#10;- regression tested&#10;- Documentation updated and completed&#10;- automated docker compose build scenarios">
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="New Feature:&#10;Allow special case: send to all members and all groups">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/deps.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/deps.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/jobs_htmx.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/group_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/group_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/job_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/job_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/mail_queue.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/mail_queue.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/mailer_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/mailer_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/job_editor.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/job_editor.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/jobs_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/jobs_list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/scheduler.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/scheduler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/job_status.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/job_status.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -155,7 +148,7 @@
       <workItem from="1760959418832" duration="37858000" />
       <workItem from="1761131799627" duration="87886000" />
       <workItem from="1761583441087" duration="19000" />
-      <workItem from="1761583474096" duration="12272000" />
+      <workItem from="1761583474096" duration="15927000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -381,7 +374,15 @@
       <option name="project" value="LOCAL" />
       <updated>1761571730977</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="New Feature:&#10;Allow special case: send to all members and all groups">
+      <option name="closed" value="true" />
+      <created>1761596056600</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1761596056600</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -399,7 +400,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Version ready for upload" />
     <MESSAGE value="Some enhancements of documentation" />
     <MESSAGE value="Enhancements:&#10;- Full Admin user model&#10;- 2FA with TOTP&#10;- Use Redis for mail queuing&#10;- Use Redis for throttling / limiting mail send&#10;- Introduce Queue Status Monitoring on Job Page&#10;- Allow Disable of REST API&#10;- Switch to TinyMCE Community (GPL-Licensed deploymnent)" />
     <MESSAGE value="- Added commercial License" />
@@ -424,7 +424,8 @@
     <MESSAGE value="Bugfix: Update job_service to accept new Selection fields" />
     <MESSAGE value="Bugfix II" />
     <MESSAGE value="Full First Release &#10;- regression tested&#10;- Documentation updated and completed&#10;- automated docker compose build scenarios" />
-    <option name="LAST_COMMIT_MESSAGE" value="Full First Release &#10;- regression tested&#10;- Documentation updated and completed&#10;- automated docker compose build scenarios" />
+    <MESSAGE value="New Feature:&#10;Allow special case: send to all members and all groups" />
+    <option name="LAST_COMMIT_MESSAGE" value="New Feature:&#10;Allow special case: send to all members and all groups" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -434,7 +435,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761595807219" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1761599093184" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>
