@@ -1,0 +1,26 @@
+# Entwicklungsumgebung: bindet lokale Verzeichnisse ein
+# - Live Code Reload
+# - Live Frontend (inkl. static/images)
+# - Lokale Datenhaltung unter ./app/data
+
+services:
+  gratulo:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: gratulo-dev
+    volumes:
+      - ../app:/app/app
+      - ../frontend:/app/frontend
+      - ../app/app/data:/app/app/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    command: >
+      python -m watchfiles
+      "uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      /app/app /app/frontend
+
+
+
+
+

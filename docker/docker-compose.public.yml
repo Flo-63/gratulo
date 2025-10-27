@@ -1,0 +1,15 @@
+# Public Release: nutzt das veröffentlichte Image von Docker Hub.
+# - kein Build, nur Image-Pull
+# - persistente Volumes für Daten und Uploads
+
+services:
+  gratulo:
+    image: florianmoesch/gratulo:latest
+    volumes:
+      - app_data:/app/app/data
+      - frontend_images:/app/frontend/static/images
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+volumes:
+  app_data:
+  frontend_images:

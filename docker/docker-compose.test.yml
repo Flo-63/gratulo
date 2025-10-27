@@ -1,0 +1,18 @@
+# Testumgebung: baut lokales Image aus dem Repo, verwendet aber persistente Volumes.
+# - keine Live-Mounts
+# - simulierter Containerbetrieb mit echten Datenvolumes
+
+services:
+  gratulo:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: gratulo-test
+    volumes:
+      - app_data:/app/app/data
+      - frontend_images:/app/frontend/static/images
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+volumes:
+  app_data:
+  frontend_images:

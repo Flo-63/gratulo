@@ -41,6 +41,20 @@ Zur Bearbeitung von Vorlagen wird der Editor **TinyMCE** in der GPL Community Ed
 
 ---
 
+## Schnellstart
+
+Wenn Sie **gratulo** einfach einmal ausprobieren möchten, ohne Python oder Abhängigkeiten zu installieren,  
+lesen Sie den **[Quick Start Guide](./QUICKSTART_DE.md)**.  
+Dort wird Schritt für Schritt erklärt, wie Sie gratulo in wenigen Minuten per Docker starten.
+
+---
+
+## Für Entwickler
+
+Diese Dokumentation richtet sich an Entwickler und Integratoren. Sie beschreibt Einrichtung, Konfiguration und Architektur von gratulo.
+Eine ausführliche Beschreibung der Docker-Umgebungen finden Sie unter 
+[docker/README-DOCKER_DE.md](./docker/README-DOCKER_DE.md).
+
 ## Technische Basis
 
 | Komponente               | Technologie                               |
@@ -187,45 +201,6 @@ Zugriff unter: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 ```bash
 gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
 ```
-
-## Installation und Betrieb mit Docker
-
-### Manuelles Erstellen und Starten
-
-```bash
-docker build -t gratulo .
-docker run -d -p 8000:8000 --env-file .env gratulo
-```
-Damit wird die Anwendung in einem Container gestartet, der Port 8000 nach außen bereitstellt.
-Die Konfiguration erfolgt über die Datei .env im Projektverzeichnis.
-
-
-### Bauen mit Docker Compose
-```bash
-docker compose build --no-cache
-oder
-docker compose up -d --force-recreate
-```
-So wird der Container komplett neu gebaut, mit no-cache wird der build-cache ebenfalls neu erstellt.  
-
-### Laufenlassen unter Docker Compose
-```bash
-docker compose up -d
-```
-Die mitgelieferte Datei docker-compose.yml startet automatisch:
-- den gratulo-Container (FastAPI-Anwendung),
-- eine Redis-Instanz (Rate Limiting, Brute-Force-Schutz),
-- optional eine PostgreSQL-Datenbank.
-
-### Docker Logs anzeigen:
-```bash
-docker compose logs -f
-```
-### Container beenden:
-
-```bash
-    docker compose down
- ```
 ---
 
 ## API-Dokumentation
@@ -237,7 +212,6 @@ docker compose logs -f
 
 ## Zukünftige Erweiterungen
 
-* Dashboard mit Versandstatistiken und Fehleranalyse
 * Zentrale Benachrichtigungsübersicht für anstehende Ereignisse
 * Unterstützung mehrsprachiger Vorlagen
 * Newsletter Funktionen

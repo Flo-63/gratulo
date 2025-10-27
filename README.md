@@ -25,18 +25,6 @@ Template editor uses **TinyMCE** (GPL Community Edition).
 
 ---
 
-## Table of Contents
-
-1. [Features](#-features)
-2. [Tech Stack](#-tech-stack)
-3. [Installation](#-installation)
-4. [Environment Configuration](#-environment-configuration)
-5. [Running the Application](#-running-the-application)
-6. [API Overview](#-api-overview)
-7. [License](#-license)
-8. [Author](#-author)
-
----
 
 ## Features
 
@@ -61,6 +49,37 @@ Template editor uses **TinyMCE** (GPL Community Edition).
 - **Encrypted storage** for all sensitive data (AES-based field-level encryption)
 - **GDPR-compliant deletion** – supports *soft delete* and *secure wipe*
 - **Jinja2-based templates** for consistent UI
+
+---
+
+## Quick Start
+
+If you simply want to try out **gratulo** without writing any code or installing Python,  
+check out the **[Quick Start Guide](./QUICKSTART.md)**.  
+It explains how to start gratulo in a few minutes using Docker.
+
+---
+
+## For Developers
+
+This document covers development setup, configuration, and internal architecture.  
+If you plan to contribute, extend, or integrate gratulo, start here.
+
+For detailed Docker environment setup (development, test, public),  
+refer to [docker/README-DOCKER.md](./docker/README-DOCKER.md).
+
+---
+
+## Table of Contents
+
+1. [Features](#-features)
+2. [Tech Stack](#-tech-stack)
+3. [Installation](#-installation)
+4. [Environment Configuration](#-environment-configuration)
+5. [Running the Application](#-running-the-application)
+6. [API Overview](#-api-overview)
+7. [License](#-license)
+8. [Author](#-author)
 
 ---
 
@@ -216,39 +235,6 @@ gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
 
 ---
 
-## Running with Docker
-
-### Build and run the container manually
-
-```bash
-docker build -t gratulo .
-docker run -d -p 8000:8000 --env-file .env gratulo
-```
-This starts the application inside a container on port 8000.
-The .env file from your project root provides configuration (e.g., database, SMTP, Redis).
-
-### Build with Docker Compose
-```bash
-docker compose build --no-cache
-or
-docker compose up -d --force-recreate
-```
-### Run with Docker Compose
-```bash
-docker compose up -d
-```
-This uses the included docker-compose.yml file, which provides all required services.
-You can view logs with:
-
-```bash
-docker compose logs -f
-```
-And stop all containers with:
-```bash
-docker compose down
-```
----
-
 ## API Overview
 
 | Endpoint              | Method                    | Description                                 |
@@ -282,9 +268,6 @@ See [`COMMERCIAL_LICENSE_EN.md`](./COMMERCIAL_LICENSE_EN.md) for details.
 ---
 
 ## Future Enhancements (Planned)
-- **Advanced Birthday & Anniversary Logic**  
-  Support for “special” occasions such as *round birthdays* (e.g., 30th, 40th, 50th)  
-  or long-term anniversaries (e.g., 10-year memberships).
 
 -  **Dashboard for Sending Statistics**  
   Visual overview of sent, pending, and failed messages with filtering options.

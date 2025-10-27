@@ -1,0 +1,19 @@
+# Diese config definiert die gemeinsame Basis, um den Container für Gratulo
+# - neu zu bauen und zu starten ("DEV")
+# - direkt aus dem Repo zu laden.
+
+services:
+  gratulo:
+    image: florianmoesch/gratulo:latest
+    container_name: gratulo_app
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+    restart: always
+  redis:
+    image: redis:8.2-alpine
+    container_name: gratulo_redis
+    restart: unless-stopped
+    expose:
+      - "6379"

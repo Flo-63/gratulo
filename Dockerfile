@@ -18,22 +18,11 @@ COPY app ./app
 COPY frontend ./frontend
 
 # Verzeichnisse vorbereiten und Rechte setzen
-RUN mkdir -p /app/app/data/{instance,uploads,logos} \
+RUN bash -c "mkdir -p /app/app/data/{instance,uploads}" \
     && chown -R appuser:appuser /app/app/data \
     && chown -R appuser:appuser /app/frontend
 
-# Sicherstellen, dass /app/frontend/static/images ein Verzeichnis ist
-RUN rm -f /app/frontend/static/images && mkdir -p /app/frontend/static/images \
-    && chown -R appuser:appuser /app/frontend/static/images
-
-
-# entrypoint
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
 USER appuser
-
-ENTRYPOINT ["/app/entrypoint.sh"]
 
 EXPOSE 8000
 
