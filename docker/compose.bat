@@ -6,10 +6,13 @@ REM -----------------------------------------------------------
 REM Konfiguration
 REM -----------------------------------------------------------
 set LANGUAGE=de
-REM set LANGUAGE=en
-
 set "MODE=%~1"
 if "%MODE%"=="" set "MODE=dev"
+
+set "BASE_ENV=.env.base"
+set "MODE_ENV=.env.%MODE%"
+set "TMP_ENV=.env.merged"
+set "OVERRIDE_YML=.envfile.override.yml"
 
 REM -----------------------------------------------------------
 REM Sprachtexte
@@ -32,6 +35,7 @@ if /I "%LANGUAGE%"=="de" (
   set "deleting=Lösche Container und Volumes..."
   set "deleted=Alles wurde gelöscht."
   set "cancel=Abgebrochen – keine Änderungen vorgenommen."
+  set "err_base=Fehler: .env.base fehlt – Abbruch."
 ) else (
   set "usage=Usage:"
   set "dev_desc=Start development environment (Hot Reload)"
@@ -50,6 +54,7 @@ if /I "%LANGUAGE%"=="de" (
   set "deleting=Deleting containers and volumes..."
   set "deleted=All items have been removed."
   set "cancel=Cancelled – no changes made."
+  set "err_base=Error: .env.base missing – aborting."
 )
 
 REM -----------------------------------------------------------
@@ -66,15 +71,32 @@ if /I "%MODE%"=="help" (
 )
 
 REM -----------------------------------------------------------
-REM Environment files
+REM Environment-Dateien mergen
 REM -----------------------------------------------------------
-set "ENV_FILES=--env-file .env.base"
-if exist ".env.%MODE%" (
-    echo !env_used! .env.base + .env.%MODE%
-    set "ENV_FILES=!ENV_FILES! --env-file .env.%MODE%"
-) else (
-    echo !env_missing!
+if not exist "%BASE_ENV%" (
+  echo ? !err_base!
+  goto END
 )
+
+copy /y "%BASE_ENV%" "%TMP_ENV%" >nul
+
+if exist "%MODE_ENV%" (
+  echo !env_used! .env.base + .env.%MODE%
+  for /f "usebackq tokens=1,* delims==" %%A in ("%MODE_ENV%") do (
+    call :UPDATE_ENV "%%A" "%%B" "%TMP_ENV%"
+  )
+) else (
+  echo !env_missing!
+)
+
+echo ? Erzeugte Merge-Datei: %TMP_ENV%
+
+(
+  echo services:
+  echo   gratulo:
+  echo     env_file:
+  echo       - %TMP_ENV%
+) > "%OVERRIDE_YML%"
 
 REM -----------------------------------------------------------
 REM Main logic
@@ -96,17 +118,17 @@ goto END
 
 :DEV
 echo !start_dev!
-docker compose -f docker-compose.yml -f docker-compose.dev.yml %ENV_FILES% up --build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml -f "%OVERRIDE_YML%" up --build
 goto END
 
 :TEST
 echo !start_test!
-docker compose -f docker-compose.yml -f docker-compose.test.yml %ENV_FILES% up --build
+docker compose -f docker-compose.yml -f docker-compose.test.yml -f "%OVERRIDE_YML%" up --build
 goto END
 
 :PUBLIC
 echo !start_public!
-docker compose -f docker-compose.yml -f docker-compose.public.yml %ENV_FILES% up -d
+docker compose -f docker-compose.yml -f docker-compose.public.yml -f "%OVERRIDE_YML%" up -d
 goto END
 
 :DOWN
@@ -120,13 +142,35 @@ echo !warn_title!
 echo.
 set /p "CONFIRM=!warn_confirm! "
 if /I "!CONFIRM!"=="yes" (
-    echo !deleting!
-    docker compose down -v
-    echo !deleted!
+  echo !deleting!
+  docker compose down -v
+  echo !deleted!
 ) else (
-    echo !cancel!
+  echo !cancel!
 )
 goto END
+
+REM -----------------------------------------------------------
+REM Funktion: Key in .env-Datei ersetzen oder hinzufügen
+REM -----------------------------------------------------------
+:UPDATE_ENV
+set "key=%~1"
+set "val=%~2"
+set "file=%~3"
+set "found="
+(for /f "usebackq delims=" %%L in ("%file%") do (
+  echo %%L | findstr /b "%key%=" >nul
+  if not errorlevel 1 (
+    echo %key%=%val%
+    set "found=1"
+  ) else (
+    echo %%L
+  )
+)) > "%file%.tmp"
+if not defined found echo %key%=%val%>>"%file%.tmp"
+move /y "%file%.tmp" "%file%" >nul
+set "found="
+goto :eof
 
 :END
 popd
