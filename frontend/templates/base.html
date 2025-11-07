@@ -79,14 +79,24 @@ Purpose   : Base template for the gratulo frontend
     </div>
   </footer>
 
-  <!-- Notification Popup (zentriert) -->
-  <div id="notification"
-       class="hidden fixed inset-0 flex items-center justify-center z-50">
-    <div id="notification-box"
-         class="max-w-md w-full mx-4 px-6 py-4 rounded shadow-lg text-white text-center">
-      <span id="notification-message"></span>
-    </div>
-  </div>
+  <!-- Global Popup Container -->
+
+    <div id="popup"
+         class="hidden opacity-0 transition-opacity duration-200 fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div id="popup-box"
+               class="max-w-md w-full mx-4 px-6 py-5 rounded-xl shadow-lg text-white text-center bg-gray-800">
+            <p id="popup-message" class="text-base mb-4"></p>
+            <div id="popup-buttons" class="flex justify-center space-x-4 hidden">
+              <button id="popup-yes"
+                      class="bg-green-600 hover:bg-green-700 px-5 py-2 rounded font-semibold shadow">Ja</button>
+              <button id="popup-no"
+                      class="bg-gray-500 hover:bg-gray-600 px-5 py-2 rounded font-semibold shadow">Abbrechen</button>
+            </div>
+          </div>
+        </div>
+
+
+
 
 <!-- HTMX zuerst laden -->
 <script src="{{ url_for('static', path='js/htmx.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
@@ -99,7 +109,10 @@ Purpose   : Base template for the gratulo frontend
 
 <!-- Und zuletzt Initialisierungen / Module -->
 <script src="{{ url_for('static', path='js/htmx_alpine_init.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
-<script src="{{ url_for('static', path='js/notification.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
+<script type="module" src="/static/js/popup.js" defer nonce="{{ csp_nonce }}"></script>
+<script type="module" src="/static/js/htmx-confirmation.js" defer nonce="{{ csp_nonce }}"></script>
+
+
 
 </body>
 
