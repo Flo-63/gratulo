@@ -109,8 +109,9 @@ Purpose   : Base template for the gratulo frontend
 
 <!-- Und zuletzt Initialisierungen / Module -->
 <script src="{{ url_for('static', path='js/htmx_alpine_init.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
-<script type="module" src="/static/js/popup.js" defer nonce="{{ csp_nonce }}"></script>
-<script type="module" src="/static/js/htmx-confirmation.js" defer nonce="{{ csp_nonce }}"></script>
+<script type="module" src="{{ url_for('static', path='js/popup.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script type="module" src="{{ url_for('static', path='js/htmx-confirmation.js') }}" defer nonce="{{ csp_nonce }}"></script>
+
 
 
 

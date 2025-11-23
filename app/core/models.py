@@ -242,7 +242,6 @@ class MailerJob(Base):
             return None
 
 
-
 class MailerJobLog(Base):
     """
     Represents a log entry for a specific mailer job.

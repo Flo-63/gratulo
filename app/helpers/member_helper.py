@@ -159,96 +159,28 @@ def normalize_date(value) -> date | None:
             raise ValueError(f"Ungültiges Datumsformat '{value}': {e}")
     raise TypeError(f"Ungültiger Datentyp für Datum: {type(value)}")
 
-def validate_rows_old(rows: list[dict], db: Session) -> list[dict]:
-    """
-    Validates and cleans up rows of data for importing into a system.
+import unicodedata
 
-    This method processes the provided rows by validating each entry based on specific
-    criteria (email format, names, birthdates, group assignments, etc.). Invalid rows
-    raise errors with detailed messages, while valid rows are cleaned and returned as
-    a list of dictionaries prepared for further processing.
+def german_sort_key(value: str) -> str:
+    if not value:
+        return ""
+    value = value.strip()
 
-    Args:
-        rows (list[dict]): The list of dictionaries, where each dictionary represents a
-            row of data to validate and process.
-        db (Session): Database session to be used for fetching required data, such
-            as groups or default group configuration.
+    # Unicode Normalisieren
+    value = unicodedata.normalize("NFKD", value)
 
-    Returns:
-        list[dict]: A list of cleaned and validated rows representing the input data,
-            formatted and prepared for further usage.
+    # Deutsche Umlaut-Regeln
+    replacements = {
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "ß": "ss",
+        "Ä": "Ae",
+        "Ö": "Oe",
+        "Ü": "Ue",
+    }
+    for src, dst in replacements.items():
+        value = value.replace(src, dst)
 
-    Raises:
-        HTTPException: An error raised with specific details if validation fails
-            for any row, such as missing fields or invalid data formats.
-    """
-    emails_seen = set()
-    cleaned = []
-
-    groups = group_service.list_groups(db)
-    groups_by_name = {g.name.lower(): g for g in groups}  # Lookup dict
-    default_group = group_service.get_default_group(db)
-
-    for idx, row in enumerate(rows, start=2):
-        if not any(v and str(v).strip() for v in row.values()):
-            continue
-
-        # --- E-Mail prüfen ---
-        email = (row.get("email") or "").strip().lower()
-        if not email:
-            raise HTTPException(status_code=400, detail=render_import_error(idx, "E-Mail fehlt"))
-        if not EMAIL_RE.match(email):
-            raise HTTPException(status_code=400, detail=render_import_error(idx, "E-Mail ungültig"))
-        if email in emails_seen:
-            raise HTTPException(status_code=400, detail=render_import_error(idx, f"Doppelte E-Mail {email}"))
-        emails_seen.add(email)
-
-        # --- Namen prüfen ---
-        firstname = (row.get("Vorname") or "").strip()
-        lastname = (row.get("Nachname") or "").strip()
-        if not firstname or not lastname:
-            raise HTTPException(status_code=400, detail=render_import_error(idx, "Vorname/Nachname fehlt"))
-
-        # --- Geburtstag prüfen ---
-        birthdate_str = (row.get("Geburtstag") or "").strip()
-        birthdate = None
-        if birthdate_str:
-            birthdate = parse_date_flexible(birthdate_str, "Geburtstag", idx)
-            if birthdate.year < datetime.now().year - 105:
-                raise HTTPException(status_code=400, detail=render_import_error(idx, "Geburtsjahr zu weit in der Vergangenheit"))
-            if birthdate > datetime.now().date():
-                raise HTTPException(status_code=400, detail=render_import_error(idx, "Geburtsjahr in der Zukunft"))
-
-        # --- Eintrittsdatum prüfen ---
-        member_since_str = (row.get("Eintrittsdatum") or "").strip()
-        member_since = None
-        if member_since_str:
-            member_since = parse_member_since(member_since_str, idx)
-
-        # --- Gruppe prüfen ---
-        raw_group_name = (row.get("group_name") or "").strip().lower()
-        if not raw_group_name:
-            group = default_group
-        else:
-            group = groups_by_name.get(raw_group_name)
-            if not group:
-                raise HTTPException(
-                    status_code=400,
-                    detail=render_import_error(
-                        idx,
-                        f"Ungültige Gruppe (erlaubt: {', '.join([g.name for g in groups])})"
-                    )
-                )
-
-        cleaned.append({
-            "email": email,
-            "firstname": firstname,
-            "lastname": lastname,
-            "kombi": (row.get("Kombi") or "").strip(),
-            "member_since": member_since,
-            "birthdate": birthdate,
-            "group_id": group.id if group else None,
-            "gender": normalize_gender(row.get("Geschlecht") or ""),
-        })
-
-    return cleaned
+    # Lowercase für echte Sortierung
+    return value.lower()

@@ -24,9 +24,10 @@ from sqlalchemy.orm import Session
 from app.core import models, database
 from app.core.auth import require_admin
 from app.core.deps import TEMPLATES_DIR
+from app.core.constants import LABELS_DISPLAY
 from app.services import group_service, member_service
 from app.services.member_service import parse_csv, commit_members, EXPECTED_FIELDS, validate_rows
-from app.helpers.member_helper import parse_date_flexible, parse_member_since
+from app.helpers.member_helper import parse_date_flexible, parse_member_since, german_sort_key
 
 members_htmx_router = APIRouter(
     prefix="/htmx/members",
@@ -443,7 +444,9 @@ def update_group(
 @members_htmx_router.get("/list", response_class=HTMLResponse)
 def list_members_htmx(
     request: Request,
-    deleted: str = "false",  # Werte: "true", "false", "all"
+    deleted: str = "false",
+    order_by: str = "lastname",
+    direction: str = "asc",
     db: Session = Depends(database.get_db),
 ):
     """
@@ -461,19 +464,59 @@ def list_members_htmx(
         HTMLResponse: Rendered HTML response containing the member list.
     """
     deleted = (deleted or "").lower().strip()
+    order_by = (order_by or "lastname").strip()
+    direction = (direction or "asc").strip().lower()
 
+    # Basis Query
     if deleted in ("all", "alle"):
-        members = member_service.list_members(db, include_deleted=True)
+        query = db.query(models.Member)
     elif deleted in ("true", "1", "yes", "deleted"):
-        members = member_service.list_deleted_members(db)
+        query = db.query(models.Member).filter(models.Member.is_deleted == True)
     else:
-        # Default: aktive Mitglieder (nicht gelöscht)
-        members = member_service.list_active_members(db)
+        query = db.query(models.Member).filter(models.Member.is_deleted == False)
 
+    if order_by == "group_name":
+        query = query.join(models.Group)
+
+    members = query.all()  # Alles holen
+
+    reverse = (direction == "desc")
+
+    # Sortierlogik
+    if order_by in ("firstname", "lastname", "email"):
+        members = sorted(
+            members,
+            key=lambda m: german_sort_key(getattr(m, order_by)),
+            reverse=reverse,
+        )
+    elif order_by == "group_name":
+        members = sorted(
+            members,
+            key=lambda m: german_sort_key(m.group.name if m.group else ""),
+            reverse=reverse,
+        )
+    else:
+        # Sortierbare DB-Felder: birthdate, member_since, gender
+        members = sorted(
+            members,
+            key=lambda m: getattr(m, order_by) or "",
+            reverse=reverse,
+        )
+
+    # Template rendern
     return jinja_templates.TemplateResponse(
         "partials/members_list.html",
-        context(request, db=db, members=members, deleted=deleted),
+        context(
+            request,
+            db=db,
+            members=members,
+            deleted=deleted,
+            order_by=order_by,
+            direction=direction,
+            LABELS_DISPLAY = LABELS_DISPLAY,
+        ),
     )
+
 
 @members_htmx_router.delete("/{member_id}", response_class=HTMLResponse)
 def soft_delete_member_htmx(member_id: int, request: Request, db: Session = Depends(database.get_db)):
