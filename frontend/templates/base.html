@@ -28,7 +28,7 @@ Purpose   : Base template for the gratulo frontend
 
   <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800 h-screen overflow-hidden" style="display: grid; grid-template-rows: auto 1fr auto;">
 
   <!-- Header -->
   <header class="bg-white shadow">
@@ -67,14 +67,14 @@ Purpose   : Base template for the gratulo frontend
 
 
   <!-- Content -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full" style="overflow-y: auto; overflow-x: hidden;">
     {% block content %}{% endblock %}
 
   </main>
 
   <!-- Footer -->
-  <footer class="bg-white border-t mt-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500">
+  <footer class="bg-white border-t">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-500">
       © {{ year|default("2025") }} Florian Mösch
     </div>
   </footer>

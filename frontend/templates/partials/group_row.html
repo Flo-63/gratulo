@@ -19,7 +19,7 @@ Purpose   : Dynamic template used to show a group row in the group list
       {{ g.name }}
     </span>
     <form hx-post="/htmx/members/groups/{{ g.id }}"
-          hx-target="#groups-container"
+          hx-target="#groups-list"
           hx-swap="outerHTML"
           class="hidden"
           id="edit-form-{{ g.id }}">
@@ -33,7 +33,7 @@ Purpose   : Dynamic template used to show a group row in the group list
       <span class="text-green-600 font-semibold">✔</span>
     {% else %}
       <form hx-post="/htmx/members/groups/{{ g.id }}"
-            hx-target="#groups-container"
+            hx-target="#groups-list"
             hx-swap="outerHTML">
         <input type="hidden" name="name" value="{{ g.name }}">
         <input type="hidden" name="is_default" value="true">
@@ -50,8 +50,9 @@ Purpose   : Dynamic template used to show a group row in the group list
     </button>
     <button class="btn btn-red"
             hx-delete="/htmx/members/groups/{{ g.id }}"
-            hx-target="#groups-container"
-            hx-swap="outerHTML">
+            hx-target="#groups-list"
+            hx-swap="outerHTML"
+            hx-confirm="Gruppe wirklich löschen?">
       Löschen
     </button>
   </td>

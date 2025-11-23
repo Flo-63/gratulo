@@ -224,7 +224,8 @@ def import_members_validate(request: Request, file: UploadFile = File(...), db: 
         template along with the parsed CSV data for review.
     """
     rows = parse_csv(file)
-    return jinja_templates.TemplateResponse("partials/members_import_preview.html", context(request, db=db, rows=rows))
+    validated_rows = validate_rows(rows, db)  # ← VALIDIERUNG HINZUFÜGEN!
+    return jinja_templates.TemplateResponse("partials/members_import_preview.html", context(request, db=db, rows=validated_rows))
 
 
 @members_htmx_router.post("/import-commit")
@@ -500,7 +501,7 @@ def soft_delete_member_htmx(member_id: int, request: Request, db: Session = Depe
     members = member_service.list_active_members(db)
     return jinja_templates.TemplateResponse(
         "partials/members_list.html",
-        context(request, db=db, members=members),
+        context(request, db=db, members=members, deleted="false"),
     )
 
 @members_htmx_router.post("/{member_id}/restore", response_class=HTMLResponse)
@@ -527,7 +528,7 @@ def restore_member_htmx(member_id: int, request: Request, db: Session = Depends(
     members = member_service.list_members(db, include_deleted=True)
     return jinja_templates.TemplateResponse(
         "partials/members_list.html",
-        context(request, db=db, members=members),
+        context(request, db=db, members=members, deleted="all"),
     )
 
 
@@ -561,5 +562,5 @@ def wipe_member_htmx(member_id: int, request: Request, db: Session = Depends(dat
     members = member_service.list_members(db, include_deleted=True)
     return jinja_templates.TemplateResponse(
         "partials/members_list.html",
-        context(request, db=db, members=members),
+        context(request, db=db, members=members, deleted="all"),
     )

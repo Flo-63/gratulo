@@ -175,8 +175,16 @@ def validate_rows(rows: list[dict], db: Session) -> list[dict]:
     groups_by_name = {g.name.lower(): g for g in groups}
     default_group = group_service.get_default_group(db)
 
+    # E-Mail-Duplikate zählen für Warnungen
+    email_counts = {}
+    for row in rows:
+        email = (row.get("email") or "").strip().lower()
+        if email:
+            email_counts[email] = email_counts.get(email, 0) + 1
+
     for row in rows:
         errors = {}
+        warnings = {}
 
         # --- Pflichtfelder prüfen ---
         if not row.get("firstname"):
@@ -189,6 +197,8 @@ def validate_rows(rows: list[dict], db: Session) -> list[dict]:
             errors["email"] = "E-Mail fehlt"
         elif "@" not in email:
             errors["email"] = "E-Mail ungültig"
+        elif email_counts.get(email, 0) > 1:
+            warnings["email"] = f"E-Mail wird {email_counts[email]}x verwendet (z.B. Familie)"
         row["email"] = email
 
         # --- Geburtstag prüfen ---
@@ -238,8 +248,9 @@ def validate_rows(rows: list[dict], db: Session) -> list[dict]:
                 errors["group_name"] = f"Ungültige Gruppe (erlaubt: {', '.join([g.name for g in groups])})"
                 row["group_id"] = None
 
-        # Fehler speichern
+        # Fehler und Warnungen speichern
         row["_errors"] = errors
+        row["_warnings"] = warnings
         validated.append(row)
 
     return validated
