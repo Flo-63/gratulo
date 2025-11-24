@@ -276,7 +276,7 @@ async def import_members_commit(request: Request, db: Session = Depends(database
     if any(r["_errors"] for r in validated):
         return jinja_templates.TemplateResponse(
             "partials/members_import_preview.html",
-            {"request": request, "rows": validated}
+            context(request, db=db, rows=validated)
         )
 
     #  Sicherstellen, dass birthdate wirklich gesetzt ist
@@ -284,11 +284,7 @@ async def import_members_commit(request: Request, db: Session = Depends(database
         if not row.get("birthdate"):
             return jinja_templates.TemplateResponse(
                 "partials/members_import_preview.html",
-                {
-                    "request": request,
-                    "rows": validated,
-                    "error": "Es fehlen Pflichtfelder (Geburtsdatum)."
-                }
+                context(request, db=db, rows=validated, error="Es fehlen Pflichtfelder (Geburtsdatum).")
             )
 
     # Speichern
@@ -343,10 +339,7 @@ async def import_members_revalidate(
 
     return jinja_templates.TemplateResponse(
         "partials/members_import_preview.html",
-        {
-            "request": request,
-            "rows": validated_rows,
-        }
+        context(request, db=db, rows=validated_rows)
     )
 
 @members_htmx_router.post("/groups", response_class=HTMLResponse)

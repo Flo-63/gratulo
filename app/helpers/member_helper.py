@@ -17,6 +17,7 @@ Purpose   : This module provides helper functions for member-related operations.
 import re
 from sqlalchemy.orm import Session
 from datetime import datetime, date
+import unicodedata
 from fastapi import HTTPException
 from app.core.constants import CLUB_FOUNDATION_DATE
 from app.services import group_service
@@ -158,8 +159,6 @@ def normalize_date(value) -> date | None:
         except ValueError as e:
             raise ValueError(f"Ungültiges Datumsformat '{value}': {e}")
     raise TypeError(f"Ungültiger Datentyp für Datum: {type(value)}")
-
-import unicodedata
 
 def german_sort_key(value: str) -> str:
     if not value:

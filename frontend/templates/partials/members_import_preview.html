@@ -159,14 +159,28 @@ Purpose   : Dynamic template used to show the preview of the imported members
               </td>
 
               <td class="px-3 py-2">
-                <select name="rows[{{i}}][group_id]"
-                        class="w-full border p-1 text-xs {% if e.get('group_name') %}border-red-500 bg-red-50{% else %}border-gray-300{% endif %}"
-                        style="border-radius: 0.25rem;">
-                  {% for g in GROUPS %}
-                    <option value="{{ g.id }}" {% if r.group_id == g.id %}selected{% endif %}>{{ g.name }}</option>
-                  {% endfor %}
-                </select>
-                {% if e.get('group_name') %}<div class="text-xs text-red-600 mt-1">{{ e['group_name'] }}</div>{% endif %}
+                  <!-- Auswahlfeld für group_id -->
+                  <select
+                      name="rows[{{i}}][group_id]"
+                      class="w-full border p-1 text-xs {% if e.get('group_name') %}border-red-500 bg-red-50{% else %}border-gray-300{% endif %}"
+                      onchange="
+                          const name = this.options[this.selectedIndex].textContent.trim();
+                          this.parentElement.querySelector('input[name=\'rows[{{i}}][group_name]\']').value = name;
+                      "
+                  >
+                      <option value="">– keine –</option>
+                      {% for g in GROUPS %}
+                          <option value="{{ g.id }}"
+                              {% if r.group_id and (r.group_id|int == g.id or r.group_id == g.id) %}selected{% endif %}
+                          >{{ g.name }}</option>
+                      {% endfor %}
+                  </select>
+                  <!-- HIDDEN: group_name wird IMMER mit übertragen -->
+                  <input
+                      type="hidden"
+                      name="rows[{{i}}][group_name]"
+                      value="{{ r.group_name }}"
+                  >
               </td>
 
               <td class="px-3 py-2">

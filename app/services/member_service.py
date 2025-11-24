@@ -37,6 +37,7 @@ EXPECTED_FIELDS = [
     "lastname",
     "member_since",
     "group_name",
+    "group_id",
     "birthdate",
     "gender",
 ]
@@ -186,6 +187,20 @@ def validate_rows(rows: list[dict], db: Session) -> list[dict]:
         errors = {}
         warnings = {}
 
+        # Konvertiere group_id zu Integer, falls als String vorhanden
+        raw_gid = row.get("group_id")
+        if raw_gid:
+            if isinstance(raw_gid, str):
+                if raw_gid.isdigit():
+                    row["group_id"] = int(raw_gid)
+                elif raw_gid.strip() == "":
+                    row["group_id"] = None
+            elif isinstance(raw_gid, int):
+                row["group_id"] = raw_gid
+        else:
+            row["group_id"] = None
+
+
         # --- Pflichtfelder prüfen ---
         if not row.get("firstname"):
             errors["firstname"] = "Vorname fehlt"
@@ -231,22 +246,43 @@ def validate_rows(rows: list[dict], db: Session) -> list[dict]:
         row["gender"] = gender
 
         # --- Gruppe prüfen ---
-        raw_group_name = (row.get("group_name") or "").strip().lower()
-        if not raw_group_name:
+        raw_group_name = (row.get("group_name") or "").strip()
+
+        # 1) group_id hat Vorrang - prüfen ob bereits gültig
+        gid = row.get("group_id")
+        group_validated = False
+
+        # group_id vorhanden → versuchen zu matchen
+        if gid:
+            group = db.query(models.Group).filter(models.Group.id == gid).first()
+            if group:
+                row["group_name"] = group.name  # clean
+                row["group_id"] = group.id
+                group_validated = True
+            else:
+                # Nur wenn ungültig, dann zurücksetzen
+                errors["group_name"] = "Ungültige Gruppen-ID"
+                row["group_id"] = None
+
+        # 2) Falls keine gültige ID → per Name
+        if not group_validated and raw_group_name:
+            normalized = raw_group_name.lower()
+            group = groups_by_name.get(normalized)
+            if group:
+                row["group_name"] = group.name
+                row["group_id"] = group.id
+                group_validated = True
+            else:
+                allowed = ", ".join(g.name for g in groups)
+                errors["group_name"] = f"Ungültige Gruppe (erlaubt: {allowed})"
+
+        # 3) Falls keine Angabe → Standardgruppe (nur wenn noch nicht validiert)
+        if not group_validated:
             if default_group:
-                row["group_id"] = default_group.id
                 row["group_name"] = default_group.name
+                row["group_id"] = default_group.id
             else:
                 errors["group_name"] = "Keine Standardgruppe vorhanden"
-                row["group_id"] = None
-        else:
-            group = groups_by_name.get(raw_group_name)
-            if group:
-                row["group_id"] = group.id
-                row["group_name"] = group.name
-            else:
-                errors["group_name"] = f"Ungültige Gruppe (erlaubt: {', '.join([g.name for g in groups])})"
-                row["group_id"] = None
 
         # Fehler und Warnungen speichern
         row["_errors"] = errors
@@ -350,14 +386,31 @@ def commit_members(db: Session, rows: list[dict]) -> None:
     for row in rows:
         # Gruppe auflösen
         group = None
-        if "group_id" in row and row["group_id"]:
+
+        # 1) lookup per group_id
+        if row.get("group_id"):
             group = db.query(models.Group).filter(models.Group.id == row["group_id"]).first()
-        if not group and "group_name" in row and row["group_name"]:
-            group = db.query(models.Group).filter(models.Group.name == row["group_name"]).first()
+
+        # 2) fallback per Name (case-insensitive)
+        if not group and row.get("group_name"):
+            normalized = row["group_name"].strip().lower()
+            group = (
+                db.query(models.Group)
+                .filter(func.lower(models.Group.name) == normalized)
+                .first()
+            )
+
+        # 3) fallback default group
         if not group:
             group = group_service.get_default_group(db)
+
+        # 4) wenn es dann immer noch keine Gruppe gibt → fatal
         if not group:
             raise HTTPException(status_code=400, detail="Keine gültige Gruppe vorhanden")
+
+        # 5) Werte final normalisieren
+        row["group_id"] = group.id
+        row["group_name"] = group.name
 
         member = models.Member(
             email=row["email"],
@@ -366,8 +419,9 @@ def commit_members(db: Session, rows: list[dict]) -> None:
             gender=row["gender"],
             member_since=None,
             birthdate=None,
-            group=group,  # << jetzt echte Beziehung statt group_name
+            group=group,
         )
+        member.group_id = group.id
 
         if row.get("member_since"):
             try:
@@ -385,7 +439,6 @@ def commit_members(db: Session, rows: list[dict]) -> None:
 
     # 3. Commit für alle neuen Mitglieder
     db.commit()
-
 
 def list_members(db: Session, include_deleted: bool = False):
     """
@@ -410,7 +463,6 @@ def list_members(db: Session, include_deleted: bool = False):
 
     return members
 
-
 def soft_delete_member(db, member_id: int):
     """
     Marks a member as deleted without removing the record from the database. This function
@@ -432,7 +484,6 @@ def soft_delete_member(db, member_id: int):
     member.deleted_at = datetime.utcnow()
     db.commit()
     return member
-
 
 def get_member_api(db: Session, member_id: int) -> schemas.MemberResponse:
     """
@@ -503,7 +554,6 @@ def list_active_members(db: Session):
         .all()
     )
 
-
 def list_deleted_members(db: Session):
     """
     Fetches a list of deleted members from the database, ordered by lastname and firstname
@@ -522,7 +572,6 @@ def list_deleted_members(db: Session):
         .order_by(asc(models.Member.lastname), asc(models.Member.firstname))
         .all()
     )
-
 
 def restore_member(db: Session, member_id: int):
     """
@@ -551,7 +600,6 @@ def restore_member(db: Session, member_id: int):
     db.commit()
     db.refresh(member)
     return member
-
 
 def wipe_member(db: Session, member_id: int) -> bool:
     """
@@ -613,7 +661,6 @@ def search_members(db: Session, query: str, include_deleted: bool = False):
     members = q.order_by(asc(models.Member.lastname), asc(models.Member.firstname)).all()
     return members
 
-
 def get_member_by_email(db: Session, email: str):
     """
     Fetches a single member from the database using their email address.
@@ -656,7 +703,6 @@ def validate_group(db: Session, group_id: int | None) -> models.Group:
         raise HTTPException(status_code=400, detail="Keine gültige Gruppe gefunden.")
     return group
 
-
 def validate_unique_email(db: Session, email: str, member_id: int | None = None):
     """
     Validates the uniqueness of an email address within the database. Ensures that the email
@@ -684,7 +730,6 @@ def validate_unique_email(db: Session, email: str, member_id: int | None = None)
     if existing:
         raise HTTPException(status_code=400, detail="E-Mail-Adresse bereits vergeben.")
     return True
-
 
 def validate_birth_and_membership_dates(
         birthdate: str | date | None,

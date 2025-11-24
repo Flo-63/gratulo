@@ -4,14 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="- email adress is no longer unique because family members might well share one mailbox.&#10;&#10;- UI for CSV Import reworked. Now a scrollable container, in case of error or warning only the respective lines are shown.">
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="- Added sort Function to members list.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/helpers/member_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/member_helper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/htmx/members_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/members_htmx.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/static/js/htmx-confirmation.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/static/js/htmx-confirmation.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/members_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/members_list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/member_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/member_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/members_import_preview.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/members_import_preview.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,30 +51,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "FastAPI.birthday_mailer.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.Uvicorn.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHELLCHECK.PATH": "C:\\Users\\Florian\\AppData\\Roaming\\JetBrains\\PyCharm2025.2\\plugins\\Shell Script\\shellcheck.exe",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "D:/Python/gratulo/frontend/static/images",
-    "list.type.of.created.stylesheet": "CSS",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "ts.external.directory.path": "C:\\Users\\Florian\\AppData\\Roaming\\JetBrains\\PyCharm2025.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;FastAPI.birthday_mailer.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.Uvicorn.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHELLCHECK.PATH&quot;: &quot;C:\\Users\\Florian\\AppData\\Roaming\\JetBrains\\PyCharm2025.2\\plugins\\Shell Script\\shellcheck.exe&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Python/gratulo/frontend/static/images&quot;,
+    &quot;list.type.of.created.stylesheet&quot;: &quot;CSS&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\Florian\\AppData\\Roaming\\JetBrains\\PyCharm2025.2\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\Python\gratulo\frontend\static\images" />
@@ -155,7 +152,8 @@
       <workItem from="1762359941719" duration="197000" />
       <workItem from="1762507314814" duration="7304000" />
       <workItem from="1762518388219" duration="3000" />
-      <workItem from="1763897407522" duration="19847000" />
+      <workItem from="1763897407522" duration="20054000" />
+      <workItem from="1763969851616" duration="4187000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -413,7 +411,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763907571447</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="- Added sort Function to members list.">
+      <option name="closed" value="true" />
+      <created>1763917917740</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1763917917740</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -431,7 +437,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="CSP Compliance:&#10;- Carve out of inline scripts and styles&#10;- local deployment of tailwind, alpine.js and htmx&#10;- introduction of CSP Middleware for FastAPI" />
     <MESSAGE value="- Handling / Detection of &quot;round&quot; birthdays and anniversaries&#10;- Add template option in Mail server" />
     <MESSAGE value="- Bugfixes" />
     <MESSAGE value="- Added optional BCC per Job&#10;- Cleanup of Job List Partial&#10;- Added missing localized framework modules to git&#10;- Added Initial defaults in db" />
@@ -456,7 +461,8 @@
     <MESSAGE value="Bugfix: Confusing UTC vs. Localized Time in Fronted" />
     <MESSAGE value="Bugfix:&#10;Attempt to delete a template still in use in a mail job caused crash (constraint in DB)&#10;Enhancement:&#10;Reworked notificaion and confirmation dialog. Make use of global htmx event registration" />
     <MESSAGE value="- email adress is no longer unique because family members might well share one mailbox.&#10;&#10;- UI for CSV Import reworked. Now a scrollable container, in case of error or warning only the respective lines are shown." />
-    <option name="LAST_COMMIT_MESSAGE" value="- email adress is no longer unique because family members might well share one mailbox.&#10;&#10;- UI for CSV Import reworked. Now a scrollable container, in case of error or warning only the respective lines are shown." />
+    <MESSAGE value="- Added sort Function to members list." />
+    <option name="LAST_COMMIT_MESSAGE" value="- Added sort Function to members list." />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -466,7 +472,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1763917707345" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1763974122334" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>
