@@ -241,7 +241,6 @@ class MailerJob(Base):
             print("⚠️ Fehler in once_at_local:", e)
             return None
 
-
 class MailerJobLog(Base):
     """
     Represents a log entry for a specific mailer job.
@@ -401,7 +400,6 @@ class Group(Base):
     mailer_jobs = relationship("MailerJob", back_populates="group", cascade="all, delete")
 
     is_default = Column(Boolean, default=False, nullable=False)
-
 
 class AdminUser(Base):
     """Represents an admin user in the system with authentication and metadata.

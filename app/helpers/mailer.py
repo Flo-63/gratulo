@@ -21,6 +21,8 @@ from email.mime.image import MIMEImage
 import logging
 import os
 import re
+import io
+from PIL import Image
 from redis import Redis
 from app.core.constants import REDIS_URL
 from app.core.models import MailerConfig
@@ -51,11 +53,15 @@ def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
     Returns:
         str: The modified HTML email body wrapped inside a standard structure with inline images referenced by Content-ID.
     """
+
+
     matches = CID_PATTERN.findall(body)
 
-    for path in matches:
+    # Set verhindert Duplikate
+    for path in set(matches):
         filename = os.path.basename(path)
 
+        # Pfad-Logik wie gehabt
         if path.startswith("/uploads/"):
             full_path = os.path.join(UPLOADS_DIR, path[len("/uploads/"):].lstrip("/"))
         elif path.startswith("/static/"):
@@ -68,15 +74,52 @@ def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
             continue
 
         try:
-            with open(full_path, "rb") as f:
-                img = MIMEImage(f.read())
-                # 💡 Unterschiedliche Prefixes für Uploads und Static erlauben saubere IDs
-                cid = path.lstrip("/").replace("/", "_")
-                img.add_header("Content-ID", f"<{cid}>")
-                msg.attach(img)
-                logger.debug(f"📎 Inline-Bild {filename} eingebettet.")
+            # -----------------------------------------------------------
+            # BILD-OPTIMIERUNG
+            # -----------------------------------------------------------
+            with Image.open(full_path) as img:
+                original_format = img.format  # z.B. JPEG, PNG
 
-            # Ersetze sowohl Upload- als auch Static-Pfade durch cid:
+                # Maximale Breite definieren (z.B. 800px ist für Mails genug)
+                max_width = 800
+
+                if img.width > max_width:
+                    # Seitenverhältnis berechnen und verkleinern
+                    aspect_ratio = img.height / img.width
+                    new_height = int(max_width * aspect_ratio)
+                    img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+                    logger.debug(f"Bild {filename} verkleinert auf {max_width}x{new_height}")
+
+                # Bild in Bytes speichern statt auf Disk
+                img_byte_arr = io.BytesIO()
+
+                # Wenn es ein JPEG ist, Qualität leicht senken (spart massiv Platz)
+                if original_format == 'JPEG':
+                    img.save(img_byte_arr, format=original_format, quality=80, optimize=True)
+                else:
+                    # PNGs (z.B. Logos mit Transparenz) einfach so speichern
+                    img.save(img_byte_arr, format=original_format)
+
+                img_data = img_byte_arr.getvalue()
+
+            # -----------------------------------------------------------
+            # MIME-Erstellung mit den optimierten Daten
+            # -----------------------------------------------------------
+            mime_img = MIMEImage(img_data)
+
+            # 1. CID säubern und RFC-konform machen (@domain)
+            base_id = path.lstrip("/").replace("/", "_").replace(" ", "_")
+            cid = f"{base_id}@radtreffcampus.de"
+
+            mime_img.add_header("Content-ID", f"<{cid}>")
+
+            # 2. Inline Disposition
+            mime_img.add_header("Content-Disposition", "inline", filename=filename)
+
+            msg.attach(mime_img)
+            logger.debug(f"📎 Inline-Bild {filename} eingebettet (Größe: {len(img_data) / 1024:.1f} KB).")
+
+            # HTML Pfad ersetzen
             pattern = re.compile(
                 rf"(?:https?://[^/]+)?{re.escape(path)}",
                 re.IGNORECASE
@@ -87,20 +130,19 @@ def prepare_template_for_mail(body: str, msg: MIMEMultipart) -> str:
             logger.exception(f"❌ Fehler beim Einbetten von {filename}: {e}")
 
     wrapped = f"""
-    <!DOCTYPE html>
-    <html>
-      <body style="margin:0; padding:0;">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" width="600">
-          <tr>
-            <td style="padding:20px; font-family:Arial, sans-serif; font-size:14px; line-height:20px;">
-              {body}
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
-    """
-
+        <!DOCTYPE html>
+        <html>
+          <body style="margin:0; padding:0;">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="600">
+              <tr>
+                <td style="padding:20px; font-family:Arial, sans-serif; font-size:14px; line-height:20px;">
+                  {body}
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+        """
 
     return wrapped
 

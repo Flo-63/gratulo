@@ -4,11 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="- Added sort Function to members list.">
+    <list default="true" id="a34bd116-a169-4f0a-8416-f32761e17709" name="Changes" comment="- Bugfix: Groups from CSV not handled correctly">
+      <change afterPath="$PROJECT_DIR$/frontend/static/js/notification.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/helpers/member_helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/member_helper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/helpers/mailer.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/helpers/mailer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/htmx/members_htmx.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/htmx/members_htmx.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/services/member_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/member_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/members_import_preview.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/members_import_preview.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/static/js/htmx-confirmation.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/static/js/htmx-confirmation.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/static/js/popup.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/static/js/popup.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/templates/partials/members_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/templates/partials/members_list.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,8 +29,8 @@
         <option value="Dockerfile" />
         <option value="HTML File" />
         <option value="CSS File" />
-        <option value="JavaScript File" />
         <option value="Python Script" />
+        <option value="JavaScript File" />
       </list>
     </option>
   </component>
@@ -153,7 +159,11 @@
       <workItem from="1762507314814" duration="7304000" />
       <workItem from="1762518388219" duration="3000" />
       <workItem from="1763897407522" duration="20054000" />
-      <workItem from="1763969851616" duration="4187000" />
+      <workItem from="1763969851616" duration="4485000" />
+      <workItem from="1764502444739" duration="28000" />
+      <workItem from="1766155728973" duration="2877000" />
+      <workItem from="1766220279073" duration="37000" />
+      <workItem from="1767620967790" duration="10628000" />
     </task>
     <task id="LOCAL-00001" summary="First Complete Version">
       <option name="closed" value="true" />
@@ -419,7 +429,15 @@
       <option name="project" value="LOCAL" />
       <updated>1763917917740</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="- Bugfix: Groups from CSV not handled correctly">
+      <option name="closed" value="true" />
+      <created>1763974493769</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1763974493769</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -437,7 +455,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="- Handling / Detection of &quot;round&quot; birthdays and anniversaries&#10;- Add template option in Mail server" />
     <MESSAGE value="- Bugfixes" />
     <MESSAGE value="- Added optional BCC per Job&#10;- Cleanup of Job List Partial&#10;- Added missing localized framework modules to git&#10;- Added Initial defaults in db" />
     <MESSAGE value="Allows other purposes than gratulation:&#10;-  Both dates can be defined with different names&#10;- Dates can be of type Anniversary or Event&#10;- Dates of type Event can have a recurrency of n months&#10;These settings currently live in .env." />
@@ -462,7 +479,8 @@
     <MESSAGE value="Bugfix:&#10;Attempt to delete a template still in use in a mail job caused crash (constraint in DB)&#10;Enhancement:&#10;Reworked notificaion and confirmation dialog. Make use of global htmx event registration" />
     <MESSAGE value="- email adress is no longer unique because family members might well share one mailbox.&#10;&#10;- UI for CSV Import reworked. Now a scrollable container, in case of error or warning only the respective lines are shown." />
     <MESSAGE value="- Added sort Function to members list." />
-    <option name="LAST_COMMIT_MESSAGE" value="- Added sort Function to members list." />
+    <MESSAGE value="- Bugfix: Groups from CSV not handled correctly" />
+    <option name="LAST_COMMIT_MESSAGE" value="- Bugfix: Groups from CSV not handled correctly" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
@@ -472,7 +490,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1763974122334" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
+    <SUITE FILE_PATH="coverage/gratulo$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1767724563701" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\gratulo" />
     <SUITE FILE_PATH="coverage/birthday_mailer$Uvicorn.coverage" NAME="Uvicorn Coverage Results" MODIFIED="1759649661760" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="D:\Python\birthday_mailer" />
   </component>
 </project>

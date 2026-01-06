@@ -440,25 +440,44 @@ def commit_members(db: Session, rows: list[dict]) -> None:
     # 3. Commit für alle neuen Mitglieder
     db.commit()
 
-def list_members(db: Session, include_deleted: bool = False):
+def list_members(db: Session, status: str = "active", search: str = None):
     """
-    Fetches a list of members from the database, with the ability to filter out deleted
-    members and sort them by their last and first names in ascending order.
+    Listet Mitglieder basierend auf Status und Suchbegriff.
 
     Args:
-        db (Session): Database session used to query the members.
-        include_deleted (bool): If True, includes deleted members in the result.
-            Defaults to False.
+        db (Session): Datenbank-Session.
+        status (str): 'active' (Standard), 'deleted' (Papierkorb) oder 'all'.
+        search (str, optional): Suchbegriff für Vor-/Nachname oder E-Mail.
 
     Returns:
-        List[models.Member]: A list of member objects retrieved from the database.
+        List[models.Member]: Die gefilterte Liste.
     """
     query = db.query(models.Member)
-    if not include_deleted:
-        query = query.filter(models.Member.is_deleted == literal(0))
 
+    # 1. Filter nach Status
+    if status == "active":
+        # Zeige NUR aktive (nicht gelöschte)
+        query = query.filter(models.Member.is_deleted == False) # oder literal(0)
+    elif status == "deleted":
+        # Zeige NUR gelöschte (Papierkorb)
+        query = query.filter(models.Member.is_deleted == True)
+    # bei "all" filtern wir gar nicht auf is_deleted
+
+    # 2. Filter nach Suchbegriff (case-insensitive)
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                models.Member.lastname.ilike(term),
+                models.Member.firstname.ilike(term),
+                models.Member.email.ilike(term)
+            )
+        )
+
+    # 3. Sortierung
     members = query.order_by(
-        asc(models.Member.lastname), asc(models.Member.firstname)
+        asc(models.Member.lastname),
+        asc(models.Member.firstname)
     ).all()
 
     return members
@@ -601,29 +620,61 @@ def restore_member(db: Session, member_id: int):
     db.refresh(member)
     return member
 
-def wipe_member(db: Session, member_id: int) -> bool:
+
+def wipe_member(db: Session, member_id: int, force: bool = False) -> bool:
     """
     Deletes a member from the database by the given member ID.
 
-    This function queries the database to find a member with the specified
-    member ID. If the member is found, it deletes the member from the database
-    and commits the changes. If the member is not found, it returns False.
+    This function attempts to delete the member. If the member is linked to other
+    records (Foreign Key Constraints) causing an IntegrityError, it catches the
+    error and raises a readable HTTPException for the frontend.
 
     Args:
         db (Session): The database session used to execute queries.
         member_id (int): The ID of the member to delete.
+        force (bool): Legacy parameter for compatibility with HTMX calls.
+                      If dependent data exists, the DB will block deletion regardless,
+                      unless cascade rules are defined in models.py.
 
     Returns:
         bool: True if the member was successfully deleted, False if the member
         was not found.
+
+    Raises:
+        HTTPException: If database constraints prevent deletion or on system errors.
     """
+    # 1. Mitglied suchen
     member = db.query(models.Member).filter(models.Member.id == member_id).first()
+
     if not member:
         return False
 
-    db.delete(member)
-    db.commit()
-    return True
+    try:
+        # 2. Versuch zu löschen
+        db.delete(member)
+        db.commit()
+        return True
+
+    except IntegrityError as e:
+        # 3. DB blockiert das Löschen (z.B. weil noch Emails/Logs existieren)
+        db.rollback()
+        # Log für dich im Docker-Output
+        print(f"❌ DB INTEGRITY ERROR bei Member {member_id}: {e}")
+
+        # Verständliche Fehlermeldung für den User (Status 400 wird vom HTMX-Frontend angezeigt)
+        raise HTTPException(
+            status_code=400,
+            detail="Löschen nicht möglich: Es existieren noch abhängige Daten (z.B. E-Mails oder Protokolle), die mit diesem Mitglied verknüpft sind."
+        )
+
+    except Exception as e:
+        # 4. Sonstige technische Fehler
+        db.rollback()
+        print(f"❌ SYSTEM ERROR bei Member {member_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Technischer Fehler beim Löschen: {str(e)}"
+        )
 
 def search_members(db: Session, query: str, include_deleted: bool = False):
     """

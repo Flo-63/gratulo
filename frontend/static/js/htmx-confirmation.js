@@ -1,30 +1,41 @@
-// =======================================================================
-// Globale Bestätigungs-Logik für HTMX Requests – mit Opt-Out Mechanismus
-// =======================================================================
+import { showConfirmation } from "./popup.js";
 
-htmx.on('htmx:confirm', function (evt) {
-  // ------------------------------------------
-  // 1️⃣ Sortier-Requests erkennen und ignorieren
-  // ------------------------------------------
-  const url = evt.detail.requestConfig.path || "";
+// Wir nutzen einen Event-Listener auf dem Body, das ist am sichersten
+document.body.addEventListener('htmx:confirm', function(evt) {
+    const el = evt.target; // Das Element, das geklickt wurde
 
-  // Wenn der Request dieses Flag enthält → KEINE Bestätigung anzeigen
-  if (url.includes("_no_confirm=1")) {
-    return; // Nichts tun → Sortierung läuft ohne Popup
-  }
+    // 1. Prüfen: Hat das Element überhaupt hx-confirm?
+    // Wenn nicht, lassen wir HTMX einfach weitermachen.
+    if (!el.hasAttribute('hx-confirm')) {
+        return;
+    }
 
-  // ------------------------------------------
-  // 2️⃣ Normale Confirmation-Logik (dein Popup)
-  // ------------------------------------------
-  evt.preventDefault();
+    // 2. Opt-Out Check (_no_confirm)
+    // Wir lesen die URL direkt aus den Attributen, da das Event-Objekt hier oft leer ist.
+    // Das behebt den "reading 'path' of undefined" Fehler.
+    const url = el.getAttribute('hx-get') ||
+                el.getAttribute('hx-post') ||
+                el.getAttribute('hx-delete') ||
+                el.getAttribute('hx-patch') ||
+                el.getAttribute('hx-put') || "";
 
-  const confirmMessage = evt.detail.question || "Möchten Sie fortfahren?";
+    // Wenn der "Geheimcode" in der URL steckt -> Kein Popup
+    if (url.includes("_no_confirm=1")) {
+        return;
+    }
 
-  // showConfirmation() kommt aus popup.js
-  showConfirmation(confirmMessage)
-    .then((confirmed) => {
-      if (confirmed) {
-        evt.detail.issueRequest(true);
-      }
+    // 3. HTMX stoppen (damit der Request nicht sofort rausgeht)
+    evt.preventDefault();
+
+    // 4. Frage holen (aus dem hx-confirm Attribut)
+    const question = el.getAttribute('hx-confirm') || "Wirklich durchführen?";
+
+    // 5. Modal anzeigen
+    showConfirmation(question).then((confirmed) => {
+        if (confirmed) {
+            // Wenn User "Ja" klickt -> HTMX Request manuell fortsetzen
+            // issueRequest(true) überspringt die Bestätigungs-Prüfung beim zweiten Mal
+            evt.detail.issueRequest(true);
+        }
     });
 });

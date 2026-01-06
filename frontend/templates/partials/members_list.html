@@ -1,13 +1,3 @@
-<!--
-===============================================================================
-Project   : gratulo
-Module    : frontend/templates/partials/members_list.html
-Created   : 2025-10-05
-Author    : Florian
-Purpose   : Dynamic template used to show the list of entities (formerly members)
-===============================================================================
--->
-
 {% set article_nom =
   'Neue' if LABELS_DISPLAY.entity_gender == 'f'
   else 'Neuer' if LABELS_DISPLAY.entity_gender == 'm'
@@ -20,42 +10,60 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
   else 'Neues'
 %}
 
-<div id="members-list" class="bg-white shadow rounded-lg members-groups-container" style="height: 400px; display: flex; flex-direction: column;">
-  <div class="flex justify-between items-center mb-4 px-4 pt-4" style="flex-shrink: 0;">
+<div id="members-list" class="bg-white shadow rounded-lg members-groups-container h-full flex flex-col">
+
+  <div class="flex flex-col md:flex-row justify-between items-center mb-4 px-4 pt-4 gap-4 flex-shrink-0">
     <h2 class="text-xl font-bold text-gray-800">{{ LABELS_DISPLAY.entity_plural }}</h2>
-    <a href="/members/new" class="btn btn-green">
+
+<form id="member-filters" class="flex items-center gap-2">
+
+      <input type="hidden" name="order_by" value="{{ order_by }}">
+      <input type="hidden" name="direction" value="{{ direction }}">
+
+      <div class="relative">
+        <input type="search"
+               name="search"
+               value="{{ search or '' }}"
+               placeholder="Suchen..."
+               class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm pl-8 py-2"
+               hx-get="/htmx/members/list"
+               hx-trigger="keyup changed delay:500ms, search"
+               hx-target="#members-list"
+               hx-swap="outerHTML"
+               hx-include="closest form"
+               autocomplete="off">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">
+           <i class="fa-solid fa-search"></i>
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <select name="deleted"
+                class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2"
+                hx-get="/htmx/members/list"
+                hx-trigger="change"
+                hx-target="#members-list"
+                hx-swap="outerHTML"
+                hx-include="closest form">
+          <option value="false" {% if deleted == "false" or not deleted %}selected{% endif %}>
+            Aktive
+          </option>
+          <option value="true" {% if deleted == "true" %}selected{% endif %}>
+            Deaktivierte / Papierkorb
+          </option>
+          <option value="all" {% if deleted == "all" %}selected{% endif %}>
+            Alle anzeigen
+          </option>
+        </select>
+      </div>
+    </form>
+
+    <a href="/members/new" class="btn btn-green whitespace-nowrap">
       ➕ {{ article_acc }} {{ LABELS_DISPLAY.entity_singular }} anlegen
     </a>
   </div>
 
-  <!-- Filterbereich -->
-  <div class="flex items-center justify-between mb-4 px-4" style="flex-shrink: 0;">
-    <div class="flex items-center gap-3">
-      <label for="filter-deleted" class="text-sm text-gray-700 font-medium">Anzeigen:</label>
-      <select id="filter-deleted"
-              name="deleted"
-              class="border rounded px-2 py-1 text-sm"
-              hx-get="/htmx/members/list"
-              hx-target="#members-list"
-              hx-swap="outerHTML">
-        <option value="false" {% if deleted == "false" %}selected{% endif %}>
-          Aktive {{ LABELS_DISPLAY.entity_plural }}
-        </option>
-        <option value="true" {% if deleted == "true" %}selected{% endif %}>
-          Deaktivierte {{ LABELS_DISPLAY.entity_plural }}
-        </option>
-        <option value="all" {% if deleted == "all" %}selected{% endif %}>
-          Alle {{ LABELS_DISPLAY.entity_plural }}
-        </option>
-      </select>
-    </div>
-    <p class="text-xs text-gray-500 italic">
-      Soft-Delete-Status kann über Aktionen geändert werden
-    </p>
-  </div>
-
-  <!-- Entitätenliste mit Scroll -->
-  <div style="flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; position: relative;">
+  <div style="flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; position: relative;" class="px-4 pb-4">
 
     {% if members %}
     <table class="w-full divide-y divide-gray-200 table-fixed">
@@ -63,147 +71,118 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
     <thead class="bg-gray-50" style="position: sticky; top: 0; z-index: 20;">
       <tr>
 
-        <!-- Vorname -->
-        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            style="width:10%; cursor:pointer;"
-            onclick="
-              htmx.ajax(
-                'GET',
-                '/htmx/members/list?_no_confirm=1&order_by=firstname&direction={{ 'desc' if order_by == 'firstname' and direction == 'asc' else 'asc' }}&deleted={{ deleted }}',
-                { target: '#members-list', swap: 'outerHTML' }
-              );
-            ">
+        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+            style="width:10%;"
+            hx-get="/htmx/members/list?_no_confirm=1&order_by=firstname&direction={{ 'desc' if order_by == 'firstname' and direction == 'asc' else 'asc' }}"
+            hx-include="#member-filters"
+            hx-target="#members-list"
+            hx-swap="outerHTML">
           <span style="white-space:nowrap;">
             Vorname
             {% if order_by == 'firstname' %}
               {{ ' ▲' if direction == 'asc' else ' ▼' }}
             {% else %}
-              ⇅
+              <span class="text-gray-300">⇅</span>
             {% endif %}
           </span>
         </th>
 
-        <!-- Nachname -->
-        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            style="width:10%; cursor:pointer;"
-            onclick="
-              htmx.ajax(
-                'GET',
-                '/htmx/members/list?_no_confirm=1&order_by=lastname&direction={{ 'desc' if order_by == 'lastname' and direction == 'asc' else 'asc' }}&deleted={{ deleted }}',
-                { target: '#members-list', swap: 'outerHTML' }
-              );
-            ">
+        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+            style="width:10%;"
+            hx-get="/htmx/members/list?_no_confirm=1&order_by=lastname&direction={{ 'desc' if order_by == 'lastname' and direction == 'asc' else 'asc' }}"
+            hx-include="#member-filters"
+            hx-target="#members-list"
+            hx-swap="outerHTML">
           <span style="white-space:nowrap;">
             Nachname
             {% if order_by == 'lastname' %}
               {{ ' ▲' if direction == 'asc' else ' ▼' }}
             {% else %}
-              ⇅
+              <span class="text-gray-300">⇅</span>
             {% endif %}
           </span>
         </th>
 
-        <!-- Geschlecht -->
-        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            style="width:8%; cursor:pointer;"
-            onclick="
-              htmx.ajax(
-                'GET',
-                '/htmx/members/list?_no_confirm=1&order_by=gender&direction={{ 'desc' if order_by == 'gender' and direction == 'asc' else 'asc' }}&deleted={{ deleted }}',
-                { target: '#members-list', swap: 'outerHTML' }
-              );
-            ">
+        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+            style="width:8%;"
+            hx-get="/htmx/members/list?_no_confirm=1&order_by=gender&direction={{ 'desc' if order_by == 'gender' and direction == 'asc' else 'asc' }}"
+            hx-include="#member-filters"
+            hx-target="#members-list"
+            hx-swap="outerHTML">
           <span style="white-space:nowrap;">
             Geschlecht
             {% if order_by == 'gender' %}
               {{ ' ▲' if direction == 'asc' else ' ▼' }}
             {% else %}
-              ⇅
+              <span class="text-gray-300">⇅</span>
             {% endif %}
           </span>
         </th>
 
-        <!-- E-Mail -->
-        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            style="width:15%; cursor:pointer;"
-            onclick="
-              htmx.ajax(
-                'GET',
-                '/htmx/members/list?_no_confirm=1&order_by=email&direction={{ 'desc' if order_by == 'email' and direction == 'asc' else 'asc' }}&deleted={{ deleted }}',
-                { target: '#members-list', swap: 'outerHTML' }
-              );
-            ">
+        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+            style="width:15%;"
+            hx-get="/htmx/members/list?_no_confirm=1&order_by=email&direction={{ 'desc' if order_by == 'email' and direction == 'asc' else 'asc' }}"
+            hx-include="#member-filters"
+            hx-target="#members-list"
+            hx-swap="outerHTML">
           <span style="white-space:nowrap;">
             E-Mail
             {% if order_by == 'email' %}
               {{ ' ▲' if direction == 'asc' else ' ▼' }}
             {% else %}
-              ⇅
+              <span class="text-gray-300">⇅</span>
             {% endif %}
           </span>
         </th>
 
-        <!-- Geburtsdatum -->
-        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            style="width:9%; cursor:pointer;"
-            onclick="
-              htmx.ajax(
-                'GET',
-                '/htmx/members/list?_no_confirm=1&order_by=birthdate&direction={{ 'desc' if order_by == 'birthdate' and direction == 'asc' else 'asc' }}&deleted={{ deleted }}',
-                { target: '#members-list', swap: 'outerHTML' }
-              );
-            ">
+        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+            style="width:9%;"
+            hx-get="/htmx/members/list?_no_confirm=1&order_by=birthdate&direction={{ 'desc' if order_by == 'birthdate' and direction == 'asc' else 'asc' }}"
+            hx-include="#member-filters"
+            hx-target="#members-list"
+            hx-swap="outerHTML">
           <span style="white-space:nowrap;">
             {{ LABELS_DISPLAY.date1 }}
             {% if order_by == 'birthdate' %}
               {{ ' ▲' if direction == 'asc' else ' ▼' }}
             {% else %}
-              ⇅
+              <span class="text-gray-300">⇅</span>
             {% endif %}
           </span>
         </th>
 
-        <!-- Eintritt -->
-        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            style="width:7%; cursor:pointer;"
-            onclick="
-              htmx.ajax(
-                'GET',
-                '/htmx/members/list?_no_confirm=1&order_by=member_since&direction={{ 'desc' if order_by == 'member_since' and direction == 'asc' else 'asc' }}&deleted={{ deleted }}',
-                { target: '#members-list', swap: 'outerHTML' }
-              );
-            ">
+        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+            style="width:7%;"
+            hx-get="/htmx/members/list?_no_confirm=1&order_by=member_since&direction={{ 'desc' if order_by == 'member_since' and direction == 'asc' else 'asc' }}"
+            hx-include="#member-filters"
+            hx-target="#members-list"
+            hx-swap="outerHTML">
           <span style="white-space:nowrap;">
             {{ LABELS_DISPLAY.date2 }}
             {% if order_by == 'member_since' %}
               {{ ' ▲' if direction == 'asc' else ' ▼' }}
             {% else %}
-              ⇅
+              <span class="text-gray-300">⇅</span>
             {% endif %}
           </span>
         </th>
 
-        <!-- Gruppe -->
-        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            style="width:10%; cursor:pointer;"
-            onclick="
-              htmx.ajax(
-                'GET',
-                '/htmx/members/list?_no_confirm=1&order_by=group_name&direction={{ 'desc' if order_by == 'group_name' and direction == 'asc' else 'asc' }}&deleted={{ deleted }}',
-                { target: '#members-list', swap: 'outerHTML' }
-              );
-            ">
+        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100"
+            style="width:10%;"
+            hx-get="/htmx/members/list?_no_confirm=1&order_by=group_name&direction={{ 'desc' if order_by == 'group_name' and direction == 'asc' else 'asc' }}"
+            hx-include="#member-filters"
+            hx-target="#members-list"
+            hx-swap="outerHTML">
           <span style="white-space:nowrap;">
             Gruppe
             {% if order_by == 'group_name' %}
               {{ ' ▲' if direction == 'asc' else ' ▼' }}
             {% else %}
-              ⇅
+              <span class="text-gray-300">⇅</span>
             {% endif %}
           </span>
         </th>
 
-        <!-- Aktionen -->
         <th class="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
             style="width:31%;">
           Aktionen
@@ -211,9 +190,6 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
 
       </tr>
     </thead>
-
-
-
 
       <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-700">
         {% for member in members %}
@@ -240,13 +216,14 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
           </td>
           <td class="px-6 py-4">{{ member.group.name if member.group else '—' }}</td>
 
-          <!-- Aktionen -->
           <td class="px-6 py-4 text-right">
             <div class="flex justify-end gap-2">
               {% if member.is_deleted %}
+
                 <button type="button"
                         hx-post="/htmx/members/{{ member.id }}/restore"
                         hx-confirm="Soll {{ LABELS_DISPLAY.entity_singular }} wiederhergestellt werden?"
+                        hx-include="#member-filters"
                         hx-target="#members-list"
                         hx-swap="outerHTML"
                         class="btn btn-green">
@@ -256,6 +233,7 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
                 <button type="button"
                         hx-delete="/htmx/members/{{ member.id }}/wipe?force=true"
                         hx-confirm="{{ LABELS_DISPLAY.entity_singular }} wird dauerhaft gelöscht! Fortfahren?"
+                        hx-include="#member-filters"  hx-target="#members-list"
                         hx-target="#members-list"
                         hx-swap="outerHTML"
                         class="btn btn-black">
@@ -263,7 +241,6 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
                 </button>
 
               {% else %}
-                <!-- Bearbeiten -->
                 <a href="/members/{{ member.id }}/edit" class="btn btn-blue">
                   Bearbeiten
                 </a>
@@ -271,6 +248,7 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
                 <button type="button"
                         hx-delete="/htmx/members/{{ member.id }}"
                         hx-confirm="{{ LABELS_DISPLAY.entity_singular }} deaktivieren?"
+                        hx-include="#member-filters"
                         hx-target="#members-list"
                         hx-swap="outerHTML"
                         class="btn btn-red">
@@ -286,7 +264,7 @@ Purpose   : Dynamic template used to show the list of entities (formerly members
 
     {% else %}
     <div class="text-center py-10 text-gray-500">
-      Noch keine {{ LABELS_DISPLAY.entity_plural }} vorhanden.
+      Noch keine {{ LABELS_DISPLAY.entity_plural }} vorhanden (oder keine Treffer für die Suche).
     </div>
     {% endif %}
   </div>

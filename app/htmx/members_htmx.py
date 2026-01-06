@@ -19,7 +19,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Form, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-
+from typing import Optional
+from sqlalchemy import or_
 
 from app.core import models, database
 from app.core.auth import require_admin
@@ -38,24 +39,21 @@ members_htmx_router = APIRouter(
 
 jinja_templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-
 def context(request: Request, db: Session, **extra):
     """
     Provides a context dictionary that includes the request, a list of groups,
-    and any additional key-value pairs.
-
-    Args:
-        request: The incoming HTTP request object.
-        db: The database session to fetch the list of groups.
-        **extra: Arbitrary additional key-value pairs to include in
-            the context.
-
-    Returns:
-        dict: A context dictionary containing the request, a list
-        of groups, and any additional data.
+    LABELS_DISPLAY and any additional key-value pairs.
     """
+    # 1. Bestehende Logik behalten (Gruppen laden)
     groups = group_service.list_groups(db)
-    return {"request": request, "GROUPS": groups, **extra}
+
+    # 2. Dictionary zusammenbauen (Gruppen + Labels + Request)
+    return {
+        "request": request,
+        "GROUPS": groups,  # <-- Deine bestehende Logik (behalten!)
+        "LABELS_DISPLAY": LABELS_DISPLAY,  # <-- Der fehlende Fix für den Absturz
+        **extra
+    }
 
 
 
@@ -436,31 +434,20 @@ def update_group(
 
 @members_htmx_router.get("/list", response_class=HTMLResponse)
 def list_members_htmx(
-    request: Request,
-    deleted: str = "false",
-    order_by: str = "lastname",
-    direction: str = "asc",
-    db: Session = Depends(database.get_db),
+        request: Request,
+        deleted: str = "false",
+        search: Optional[str] = None,
+        order_by: str = "lastname",
+        direction: str = "asc",
+        db: Session = Depends(database.get_db),
 ):
-    """
-    Handles the listing of members based on their deletion status via an HTMX
-    compatible endpoint. The response is rendered as HTML using a Jinja2 template.
-
-    Args:
-        request (Request): The FastAPI request object.
-        deleted (str): Deletion status filter for the members. Accepted values are
-            "true" (deleted members), "false" (active members), and "all" (both
-            active and deleted members). Default is "false".
-        db (Session): SQLAlchemy session dependency, used for database access.
-
-    Returns:
-        HTMLResponse: Rendered HTML response containing the member list.
-    """
+    # Parameter säubern
     deleted = (deleted or "").lower().strip()
     order_by = (order_by or "lastname").strip()
     direction = (direction or "asc").strip().lower()
+    search = (search or "").strip().lower()
 
-    # Basis Query
+    # 1. Basis Query (Nur Status filtern, da is_deleted NICHT verschlüsselt ist)
     if deleted in ("all", "alle"):
         query = db.query(models.Member)
     elif deleted in ("true", "1", "yes", "deleted"):
@@ -468,14 +455,30 @@ def list_members_htmx(
     else:
         query = db.query(models.Member).filter(models.Member.is_deleted == False)
 
+    # Joins für Sortierung nötig?
     if order_by == "group_name":
         query = query.join(models.Group)
 
-    members = query.all()  # Alles holen
+    # 2. ALLES laden (Hier passiert die Entschlüsselung automatisch durch SQLAlchemy)
+    members = query.all()
 
+    # 3. PYTHON-SEITIGE SUCHE (Notwendig wegen Verschlüsselung!)
+    if search:
+        filtered_members = []
+        for m in members:
+            # Wir prüfen Vorname, Nachname und Email
+            # Sicherheitscheck: `or ""` falls ein Feld None ist
+            fn = (m.firstname or "").lower()
+            ln = (m.lastname or "").lower()
+            em = (m.email or "").lower()
+
+            if search in fn or search in ln or search in em:
+                filtered_members.append(m)
+        members = filtered_members
+
+    # 4. Sortierung (Python)
     reverse = (direction == "desc")
 
-    # Sortierlogik
     if order_by in ("firstname", "lastname", "email"):
         members = sorted(
             members,
@@ -489,14 +492,13 @@ def list_members_htmx(
             reverse=reverse,
         )
     else:
-        # Sortierbare DB-Felder: birthdate, member_since, gender
+        # Andere Felder
         members = sorted(
             members,
             key=lambda m: getattr(m, order_by) or "",
             reverse=reverse,
         )
 
-    # Template rendern
     return jinja_templates.TemplateResponse(
         "partials/members_list.html",
         context(
@@ -504,12 +506,12 @@ def list_members_htmx(
             db=db,
             members=members,
             deleted=deleted,
+            search=search,  # Wichtig zurückzugeben für das Input-Feld
             order_by=order_by,
             direction=direction,
-            LABELS_DISPLAY = LABELS_DISPLAY,
+            LABELS_DISPLAY=LABELS_DISPLAY,
         ),
     )
-
 
 @members_htmx_router.delete("/{member_id}", response_class=HTMLResponse)
 def soft_delete_member_htmx(member_id: int, request: Request, db: Session = Depends(database.get_db)):
@@ -569,34 +571,38 @@ def restore_member_htmx(member_id: int, request: Request, db: Session = Depends(
 
 
 @members_htmx_router.delete("/{member_id}/wipe", response_class=HTMLResponse)
-def wipe_member_htmx(member_id: int, request: Request, db: Session = Depends(database.get_db)):
-    """
-    Deletes a specific member from the database and updates the list of members.
+def wipe_member_htmx(
+        member_id: int,
+        request: Request,
 
-    This function deletes a member with the specified member ID from the database.
-    If the member cannot be located or deleted, a 404 HTTPException is raised. After
-    the deletion, the function fetches an updated list of members, including deleted
-    ones, and returns a rendered HTML response containing the updated members list.
+        # URL Parameter (steht in der Action-URL: ?force=true)
+        force: bool = False,
 
-    Args:
-        member_id (int): The unique identifier of the member to be deleted.
-        request (Request): The HTTP request object.
-        db (Session): The database session dependency for executing database
-            operations.
+        # BODY Parameter (kommen via hx-include aus dem Formular)
+        # WICHTIG: Wir nutzen Form(...), damit FastAPI im Body sucht!
+        deleted: str = Form("false"),
+        search: Optional[str] = Form(None),
+        order_by: str = Form("lastname"),
+        direction: str = Form("asc"),
 
-    Returns:
-        HTMLResponse: An HTML response containing the updated list of members.
+        db: Session = Depends(database.get_db)
+):
+    # 1. Löschen
+    try:
+        success = member_service.wipe_member(db, member_id, force=True)
+        if not success:
+            print(f"⚠️ Member {member_id} nicht gefunden.")
+    except Exception as e:
+        return Response(content=f"<script>alert('Fehler: {str(e)}');</script>", status_code=200)
 
-    Raises:
-        HTTPException: If the member cannot be found or deleted, an exception with
-            a 404 status code is raised.
-    """
-    success = member_service.wipe_member(db, member_id, force=True)
-    if not success:
-        raise HTTPException(status_code=404, detail="Mitglied nicht gefunden oder konnte nicht gelöscht werden")
-
-    members = member_service.list_members(db, include_deleted=True)
-    return jinja_templates.TemplateResponse(
-        "partials/members_list.html",
-        context(request, db=db, members=members, deleted="all"),
+    # 2. Liste neu laden (Parameter weiterreichen)
+    # Da wir deleted jetzt korrekt aus dem Body gefischt haben,
+    # wird hier der richtige Status (z.B. "true") an die Liste übergeben.
+    return list_members_htmx(
+        request=request,
+        deleted=deleted,
+        search=search,
+        order_by=order_by,
+        direction=direction,
+        db=db
     )
