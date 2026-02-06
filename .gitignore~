@@ -13,14 +13,12 @@ __pycache__/
 venv/
 .env/
 .env.*
-.env
 
 # --- Editor / OS ---
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-*.db
 
 # --- Docker ---
 docker/.envfile.override.yml
@@ -43,7 +41,9 @@ static/css/tailwind-generated.css
 .kamal/
 alembic/
 alembic.ini
-app/data/instance/app/app/data/frontend/static/images/
+
+# Achtung: Wenn "config/" produktiv versioniert werden soll, bitte entfernen!
+config/
 
 # --- Sensitive / API Keys ---
 TinyMCE API Key

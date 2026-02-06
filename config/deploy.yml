@@ -1,0 +1,61 @@
+service: gratulo
+image: florianmoesch/gratulo
+
+servers:
+  web:
+    hosts:
+      - gratulo.radtreffcampus.de
+    proxy: false
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: proxy
+      traefik.http.routers.to-gratulo.rule: Host(`guideapp.radtreffcampus.de`)
+      traefik.http.routers.to-gratulo.tls: "true"
+      traefik.http.routers.to-gratulo.entrypoints: https
+      traefik.http.routers.to-gratulo.tls.certresolver: le
+    options:
+      network: proxy
+
+registry:
+  username: florianmoesch
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - APP_SECRET
+    - SERVICE_USER_NAME
+    - SERVICE_USER_PASSWORD
+    - JWT_SECRET_KEY
+
+  clear:
+    INITIAL_ADMIN_USER: "bla@bla.com"
+    INITIAL_PASSWORD: ""
+    JWT_ALGORITHM: "HS256"
+    HTTPS_ONLY: "true"
+    BASE_URL: "https://gratulo.radtreffcampus.de"
+    CLUB_FOUNDATION_DATE: "2009-01-01"
+    SESSION_LIFETIME: "480"
+    ENABLE_REST_API: "False"
+    JWT_EXPIRE_MINUTES: "60"
+    REDIS_URL: "redis://gratulo-redis:6379/0"
+    # Falls die App weitere Variablen braucht (wie uvicorn-Konfiguration):
+    PORT: 8000
+
+builder:
+  arch: amd64
+
+# Prüfe, ob du dich hier auch als 'guideapp' oder als 'root' einloggst!
+ssh:
+  user: guideapp
+
+accessories:
+  redis:
+    image: redis:7-alpine
+    host: gratulo.radtreffcampus.de
+    options:
+      name: gratulo-redis
+
+volumes:
+  - "congratulatory-emailer_gratulo_data:/app/app/data"
+  - "gratulo_frontend_images:/app/frontend/static/images"
