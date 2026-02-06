@@ -365,6 +365,119 @@ def save_member(
 
 
 
+def sync_members(db: Session, rows: list[dict]) -> dict:
+    """
+    Synchronizes members by comparing CSV data with the database.
+
+    - Members not in CSV are marked for deletion (soft delete)
+    - New members in CSV are marked for addition
+    - Returns a summary dict with actions taken
+
+    Args:
+        db (Session): Database session
+        rows (list[dict]): Validated CSV rows
+
+    Returns:
+        dict: Summary with 'deleted', 'new', and 'existing' member lists
+    """
+    # Get all emails from CSV
+    csv_emails = {row["email"].lower() for row in rows if row.get("email")}
+
+    # Get all active members from DB
+    db_members = db.query(models.Member).filter(models.Member.is_deleted == False).all()
+    db_emails = {m.email.lower(): m for m in db_members}
+
+    # Find members to delete (in DB but not in CSV)
+    to_delete = []
+    for email, member in db_emails.items():
+        if email not in csv_emails:
+            to_delete.append(member)
+
+    # Find new members (in CSV but not in DB)
+    to_add = []
+    for row in rows:
+        email = row["email"].lower()
+        if email not in db_emails:
+            to_add.append(row)
+
+    # Find existing members (in both)
+    existing = []
+    for row in rows:
+        email = row["email"].lower()
+        if email in db_emails:
+            existing.append(row)
+
+    return {
+        "to_delete": to_delete,
+        "to_add": to_add,
+        "existing": existing,
+    }
+
+
+def commit_sync(db: Session, to_delete: list[models.Member], to_add: list[dict]) -> None:
+    """
+    Commits the synchronization: soft-deletes removed members and adds new ones.
+
+    Args:
+        db (Session): Database session
+        to_delete (list[models.Member]): Members to soft-delete
+        to_add (list[dict]): New member rows to add
+    """
+    # Soft-delete members not in CSV
+    for member in to_delete:
+        member.is_deleted = True
+        member.deleted_at = datetime.utcnow()
+
+    # Add new members from CSV
+    for row in to_add:
+        group = None
+
+        # Resolve group
+        if row.get("group_id"):
+            group = db.query(models.Group).filter(models.Group.id == row["group_id"]).first()
+
+        if not group and row.get("group_name"):
+            normalized = row["group_name"].strip().lower()
+            group = (
+                db.query(models.Group)
+                .filter(func.lower(models.Group.name) == normalized)
+                .first()
+            )
+
+        if not group:
+            group = group_service.get_default_group(db)
+
+        if not group:
+            raise HTTPException(status_code=400, detail="Keine gültige Gruppe vorhanden")
+
+        member = models.Member(
+            email=row["email"],
+            firstname=row["firstname"],
+            lastname=row["lastname"],
+            gender=row["gender"],
+            member_since=None,
+            birthdate=None,
+            group=group,
+        )
+        member.group_id = group.id
+
+        if row.get("member_since"):
+            try:
+                member.member_since = datetime.strptime(row["member_since"], "%d.%m.%Y").date()
+            except ValueError:
+                pass
+
+        if row.get("birthdate"):
+            try:
+                member.birthdate = datetime.strptime(row["birthdate"], "%d.%m.%Y").date()
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Ungültiges Geburtsdatum: {row['birthdate']}")
+
+        db.add(member)
+
+    db.commit()
+
+
 def commit_members(db: Session, rows: list[dict]) -> None:
     """
     Commits new members to the database while removing all existing members. The function first deletes all current

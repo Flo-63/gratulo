@@ -10,7 +10,7 @@
   else 'Neues'
 %}
 
-<div id="members-list" class="bg-white shadow rounded-lg members-groups-container h-full flex flex-col">
+<div id="members-list" class="bg-white shadow rounded-lg members-groups-container flex flex-col" style="height: calc(100vh - 650px); min-height: 300px;">
 
   <div class="flex flex-col md:flex-row justify-between items-center mb-4 px-4 pt-4 gap-4 flex-shrink-0">
     <h2 class="text-xl font-bold text-gray-800">{{ LABELS_DISPLAY.entity_plural }}</h2>
@@ -194,9 +194,9 @@
       <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-700">
         {% for member in members %}
         <tr class="{% if member.is_deleted %}bg-gray-100 text-gray-400 italic{% else %}hover:bg-gray-50{% endif %}">
-          <td class="px-3 py-3 font-medium text-gray-900 truncate">{{ member.firstname }}</td>
-          <td class="px-3 py-3 truncate">{{ member.lastname }}</td>
-          <td class="px-3 py-3">
+          <td class="px-3 py-2 font-medium text-gray-900 truncate">{{ member.firstname }}</td>
+          <td class="px-3 py-2 truncate">{{ member.lastname }}</td>
+          <td class="px-3 py-2">
             {% if member.gender == 'm' %}
               <span class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs">Männlich</span>
             {% elif member.gender == 'w' %}
@@ -205,18 +205,18 @@
               <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs">Divers</span>
             {% endif %}
           </td>
-          <td class="px-6 py-4">{{ member.email }}</td>
-          <td class="px-6 py-4">
+          <td class="px-3 py-2">{{ member.email }}</td>
+          <td class="px-3 py-2">
             {% if member.birthdate %}
               {{ member.birthdate.strftime('%d.%m.%Y') }}
             {% endif %}
           </td>
-          <td class="px-6 py-4">
+          <td class="px-3 py-2">
             {{ member.member_since.year if member.member_since else '' }}
           </td>
-          <td class="px-6 py-4">{{ member.group.name if member.group else '—' }}</td>
+          <td class="px-3 py-2">{{ member.group.name if member.group else '—' }}</td>
 
-          <td class="px-6 py-4 text-right">
+          <td class="px-3 py-2 text-right">
             <div class="flex justify-end gap-2">
               {% if member.is_deleted %}
 

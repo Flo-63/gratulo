@@ -92,9 +92,10 @@ Purpose   : Provides the container for the dynamic list of jobs page
          hx-trigger="load"
          hx-target="#jobs-list"
          hx-swap="innerHTML"
-         class="bg-white shadow rounded-lg p-4">
+         class="bg-white shadow rounded-lg"
+         style="height: calc(100vh - 400px); min-height: 400px; display: flex; flex-direction: column; overflow-y: auto;">
         <!-- Initialer Platzhalter -->
-        <p class="text-gray-500">Jobs werden geladen...</p>
+        <p class="text-gray-500 p-4">Jobs werden geladen...</p>
     </div>
 </div>
 {% endblock %}

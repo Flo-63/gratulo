@@ -227,6 +227,44 @@ def import_members_validate(request: Request, file: UploadFile = File(...), db: 
     return jinja_templates.TemplateResponse("partials/members_import_preview.html", context(request, db=db, rows=validated_rows))
 
 
+@members_htmx_router.post("/sync-validate", response_class=HTMLResponse)
+def sync_members_validate(request: Request, file: UploadFile = File(...), db: Session = Depends(database.get_db),):
+    """
+    Validates a CSV file for member synchronization and shows preview of changes.
+
+    Args:
+        request (Request): The HTTP request object
+        file (UploadFile): The CSV file uploaded by the user
+        db (Session): Database session dependency
+
+    Returns:
+        HTMLResponse: Renders sync preview with members to delete and add
+    """
+    rows = parse_csv(file)
+    validated_rows = validate_rows(rows, db)
+
+    # Check for errors
+    if any(r["_errors"] for r in validated_rows):
+        return jinja_templates.TemplateResponse(
+            "partials/members_import_preview.html",
+            context(request, db=db, rows=validated_rows, banner_error="Bitte beheben Sie erst alle Fehler in der CSV-Datei.")
+        )
+
+    # Perform sync analysis
+    sync_result = member_service.sync_members(db, validated_rows)
+
+    return jinja_templates.TemplateResponse(
+        "partials/members_sync_preview.html",
+        context(
+            request,
+            db=db,
+            to_delete=sync_result["to_delete"],
+            to_add=sync_result["to_add"],
+            existing=sync_result["existing"],
+        )
+    )
+
+
 @members_htmx_router.post("/import-commit")
 async def import_members_commit(request: Request, db: Session = Depends(database.get_db)):
     """
@@ -287,6 +325,59 @@ async def import_members_commit(request: Request, db: Session = Depends(database
 
     # Speichern
     commit_members(db, validated)
+    return Response(status_code=204, headers={"HX-Redirect": "/members"})
+
+
+@members_htmx_router.post("/sync-commit")
+async def sync_members_commit(request: Request, db: Session = Depends(database.get_db)):
+    """
+    Commits the synchronization by deleting removed members and adding new ones.
+
+    Args:
+        request (Request): The HTTP request with form data containing member IDs
+        db (Session): Database session
+
+    Returns:
+        Response: Redirect to members page on success
+    """
+    form = await request.form()
+
+    # Parse member IDs to delete
+    to_delete_ids = []
+    for key in form.keys():
+        if key.startswith("delete_"):
+            member_id = int(key.replace("delete_", ""))
+            to_delete_ids.append(member_id)
+
+    # Parse new members to add
+    parsed_rows: dict[int, dict] = {}
+    for key, value in form.items():
+        if not key.startswith("add["):
+            continue
+        try:
+            idx_str, field = key.split("][")
+            idx = int(idx_str.replace("add[", ""))
+            field = field.rstrip("]")
+
+            if idx not in parsed_rows:
+                parsed_rows[idx] = {}
+            parsed_rows[idx][field] = value
+        except Exception:
+            continue
+
+    to_add = []
+    for i in sorted(parsed_rows.keys()):
+        row = {}
+        for field in EXPECTED_FIELDS:
+            row[field] = (parsed_rows[i].get(field) or "").strip()
+        to_add.append(row)
+
+    # Fetch members to delete
+    members_to_delete = db.query(models.Member).filter(models.Member.id.in_(to_delete_ids)).all()
+
+    # Commit the sync
+    member_service.commit_sync(db, members_to_delete, to_add)
+
     return Response(status_code=204, headers={"HX-Redirect": "/members"})
 
 
