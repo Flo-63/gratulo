@@ -58,9 +58,12 @@ def _on_job_event(event) -> None:
             as job ID and exception details.
     """
     if event.exception:
-        logger.error(f"[Scheduler] Job {event.job_id} fehlgeschlagen.")
+        logger.error(f"❌ [Scheduler] Job {event.job_id} fehlgeschlagen: {type(event.exception).__name__}")
+        logger.debug(f"[Scheduler] Exception Details: {str(event.exception)}")
+        if hasattr(event, 'traceback') and event.traceback:
+            logger.debug(f"[Scheduler] Traceback:\n{event.traceback}")
     else:
-        logger.info(f"[Scheduler] Job {event.job_id} erfolgreich beendet.")
+        logger.debug(f"✅ [Scheduler] Job {event.job_id} beendet")
 
 def start_scheduler() -> None:
     """
@@ -69,7 +72,7 @@ def start_scheduler() -> None:
     sched = _get_scheduler()
     if not sched.running:
         sched.start()
-        logger.info("[Scheduler] gestartet")
+        logger.info("✅ [Scheduler] gestartet")
 
         # 📨 Mail-Queue-Worker hinzufügen
         try:
@@ -80,9 +83,10 @@ def start_scheduler() -> None:
                 id="mail_queue_worker",
                 replace_existing=True,
             )
-            logger.info(f"[Scheduler] Mail-Queue-Worker alle {MAIL_QUEUE_INTERVAL_SECONDS}s aktiviert.")
+            logger.info(f"✅ [Scheduler] Mail-Queue-Worker aktiviert (alle {MAIL_QUEUE_INTERVAL_SECONDS}s)")
         except Exception as e:
-            logger.error(f"[Scheduler] Fehler beim Starten des Mail-Queue-Workers: {e}")
+            logger.error(f"❌ [Scheduler] Fehler beim Starten des Mail-Queue-Workers: {type(e).__name__}")
+            logger.debug(f"[Scheduler] Exception Details: {str(e)}", exc_info=True)
 
 def stop_scheduler() -> None:
     """
@@ -131,7 +135,7 @@ def unschedule(job_id: int) -> None:
     job = sched.get_job(_job_id(job_id))
     if job:
         sched.remove_job(job.id)
-        logger.info(f"[Scheduler] Job {job_id} entfernt")
+        logger.debug(f"[Scheduler] Job {job_id} entfernt")
 
 def register_job(job: models.MailerJob) -> None:
     """
@@ -154,23 +158,27 @@ def register_job(job: models.MailerJob) -> None:
     if job.cron:
         parts = job.cron.split()
         if len(parts) != 5:
-            logger.error(f"[Scheduler] Ungültiger Cron-String für Job {job.id}: '{job.cron}'")
+            logger.error(f"❌ [Scheduler] Ungültiger Cron-String für Job {job.id} ({job.name}): '{job.cron}'")
             return
 
         minute, hour, day, month, weekday = parts
-        sched.add_job(
-            execute_job_by_id,                 # direkte Service-Funktion, kein Wrapper hier
-            trigger="cron",
-            id=_job_id(job.id),
-            replace_existing=True,
-            args=[job.id],
-            minute=minute,
-            hour=hour,
-            day=day,
-            month=month,
-            day_of_week=weekday,
-        )
-        logger.info(f"[Scheduler] Job {job.id} als Cron '{job.cron}' registriert.")
+        try:
+            sched.add_job(
+                execute_job_by_id,                 # direkte Service-Funktion, kein Wrapper hier
+                trigger="cron",
+                id=_job_id(job.id),
+                replace_existing=True,
+                args=[job.id],
+                minute=minute,
+                hour=hour,
+                day=day,
+                month=month,
+                day_of_week=weekday,
+            )
+            logger.info(f"✅ [Scheduler] Job {job.id} ({job.name}) registriert (Cron: {job.cron})")
+        except Exception as e:
+            logger.error(f"❌ [Scheduler] Fehler beim Registrieren von Job {job.id} ({job.name}): {type(e).__name__}")
+            logger.debug(f"[Scheduler] Exception Details: {str(e)}", exc_info=True)
         return
 
     if job.once_at:
@@ -182,21 +190,26 @@ def register_job(job: models.MailerJob) -> None:
 
         # Nur in der Zukunft planen
         if run_date <= datetime.now(run_date.tzinfo or None):
-            logger.info(f"[Scheduler] Once-Job {job.id} liegt in der Vergangenheit – nicht geplant.")
+            logger.warning(f"⚠️ [Scheduler] Job {job.id} ({job.name}) liegt in Vergangenheit - nicht geplant")
+            logger.debug(f"[Scheduler] Once-Job {job.id} run_date: {run_date}")
             return
 
-        sched.add_job(
-            execute_job_by_id,
-            trigger="date",
-            id=_job_id(job.id),
-            replace_existing=True,
-            run_date=run_date,
-            args=[job.id],
-        )
-        logger.info(f"[Scheduler] Once-Job {job.id} für {run_date} geplant.")
+        try:
+            sched.add_job(
+                execute_job_by_id,
+                trigger="date",
+                id=_job_id(job.id),
+                replace_existing=True,
+                run_date=run_date,
+                args=[job.id],
+            )
+            logger.info(f"✅ [Scheduler] Once-Job {job.id} ({job.name}) geplant für {run_date.strftime('%Y-%m-%d %H:%M')}")
+        except Exception as e:
+            logger.error(f"❌ [Scheduler] Fehler beim Registrieren von Job {job.id} ({job.name}): {type(e).__name__}")
+            logger.debug(f"[Scheduler] Exception Details: {str(e)}", exc_info=True)
         return
 
-    logger.info(f"[Scheduler] Job {job.id} hat weder cron noch once_at – nicht geplant.")
+    logger.debug(f"[Scheduler] Job {job.id} ({job.name}) hat keinen Zeitplan - nicht geplant")
 
 def resync_all_jobs(jobs: list[models.MailerJob]) -> None:
     """

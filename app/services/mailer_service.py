@@ -45,11 +45,12 @@ def execute_job_by_id(job_id: int, logical: date | None = None):
     db = SessionLocal()
     try:
         logical = logical or date.today()
-        logger.info(f"▶️ Starte Mailer-Job {job_id} für {logical.isoformat()}")
+        logger.debug(f"▶️ Starte Mailer-Job {job_id} für {logical.isoformat()}")
         run_mailer_job(db, job_id, logical)
-        logger.info(f"✅ Mailer-Job {job_id} beendet")
-    except Exception:
-        logger.exception(f"❌ Fehler beim Ausführen des Mailer-Jobs {job_id}")
+        logger.debug(f"✅ Mailer-Job {job_id} beendet")
+    except Exception as e:
+        logger.error(f"❌ Fehler beim Ausführen des Mailer-Jobs {job_id}: {type(e).__name__}")
+        logger.debug(f"❌ Exception Details für Job {job_id}: {str(e)}", exc_info=True)
     finally:
         db.close()
 
@@ -73,7 +74,7 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     """
     job = db.query(models.MailerJob).filter(models.MailerJob.id == job_id).first()
     if not job:
-        logger.warning(f"[MailerService] Job {job_id} nicht gefunden")
+        logger.error(f"❌ [MailerService] Job {job_id} nicht gefunden")
         log_entry = MailerJobLog(
             job_id=job_id,
             executed_at=datetime.now(timezone.utc),
@@ -90,7 +91,7 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
 
     template = job.template
     if not template:
-        logger.warning(f"[MailerService] Job {job.id} hat kein Template")
+        logger.error(f"❌ [MailerService] Job {job.id} ({job.name}) hat kein Template")
         log_entry = MailerJobLog(
             job_id=job.id,
             executed_at=datetime.now(timezone.utc),
@@ -108,7 +109,7 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     # MailerConfig laden
     config = db.query(MailerConfig).first()
     if not config:
-        logger.error("❌ Keine Mailer-Konfiguration gefunden.")
+        logger.error(f"❌ [MailerService] Keine Mailer-Konfiguration gefunden - Job {job.id} abgebrochen")
         log_entry = MailerJobLog(
             job_id=job.id,
             executed_at=datetime.now(timezone.utc),
@@ -138,14 +139,14 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
             .first()
         )
         if fallback_job:
-            logger.info(f"[MailerService] Fallback auf Standard-Gruppe für Job {job.id} ({job.group.name})")
+            logger.debug(f"[MailerService] Fallback auf Standard-Gruppe für Job {job.id} ({job.group.name})")
             job = fallback_job
             template = job.template
             recipients = list(_resolve_recipients(db, job, logical))
 
     if not recipients:
-        logger.info(
-            f"[MailerService] Keine Empfänger für Job {job.id} ({job.name}, Gruppe {job.group.name}) am {logical.isoformat()}."
+        logger.debug(
+            f"[MailerService] Keine Empfänger für Job {job.id} ({job.name}) am {logical.isoformat()}"
         )
         log_entry = MailerJobLog(
             job_id=job.id,
@@ -161,9 +162,8 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
         db.commit()
         return
 
-    logger.info(
-        f"[MailerService] {len(recipients)} Empfänger für Job {job.id} "
-        f"({job.name}, Gruppe {job.group.name}) gefunden."
+    logger.debug(
+        f"[MailerService] {len(recipients)} Empfänger für Job {job.id} ({job.name}) gefunden"
     )
 
     subject_fallback = job.name
@@ -186,10 +186,11 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
             mails_sent += 1
 
 
-        except Exception:
+        except Exception as e:
             errors += 1
             failed_recipients.append(member.email)
-            logger.exception(f"[MailerService] Fehler bei {mask_email(member.email)} mit Template {tmpl_to_use.name}")
+            logger.warning(f"⚠️ [MailerService] Fehler bei Mail-Versand an {mask_email(member.email)}: {type(e).__name__}")
+            logger.debug(f"❌ [MailerService] Details: Template {tmpl_to_use.name}, Exception: {str(e)}", exc_info=True)
 
 
     duration = int((time.perf_counter() - start_time) * 1000)
@@ -197,10 +198,15 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     # 📓 Logeintrag in DB
     if errors == 0:
         status = "ok"
+        logger.info(f"✅ [MailerService] Job {job.id} ({job.name}): {mails_sent} Mails versendet")
+        logger.debug(f"[MailerService] Job {job.id} Dauer: {duration}ms")
     elif mails_sent > 0:
         status = "partial_error"
+        logger.warning(f"⚠️ [MailerService] Job {job.id} ({job.name}): {mails_sent} Mails versendet, {errors} Fehler")
+        logger.debug(f"[MailerService] Job {job.id} Dauer: {duration}ms")
     else:
         status = "error"
+        logger.error(f"❌ [MailerService] Job {job.id} ({job.name}): Fehlgeschlagen - 0 Mails versendet, {errors} Fehler")
 
     details = f"{mails_sent} gesendet, {errors} Fehler"
     if failed_recipients:
@@ -209,6 +215,7 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
             f"{', '.join(anonymize(r) for r in failed_recipients[:5])}"
             f"{'...' if len(failed_recipients) > 5 else ''})"
         )
+        logger.debug(f"[MailerService] Job {job.id} fehlgeschlagene Empfänger: {', '.join(anonymize(r) for r in failed_recipients)}")
 
     log_entry = MailerJobLog(
         job_id=job.id,
@@ -222,6 +229,7 @@ def run_mailer_job(db: Session, job_id: int, logical: date) -> None:
     )
     db.add(log_entry)
     db.commit()
+    logger.debug(f"[MailerService] Job {job.id}: DB-Log geschrieben (Status: {status})")
 
 def _select_template(job, member, logical):
     """

@@ -9,12 +9,13 @@ servers:
     labels:
       traefik.enable: "true"
       traefik.docker.network: proxy
-      traefik.http.routers.to-gratulo.rule: Host(`guideapp.radtreffcampus.de`)
+      traefik.http.routers.to-gratulo.rule: Host(`gratulo.radtreffcampus.de`)
       traefik.http.routers.to-gratulo.tls: "true"
       traefik.http.routers.to-gratulo.entrypoints: https
       traefik.http.routers.to-gratulo.tls.certresolver: le
     options:
       network: proxy
+
 
 registry:
   username: florianmoesch
@@ -38,6 +39,7 @@ env:
     SESSION_LIFETIME: "480"
     ENABLE_REST_API: "False"
     JWT_EXPIRE_MINUTES: "60"
+    LOG_LEVEL: "INFO"
     REDIS_URL: "redis://gratulo-redis:6379/0"
     # Falls die App weitere Variablen braucht (wie uvicorn-Konfiguration):
     PORT: 8000
@@ -53,6 +55,7 @@ accessories:
   redis:
     image: redis:7-alpine
     host: gratulo.radtreffcampus.de
+    port: "6379"
     options:
       name: gratulo-redis
 

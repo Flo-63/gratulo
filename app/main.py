@@ -36,7 +36,7 @@ from app.core.logging import setup_logging, get_audit_logger, get_csp_logger
 
 
 
-setup_logging()
+setup_logging(log_to_file=True)
 logger = logging.getLogger(__name__)
 audit_logger = get_audit_logger()
 csp_logger = get_csp_logger()
