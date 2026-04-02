@@ -128,12 +128,25 @@ async def startup_event():
     # Tabellen erzeugen
     ensure_database_exists()
     Base.metadata.create_all(bind=engine)
+
     from app.core.database import SessionLocal
     with SessionLocal() as db:
         ensure_default_data(db)
+
+    # 1. Den Scheduler-Basis-Dienst starten
     start_scheduler()
 
-    # Redis + Limiter initialisieren
+    # 2. Alle bestehenden Jobs aus der DB in den Scheduler laden
+    from app.services.scheduler import resync_all_jobs
+    from app.core.models import MailerJob
+
+    logger.info("Inizialisiere Mailer-Jobs aus der Datenbank...")
+    with SessionLocal() as db:
+        all_jobs = db.query(MailerJob).all()
+        resync_all_jobs(all_jobs)
+        logger.info(f"✅ {len(all_jobs)} Jobs erfolgreich in den Scheduler geladen.")
+
+    # 3. Redis + Limiter initialisieren (Achtung auf die Einrückung hier!)
     redis_url = os.getenv("REDIS_URL", "redis://redis:6379")
     try:
         r = await redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
