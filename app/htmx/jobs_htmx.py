@@ -69,8 +69,9 @@ def jobs_list(request: Request, db: Session = Depends(get_db)):
 
     # Übergib ORM-Objekte ans Template
     return jinja_templates.TemplateResponse(
-        "partials/jobs_list.html",
-        context(request, jobs=jobs, local_tz=LOCAL_TZ)
+        request=request,
+        name="partials/jobs_list.html",
+        context={"jobs": jobs}
     )
 
 
@@ -374,9 +375,9 @@ def job_status(request: Request, db: Session = Depends(get_db)):
         next_run_in = max(0, int(delta))
 
     return jinja_templates.TemplateResponse(
-        request=request,  # Explizit als Keyword
-        name="partials/job_status.html",  # Explizit als Keyword
-        context={  # Der eigentliche Inhalt
+        request=request,
+        name="partials/job_status.html",
+        context={
             "status": status,
             "next_run_in": next_run_in
         }
