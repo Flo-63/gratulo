@@ -374,14 +374,13 @@ def job_status(request: Request):
         next_run_in = max(0, int(delta))
 
     return jinja_templates.TemplateResponse(
-        "partials/job_status.html",
-        context(
-            request,
-            status={**status, "next_run_in": next_run_in},
-            rate_limit_window=RATE_LIMIT_WINDOW,
-            mail_queue_interval=MAIL_QUEUE_INTERVAL_SECONDS,
+            "partials/job_status.html",
+            {
+                "request": request,
+                "status": status,
+                "next_run_in": next_run_in
+            }
         )
-    )
 
 
 
