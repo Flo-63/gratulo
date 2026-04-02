@@ -374,13 +374,13 @@ def job_status(request: Request, db: Session = Depends(get_db)):
         next_run_in = max(0, int(delta))
 
     return jinja_templates.TemplateResponse(
-            "partials/job_status.html",
-            {
-                "request": request,
-                "status": status,
-                "next_run_in": next_run_in
-            }
-        )
+        request=request,  # Explizit als Keyword
+        name="partials/job_status.html",  # Explizit als Keyword
+        context={  # Der eigentliche Inhalt
+            "status": status,
+            "next_run_in": next_run_in
+        }
+    )
 
 
 

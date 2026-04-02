@@ -42,11 +42,9 @@ async def jobs_page(request: Request, db: Session = Depends(database.get_db)):
     """
     jobs = db.query(models.MailerJob).all()
     return jinja_templates.TemplateResponse(
-        "jobs.html",
-        {
-            "request": request,
-            "jobs": jobs
-        }
+        request=request,
+        name="jobs.html",
+        context={"jobs": jobs}
     )
 
 
