@@ -333,7 +333,7 @@ def queue_status(request: Request):
 
 
 @jobs_htmx_router.get("/job-status", response_class=HTMLResponse)
-def job_status(request: Request):
+def job_status(request: Request, db: Session = Depends(get_db)):
     scheduler = get_scheduler()
     status = get_queue_status() or {}
     status.setdefault("queued", 0)
