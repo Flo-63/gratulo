@@ -200,6 +200,7 @@ def register_job(job: models.MailerJob) -> None:
                 execute_job_by_id,
                 trigger="date",
                 id=_job_id(job.id),
+                name=job.name,
                 replace_existing=True,
                 run_date=run_date,
                 args=[job.id],
