@@ -48,9 +48,11 @@ def templates_list(request: Request, db: Session = Depends(get_db)):
         TemplateResponse: The rendered HTML response containing the list of templates.
     """
     templates = template_service.get_templates(db)
+    ctx = context(request, templates=templates)
     return jinja_templates.TemplateResponse(
-        "partials/templates_list.html",
-        context(request, templates=templates)
+        request=request,
+        name="partials/templates_list.html",
+        context=ctx
     )
 
 

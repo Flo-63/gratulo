@@ -29,9 +29,7 @@ from app.services.auth_service import (
 )
 
 
-from fastapi.templating import Jinja2Templates
-
-templates = Jinja2Templates(directory="frontend/templates")
+from app.core.deps import jinja_templates, context
 
 admin_users_router = APIRouter(prefix="/mailer-config/admin-users", tags=["Admin Users (HTMX)"])
 
@@ -52,9 +50,11 @@ def render_admin_list(request: Request, db: Session):
         TemplateResponse: Rendered HTML template for the admin user list.
     """
     users = db.query(AdminUser).order_by(AdminUser.username).all()
-    return templates.TemplateResponse(
-        "partials/admin_user_list.html",
-        {"request": request, "users": users}
+    ctx = context(request, users=users)
+    return jinja_templates.TemplateResponse(
+        request=request,
+        name="partials/admin_user_list.html",
+        context=ctx
     )
 
 # -----------------------------------------------------------------------------
@@ -90,9 +90,11 @@ def new_admin_user(request: Request):
         HTMLResponse: A rendered HTML response containing the admin user editor
         template.
     """
-    return templates.TemplateResponse(
-        "partials/admin_user_editor.html",
-        {"request": request, "user": None}
+    ctx = context(request, user=None)
+    return jinja_templates.TemplateResponse(
+        request=request,
+        name="partials/admin_user_editor.html",
+        context=ctx
     )
 
 
@@ -120,9 +122,11 @@ def edit_admin_user(request: Request, user_id: int, db: Session = Depends(get_db
     user = db.query(AdminUser).get(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Admin user not found")
-    return templates.TemplateResponse(
-        "partials/admin_user_editor.html",
-        {"request": request, "user": user}
+    ctx = context(request, user=user)
+    return jinja_templates.TemplateResponse(
+        request=request,
+        name="partials/admin_user_editor.html",
+        context=ctx
     )
 
 
@@ -189,9 +193,11 @@ def save_admin_user(
         secret = generate_2fa_secret(user, db)
         uri = generate_qr_code_uri(user, issuer_name="Gratulo")
         qr_b64 = generate_qr_code_base64(uri)
-        return templates.TemplateResponse(
-            "partials/2fa_setup.html",
-            {"request": request, "user": user, "qr_b64": qr_b64},
+        ctx = context(request, user=user, qr_b64=qr_b64)
+        return jinja_templates.TemplateResponse(
+            request=request,
+            name="partials/2fa_setup.html",
+            context=ctx
         )
 
     return render_admin_list(request, db)
@@ -260,10 +266,12 @@ def verify_2fa_code(
     if not verify_2fa_token(user, token):
         uri = generate_qr_code_uri(user, issuer_name="Gratulo")
         qr_b64 = generate_qr_code_base64(uri)
-        return templates.TemplateResponse(
-            "partials/2fa_setup.html",
-            {"request": request, "user": user, "qr_b64": qr_b64, "error": "❌ Ungültiger Code."},
-            status_code=401,
+        ctx = context(request, user=user, qr_b64=qr_b64, error="❌ Ungültiger Code.")
+        return jinja_templates.TemplateResponse(
+            request=request,
+            name="partials/2fa_setup.html",
+            context=ctx,
+            status_code=401
         )
 
     # Erfolgreich: Flag bleibt, zurück zur Liste

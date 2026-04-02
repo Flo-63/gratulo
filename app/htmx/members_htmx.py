@@ -146,14 +146,14 @@ def save_member_htmx(
         }
         groups = group_service.list_groups(db)
         return jinja_templates.TemplateResponse(
-            "partials/member_editor_partial.html",
-            {
-                "request": request,
+            request=request,
+            name="partials/member_editor_partial.html",
+            context={
                 "member": member_data,
                 "errors": errors,
                 "GROUPS": groups,
                 "htmx": True,
-            },
+            }
         )
 
     # Speicherung mit zentraler Service-Funktion
@@ -193,14 +193,14 @@ def save_member_htmx(
     }
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse(
-        "partials/member_editor_partial.html",
-        {
-            "request": request,
+        request=request,
+        name="partials/member_editor_partial.html",
+        context={
             "member": member_data,
             "errors": errors,
             "GROUPS": groups,
             "htmx": True,
-        },
+        }
     )
 
 
@@ -224,7 +224,14 @@ def import_members_validate(request: Request, file: UploadFile = File(...), db: 
     """
     rows = parse_csv(file)
     validated_rows = validate_rows(rows, db)  # ← VALIDIERUNG HINZUFÜGEN!
-    return jinja_templates.TemplateResponse("partials/members_import_preview.html", context(request, db=db, rows=validated_rows))
+    return jinja_templates.TemplateResponse(
+        request=request,
+        name="partials/members_import_preview.html",
+        context={
+            "db": db,
+            "rows": validated_rows
+        }
+    )
 
 
 @members_htmx_router.post("/sync-validate", response_class=HTMLResponse)
@@ -246,22 +253,26 @@ def sync_members_validate(request: Request, file: UploadFile = File(...), db: Se
     # Check for errors
     if any(r["_errors"] for r in validated_rows):
         return jinja_templates.TemplateResponse(
-            "partials/members_import_preview.html",
-            context(request, db=db, rows=validated_rows, banner_error="Bitte beheben Sie erst alle Fehler in der CSV-Datei.")
+            request=request,
+            name="partials/members_import_preview.html",
+            context={
+                "db": db,
+                "rows": validated_rows,
+                "banner_error": "Bitte beheben Sie erst alle Fehler in der CSV-Datei."
+            }
         )
-
     # Perform sync analysis
     sync_result = member_service.sync_members(db, validated_rows)
 
     return jinja_templates.TemplateResponse(
-        "partials/members_sync_preview.html",
-        context(
-            request,
-            db=db,
-            to_delete=sync_result["to_delete"],
-            to_add=sync_result["to_add"],
-            existing=sync_result["existing"],
-        )
+        request=request,
+        name="partials/members_sync_preview.html",
+        context={
+            "db": db,
+            "to_delete": sync_result["to_delete"],
+            "to_add": sync_result["to_add"],
+            "existing": sync_result["existing"],
+        }
     )
 
 
@@ -311,16 +322,25 @@ async def import_members_commit(request: Request, db: Session = Depends(database
     #  Stoppen, wenn es noch Fehler gibt
     if any(r["_errors"] for r in validated):
         return jinja_templates.TemplateResponse(
-            "partials/members_import_preview.html",
-            context(request, db=db, rows=validated)
+            request=request,
+            name="partials/members_import_preview.html",
+            context={
+                "db": db,
+                "rows": validated
+            }
         )
 
     #  Sicherstellen, dass birthdate wirklich gesetzt ist
     for row in validated:
         if not row.get("birthdate"):
             return jinja_templates.TemplateResponse(
-                "partials/members_import_preview.html",
-                context(request, db=db, rows=validated, error="Es fehlen Pflichtfelder (Geburtsdatum).")
+                request=request,
+                name="partials/members_import_preview.html",
+                context={
+                    "db": db,
+                    "rows": validated,
+                    "error": "Es fehlen Pflichtfelder (Geburtsdatum)."
+                }
             )
 
     # Speichern
@@ -427,8 +447,12 @@ async def import_members_revalidate(
     validated_rows = validate_rows(normalized_rows,db)
 
     return jinja_templates.TemplateResponse(
-        "partials/members_import_preview.html",
-        context(request, db=db, rows=validated_rows)
+        request=request,
+        name="partials/members_import_preview.html",
+        context={
+            "db": db,
+            "rows": validated_rows
+        }
     )
 
 @members_htmx_router.post("/groups", response_class=HTMLResponse)
@@ -454,8 +478,12 @@ def add_group(
     group_service.create_group(db, name=name.strip(), is_default=is_default)
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse(
-        "partials/groups_list.html",
-        context(request, db=db, groups=groups),
+        request=request,
+        name="partials/groups_list.html",
+        context={
+            "db": db,
+            "groups": groups
+        }
     )
 
 
@@ -482,8 +510,12 @@ def delete_group(
     group_service.delete_group(db, group_id=group_id)
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse(
-        "partials/groups_list.html",
-        context(request, db=db, groups=groups),
+        request=request,
+        name="partials/groups_list.html",
+        context={
+            "db": db,
+            "groups": groups
+        }
     )
 
 
@@ -515,8 +547,12 @@ def update_group(
     g = group_service.update_group(db, group_id=group_id, name=name.strip(), is_default=is_default)
     groups = group_service.list_groups(db)
     return jinja_templates.TemplateResponse(
-        "partials/groups_list.html",
-        context(request, db=db, groups=groups),
+        request=request,
+        name="partials/groups_list.html",
+        context={
+            "db": db,
+            "groups": groups
+        }
     )
 
 # ==========================================================
@@ -591,17 +627,17 @@ def list_members_htmx(
         )
 
     return jinja_templates.TemplateResponse(
-        "partials/members_list.html",
-        context(
-            request,
-            db=db,
-            members=members,
-            deleted=deleted,
-            search=search,  # Wichtig zurückzugeben für das Input-Feld
-            order_by=order_by,
-            direction=direction,
-            LABELS_DISPLAY=LABELS_DISPLAY,
-        ),
+        request=request,
+        name="partials/members_list.html",
+        context={
+            "db": db,
+            "members": members,
+            "deleted": deleted,
+            "search": search,
+            "order_by": order_by,
+            "direction": direction,
+            "LABELS_DISPLAY": LABELS_DISPLAY,
+        }
     )
 
 @members_htmx_router.delete("/{member_id}", response_class=HTMLResponse)
@@ -628,9 +664,11 @@ def soft_delete_member_htmx(member_id: int, request: Request, db: Session = Depe
         raise HTTPException(status_code=404, detail="Mitglied nicht gefunden")
 
     members = member_service.list_active_members(db)
+    ctx = context(request, db=db, members=members, deleted="false")
     return jinja_templates.TemplateResponse(
-        "partials/members_list.html",
-        context(request, db=db, members=members, deleted="false"),
+        request=request,
+        name="partials/members_list.html",
+        context=ctx
     )
 
 @members_htmx_router.post("/{member_id}/restore", response_class=HTMLResponse)
@@ -655,9 +693,11 @@ def restore_member_htmx(member_id: int, request: Request, db: Session = Depends(
         raise HTTPException(status_code=404, detail="Mitglied nicht gefunden oder nicht gelöscht")
 
     members = member_service.list_members(db, include_deleted=True)
+    ctx = context(request, db=db, members=members, deleted="all")
     return jinja_templates.TemplateResponse(
-        "partials/members_list.html",
-        context(request, db=db, members=members, deleted="all"),
+        request=request,
+        name="partials/members_list.html",
+        context=ctx
     )
 
 

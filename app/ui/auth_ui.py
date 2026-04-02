@@ -69,13 +69,13 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
         using_env_login = False
 
     return jinja_templates.TemplateResponse(
-        "login.html",
-        context(
-            request,
-            auth_method=auth_method,
-            using_env_login=using_env_login,
-            error_message=None,
-        ),
+        request=request,
+        name="login.html",
+        context={
+            "auth_method": auth_method,
+            "using_env_login": using_env_login,
+            "error_message": None,
+        }
     )
 
 
@@ -128,14 +128,16 @@ async def login_submit(
             "email" if (INITIAL_ADMIN_USER and INITIAL_PASSWORD)
             else (config.auth_method if config and config.auth_method else "oauth")
         )
+        ctx = context(request,
+            auth_method=auth_method,
+            using_env_login=bool(INITIAL_ADMIN_USER and INITIAL_PASSWORD),
+            error_message=error or "❌ Ungültige E-Mail oder Passwort."
+        )
         return jinja_templates.TemplateResponse(
-            "login.html",
-            context(request,
-                auth_method=auth_method,
-                using_env_login=bool(INITIAL_ADMIN_USER and INITIAL_PASSWORD),
-                error_message=error or "❌ Ungültige E-Mail oder Passwort."
-            ),
-            status_code=401,
+            request=request,
+            name="login.html",
+            context=ctx,
+            status_code=401
         )
 
 
@@ -226,9 +228,11 @@ async def two_factor_form(request: Request):
     if not pending_user:
         return RedirectResponse("/login", status_code=303)
 
+    ctx = context(request, username=pending_user, error=None)
     return jinja_templates.TemplateResponse(
-        "2fa_verify.html",
-        context(request, username=pending_user, error=None),
+        request=request,
+        name="2fa_verify.html",
+        context=ctx
     )
 
 
@@ -263,10 +267,12 @@ async def two_factor_verify(
 
     user = db.query(AdminUser).filter(AdminUser.username == pending_user).first()
     if not user or not verify_2fa_token(user, token):
+        ctx = context(request, username=pending_user, error="❌ Ungültiger Code oder abgelaufen.")
         return jinja_templates.TemplateResponse(
-            "2fa_verify.html",
-            context(request, username=pending_user, error="❌ Ungültiger Code oder abgelaufen."),
-            status_code=401,
+            request=request,
+            name="2fa_verify.html",
+            context=ctx,
+            status_code=401
         )
 
     # Erfolgreich

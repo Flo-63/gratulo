@@ -44,9 +44,11 @@ async def members_page(request: Request, db: Session = Depends(database.get_db))
     """
     # ImportMeta holen (kann None sein, wenn noch nie importiert)
     meta = db.query(models.ImportMeta).first()
+    ctx = context(request, last_imported=meta.last_imported if meta else None)
     return jinja_templates.TemplateResponse(
-        "members.html",
-        context(request, last_imported=meta.last_imported if meta else None)
+        request=request,
+        name="members.html",
+        context=ctx
     )
 
 @members_ui_router.get("/list", response_class=HTMLResponse)
@@ -64,9 +66,11 @@ async def members_list(request: Request, db: Session = Depends(database.get_db))
         HTMLResponse: Rendered HTML response with the members list.
     """
     members = member_service.list_members(db)
+    ctx = context(request, members=members)
     return jinja_templates.TemplateResponse(
-        "partials/members_list.html",
-        context(request, members=members)
+        request=request,
+        name="partials/members_list.html",
+        context=ctx
     )
 
 @members_ui_router.get("/new", response_class=HTMLResponse )
@@ -87,7 +91,12 @@ async def new_member_page(request: Request, db: Session = Depends(database.get_d
         engine.
     """
     groups = group_service.list_groups(db)
-    return jinja_templates.TemplateResponse("member_editor.html", context(request, member=None,  GROUPS=groups))
+    ctx = context(request, member=None, GROUPS=groups)
+    return jinja_templates.TemplateResponse(
+        request=request,
+        name="member_editor.html",
+        context=ctx
+    )
 
 @members_ui_router.get("/{member_id}/edit", response_class=HTMLResponse)
 async def edit_member_page(request: Request, member_id: int, db: Session = Depends(database.get_db)):
@@ -114,7 +123,12 @@ async def edit_member_page(request: Request, member_id: int, db: Session = Depen
     if not member:
         raise HTTPException(status_code=404, detail="Mitglied nicht gefunden")
     groups = group_service.list_groups(db)
-    return jinja_templates.TemplateResponse("member_editor.html", context(request, member=member,  GROUPS=groups))
+    ctx = context(request, member=member, GROUPS=groups)
+    return jinja_templates.TemplateResponse(
+        request=request,
+        name="member_editor.html",
+        context=ctx
+    )
 
 @members_ui_router.get("/groups", response_class=HTMLResponse)
 async def groups_list(request: Request, db: Session = Depends(database.get_db)):
@@ -132,7 +146,9 @@ async def groups_list(request: Request, db: Session = Depends(database.get_db)):
         HTMLResponse: A rendered HTML response containing the groups list.
     """
     groups = group_service.list_groups(db)
+    ctx = context(request, groups=groups)
     return jinja_templates.TemplateResponse(
-        "partials/groups_list.html",
-        context(request, groups=groups)
+        request=request,
+        name="partials/groups_list.html",
+        context=ctx
     )

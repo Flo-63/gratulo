@@ -43,9 +43,11 @@ def mailer_config_ui(request: Request, db: Session = Depends(get_db)):
         TemplateResponse: A response containing the rendered mailer configuration page.
     """
     config = db.query(MailerConfig).first()
+    ctx = context(request, config=config)
     return jinja_templates.TemplateResponse(
-        "mailer_config.html",
-        context(request, config=config)
+        request=request,
+        name="mailer_config.html",
+        context=ctx
     )
 
 
@@ -135,9 +137,11 @@ def mailer_config_save(
     # --- Falls Fehler, zurück ins Template ---
     if error_message:
         config = db.query(MailerConfig).first()
+        ctx = context(request, config=config, error_message=error_message)
         return jinja_templates.TemplateResponse(
-            "mailer_config.html",
-            context(request, config=config, error_message=error_message),
+            request=request,
+            name="mailer_config.html",
+            context=ctx,
             status_code=400
         )
 
@@ -173,8 +177,10 @@ def mailer_config_save(
 @mailer_config_ui_router.get("/mailer-config/admin-users")
 def admin_users_partial(request: Request, db: Session = Depends(get_db)):
     users = db.query(AdminUser).order_by(AdminUser.username.asc()).all()
+    ctx = context(request, admin_users=users)
     return jinja_templates.TemplateResponse(
-        "partials/admin_user_list.html",  # 👈 jetzt im partials-Ordner
-        context(request, admin_users=users)
+        request=request,
+        name="partials/admin_user_list.html",
+        context=ctx
     )
 

@@ -43,9 +43,11 @@ async def templates_page(request: Request, db: Session = Depends(get_db)):
         HTMLResponse: A rendered HTML response containing the templates page.
     """
     templates = template_service.get_templates(db)
+    ctx = context(request, templates=templates)
     return jinja_templates.TemplateResponse(
-        "templates.html",
-        context(request, templates=templates)
+        request=request,
+        name="templates.html",
+        context=ctx
     )
 
 
@@ -65,9 +67,11 @@ async def new_template_page(request: Request):
         HTMLResponse: A response containing the rendered HTML content for
         the template editor page.
     """
+    ctx = context(request, template=None)
     return jinja_templates.TemplateResponse(
-        "template_editor.html",
-        context(request, template=None)
+        request=request,
+        name="template_editor.html",
+        context=ctx
     )
 
 
@@ -98,7 +102,9 @@ async def edit_template_page(request: Request, template_id: int, db: Session = D
     if not template:
         raise HTTPException(status_code=404, detail="Template nicht gefunden")
 
+    ctx = context(request, template=template)
     return jinja_templates.TemplateResponse(
-        "template_editor.html",
-        context(request, template=template)
+        request=request,
+        name="template_editor.html",
+        context=ctx
     )

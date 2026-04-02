@@ -41,9 +41,11 @@ def show_license(request: Request):
         TemplateResponse: An HTTP response containing the rendered HTML
             template for the license page.
     """
+    ctx = context(request, page_title="Lizenzbedingungen")
     return jinja_templates.TemplateResponse(
-        "legal/license.html",
-        context(request, page_title="Lizenzbedingungen")
+        request=request,
+        name="legal/license.html",
+        context=ctx
     )
 
 @legal_ui_router.get("/privacy", response_class=HTMLResponse)
@@ -57,9 +59,11 @@ def show_privacy(request: Request):
     Returns:
         HTMLResponse: The rendered HTML response for the privacy policy page.
     """
+    ctx = context(request, page_title="Datenschutzerklärung")
     return jinja_templates.TemplateResponse(
-        "legal/privacy.html",
-        context(request, page_title="Datenschutzerklärung")
+        request=request,
+        name="legal/privacy.html",
+        context=ctx
     )
 
 @legal_ui_router.get("/terms", response_class=HTMLResponse)
@@ -76,7 +80,9 @@ def show_terms(request: Request):
     Returns:
         HTMLResponse: A rendered HTML response for the terms and conditions page.
     """
+    ctx = context(request, page_title="Nutzungsbedingungen")
     return jinja_templates.TemplateResponse(
-        "legal/terms.html",
-        context(request, page_title="Nutzungsbedingungen")
+        request=request,
+        name="legal/terms.html",
+        context=ctx
     )

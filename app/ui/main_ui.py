@@ -74,6 +74,9 @@ async def admin(request: Request):
     """
     if "user" not in request.session:
         return RedirectResponse("/login", status_code=303)
-    return jinja_templates.TemplateResponse("admin.html", context(request))
-
+    return jinja_templates.TemplateResponse(
+        request=request,
+        name="admin.html",
+        context={}  # oder die Daten, die du übergeben willst
+    )
 
