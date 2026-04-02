@@ -167,6 +167,7 @@ def register_job(job: models.MailerJob) -> None:
                 execute_job_by_id,                 # direkte Service-Funktion, kein Wrapper hier
                 trigger="cron",
                 id=_job_id(job.id),
+                name=job.name,
                 replace_existing=True,
                 args=[job.id],
                 minute=minute,
