@@ -262,8 +262,8 @@ def job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
 
     return jinja_templates.TemplateResponse(
         request=request,
-        name="partials/job_logs.html",
-        context={"logs": logs}
+        name="partials/job_logs_modal.html",
+        context={"job": job, "logs": logs}
     )
 
 @jobs_htmx_router.delete("/{job_id}/logs", response_class=HTMLResponse)
