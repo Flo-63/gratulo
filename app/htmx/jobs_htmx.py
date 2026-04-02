@@ -75,9 +75,6 @@ def jobs_list(request: Request, db: Session = Depends(get_db)):
     )
 
 
-
-
-
 @jobs_htmx_router.post("", response_class=Response)
 async def save_job_endpoint(
     request: Request,
@@ -223,8 +220,9 @@ def delete_job(job_id: int, request: Request, db: Session = Depends(get_db)):
         j.cron_human = cron_to_human(j.cron) if j.cron else None
 
     return jinja_templates.TemplateResponse(
-        "partials/jobs_list.html",
-        context(request, jobs=jobs, local_tz=LOCAL_TZ)
+        request=request,
+        name="partials/jobs_list.html",
+        context={"jobs": jobs, "local_tz": LOCAL_TZ}
     )
 
 
@@ -263,8 +261,9 @@ def job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
             log.executed_at = log.executed_at.replace(tzinfo=timezone.utc).astimezone(LOCAL_TZ)
 
     return jinja_templates.TemplateResponse(
-        "partials/job_logs_modal.html",
-        context(request, job=job, logs=logs, local_tz=LOCAL_TZ)
+        request=request,
+        name="partials/job_logs.html",
+        context={"logs": logs}
     )
 
 @jobs_htmx_router.delete("/{job_id}/logs", response_class=HTMLResponse)
@@ -295,8 +294,9 @@ def delete_job_logs(job_id: int, request: Request, db: Session = Depends(get_db)
 
     # Modal neu rendern (mit leerer Log-Liste)
     return jinja_templates.TemplateResponse(
-        "partials/job_logs_modal.html",
-        context(request, job=job, logs=[], local_tz=LOCAL_TZ)
+        request=request,
+        name="partials/job_logs_modal.html",
+        context={"job": job, "logs": [], "local_tz": LOCAL_TZ}
     )
 # ---------------------------------------------------------------------------
 # Mailer Queue Status
