@@ -77,15 +77,15 @@ async def new_job_page(request: Request, db: Session = Depends(database.get_db))
     used_selections = [s[0] for s in used_selections]
 
     return jinja_templates.TemplateResponse(
-        "job_editor.html",
-        context(
-            request,
-            job=None,
-            templates=templates,
-            used_selections=used_selections,
-            groups=groups,
-            labels=LABELS_DISPLAY,
-        ),
+        request=request,
+        name="job_editor.html",
+        context={
+            "job": None,
+            "templates": templates,
+            "used_selections": used_selections,
+            "groups": groups,
+            "labels": LABELS_DISPLAY
+        }
     )
 
 @jobs_ui_router.get("/{job_id}/edit", response_class=HTMLResponse)
@@ -121,13 +121,31 @@ async def edit_job_page(request: Request, job_id: int, db: Session = Depends(dat
     used_selections = [s[0] for s in used_selections]
 
     return jinja_templates.TemplateResponse(
-        "job_editor.html",
-        context(
-            request,
-            job=job,
-            templates=templates,
-            used_selections=used_selections,
-            groups=groups,
-            labels=LABELS_DISPLAY,
-        ),
+        request=request,
+        name="job_editor.html",
+        context={
+            "job": job,
+            "templates": templates,
+            "used_selections": used_selections,
+            "groups": groups,
+            "labels": LABELS_DISPLAY
+        }
     )
+
+from app.services.scheduler import get_scheduler
+
+@jobs_ui_router.get("/admin/scheduler-check")
+def check_scheduler():
+    sched = get_scheduler()
+    jobs = sched.get_jobs()
+    return {
+        "running": sched.running,
+        "count": len(jobs),
+        "jobs": [
+            {
+                "id": j.id,
+                "next_run": str(j.next_run_time),
+                "trigger": str(j.trigger)
+            } for j in jobs
+        ]
+    }
