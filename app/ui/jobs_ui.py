@@ -144,6 +144,7 @@ def check_scheduler():
         "jobs": [
             {
                 "id": j.id,
+                "name": getattr(j, "name", "Kein Name hinterlegt"), # Zeigt den Namen an, falls vorhanden
                 "next_run": str(j.next_run_time),
                 "trigger": str(j.trigger)
             } for j in jobs
