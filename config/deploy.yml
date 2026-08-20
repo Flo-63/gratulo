@@ -14,8 +14,12 @@ servers:
       traefik.http.routers.to-gratulo.entrypoints: https
       traefik.http.routers.to-gratulo.tls.certresolver: le
     options:
-      network: proxy
-
+      # Wir nutzen hier die "Option-als-Key" Schreibweise.
+      # Das ist ein valider Hash, den Kamal akzeptiert:
+      network: "proxy"
+      # Für das zweite Netzwerk tricksen wir ein bisschen,
+      # damit der Key im Hash eindeutig bleibt:
+      "network ": "congratulatory-emailer_internal"
 
 registry:
   username: florianmoesch
@@ -34,30 +38,23 @@ env:
     INITIAL_PASSWORD: ""
     JWT_ALGORITHM: "HS256"
     HTTPS_ONLY: "true"
+    # CSP zunächst nur im Report-Only-Modus (Verstöße werden geloggt, nichts
+    # blockiert). Auf "false" setzen, um die Policy scharf zu schalten.
+    CSP_REPORT_ONLY: "true"
     BASE_URL: "https://gratulo.radtreffcampus.de"
     CLUB_FOUNDATION_DATE: "2009-01-01"
     SESSION_LIFETIME: "480"
     ENABLE_REST_API: "False"
     JWT_EXPIRE_MINUTES: "60"
     LOG_LEVEL: "INFO"
-    REDIS_URL: "redis://gratulo-redis:6379/0"
-    # Falls die App weitere Variablen braucht (wie uvicorn-Konfiguration):
+    REDIS_URL: "redis://congratulatory-emailer-redis-1:6379/0"
     PORT: 8000
 
 builder:
   arch: amd64
 
-# Prüfe, ob du dich hier auch als 'guideapp' oder als 'root' einloggst!
 ssh:
   user: guideapp
-
-accessories:
-  redis:
-    image: redis:7-alpine
-    host: gratulo.radtreffcampus.de
-    port: "6379"
-    options:
-      name: gratulo-redis
 
 volumes:
   - "congratulatory-emailer_gratulo_data:/app/app/data"
