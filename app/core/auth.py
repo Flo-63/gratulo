@@ -93,6 +93,23 @@ def require_admin(
             "is_2fa_enabled": False,
         }
 
+    # OAuth-Admin: per Provider authentifiziert, per admin_emails-Allow-List
+    # autorisiert. Die Allow-List wird bei jedem Request erneut geprüft, damit
+    # ein Entzug sofort greift (auch für bereits offene Sessions).
+    if user.get("is_oauth"):
+        from app.core.models import MailerConfig
+        from app.services import oauth_service
+
+        config = db.query(MailerConfig).first()
+        if oauth_service.is_admin_email(config, username):
+            return {
+                "id": None,
+                "username": username,
+                "is_oauth": True,
+                "is_2fa_enabled": False,
+            }
+        raise HTTPException(status_code=403, detail="Keine Adminrechte")
+
     # Wenn kein Benutzer oder inaktiv → ablehnen
     if not db_user or not db_user.is_active:
         raise HTTPException(status_code=403, detail="Keine Adminrechte")

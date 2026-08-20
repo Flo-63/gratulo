@@ -13,23 +13,43 @@ Purpose   : This module provides HTTP endpoints for managing templates.
 """
 
 
+import io
+import json
 import os
+import re
 from pathlib import Path
 from fastapi import APIRouter, Depends, Form, Request, Response, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse, HTMLResponse
+from PIL import Image, UnidentifiedImageError
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.core.database import get_db
+from app.core.auth import require_admin
 from app.core.deps import jinja_templates, context, UPLOADS_DIR
 from app.services import template_service
 
-templates_htmx_router = APIRouter(prefix="/htmx/templates", include_in_schema=False)
+templates_htmx_router = APIRouter(
+    prefix="/htmx/templates",
+    include_in_schema=False,
+    dependencies=[Depends(require_admin)],
+)
 
 # Upload-Verzeichnis konfigurieren
 UPLOAD_DIR =  str(UPLOADS_DIR)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Upload-Härtung: maximale Größe und erlaubte Bildformate.
+# Die Endung wird aus dem *erkannten* Format abgeleitet (nicht aus dem
+# Client-Dateinamen), damit nichts als text/html o. Ä. ausgeliefert werden kann.
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024  # 5 MB
+ALLOWED_IMAGE_FORMATS = {
+    "PNG": ".png",
+    "JPEG": ".jpg",
+    "GIF": ".gif",
+    "WEBP": ".webp",
+}
 
 
 @templates_htmx_router.get("/list")
@@ -113,19 +133,16 @@ def delete_template(template_id: int, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
 
-        html = """
-        <script type="module">
-        import("/static/js/popup.js").then(mod => {
-            mod.showNotification(
-                "Template ist noch in Job(s) in Benutzung. Bitte erst Jobs bearbeiten!",
-                "error"
-            );
-            // Seite nach 2.5 Sekunden neu laden
-            setTimeout(() => window.location.reload(), 2500);
-        });
-        </script>
-        """
-        return HTMLResponse(content=html, status_code=200)
+        # CSP-safe notification: no inline script. htmx dispatches the HX-Trigger
+        # event, which the "notify" listener turns into a toast + reload.
+        trigger = json.dumps({
+            "notify": {
+                "message": "Template ist noch in Job(s) in Benutzung. Bitte erst Jobs bearbeiten!",
+                "type": "error",
+                "reload": True,
+            }
+        })
+        return Response(status_code=200, headers={"HX-Trigger": trigger, "HX-Reswap": "none"})
 
 @templates_htmx_router.get("/list-images", response_class=JSONResponse)
 def list_images():
@@ -165,9 +182,14 @@ def list_images():
 @templates_htmx_router.post("/upload-image")
 async def upload_image(file: UploadFile = File(...)):
     """
-    Uploads an image file to the server and ensures filename uniqueness by appending
-    an incrementing counter if a file with the same name already exists in the upload
-    directory.
+    Uploads an image file to the server after strict validation.
+
+    The upload is rejected unless the raw bytes decode as a real image in an
+    allowed format (PNG, JPEG, GIF, WEBP). The stored filename is sanitized and
+    its extension is derived from the *detected* image format — never from the
+    client-supplied name — so a caller cannot control the served content type or
+    escape the upload directory via path traversal. The size is capped and the
+    resolved path is confirmed to stay inside the upload directory.
 
     Args:
         file (UploadFile): The uploaded image file.
@@ -177,21 +199,52 @@ async def upload_image(file: UploadFile = File(...)):
         the 'location' key.
 
     Raises:
-        OSError: If there is an issue writing the file to the designated upload
-        directory.
+        HTTPException: If the file is empty, too large, not a valid image, or of
+        an unsupported format.
     """
-    filename = file.filename
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Leere Datei")
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=400, detail="Datei zu groß (max. 5 MB)")
+
+    # Inhalt als echtes Bild validieren (blockt HTML/Skript/Polyglot-Uploads)
+    try:
+        with Image.open(io.BytesIO(data)) as img:
+            img_format = (img.format or "").upper()
+            img.verify()
+    except (UnidentifiedImageError, OSError, ValueError):
+        raise HTTPException(status_code=400, detail="Keine gültige Bilddatei")
+
+    if img_format not in ALLOWED_IMAGE_FORMATS:
+        raise HTTPException(
+            status_code=400,
+            detail="Nicht unterstütztes Bildformat (erlaubt: PNG, JPEG, GIF, WEBP)",
+        )
+
+    # Endung aus dem erkannten Format erzwingen, nie aus dem Client-Namen
+    ext = ALLOWED_IMAGE_FORMATS[img_format]
+
+    # Dateinamen säubern: nur Basename, nur unbedenkliche Zeichen, keine "..".
+    raw_base = os.path.splitext(os.path.basename(file.filename or "upload"))[0]
+    safe_base = re.sub(r"[^A-Za-z0-9._-]", "_", raw_base).strip("._") or "upload"
+
+    filename = f"{safe_base}{ext}"
     save_path = os.path.join(UPLOAD_DIR, filename)
 
-    # Sicherstellen, dass der Dateiname nicht kollidiert
-    base, ext = os.path.splitext(filename)
+    # Namenskollisionen auflösen
     counter = 1
     while os.path.exists(save_path):
-        filename = f"{base}_{counter}{ext}"
+        filename = f"{safe_base}_{counter}{ext}"
         save_path = os.path.join(UPLOAD_DIR, filename)
         counter += 1
 
+    # Defense in depth: sicherstellen, dass der Zielpfad im Upload-Ordner bleibt
+    upload_root = os.path.realpath(UPLOAD_DIR)
+    if os.path.commonpath([upload_root, os.path.realpath(save_path)]) != upload_root:
+        raise HTTPException(status_code=400, detail="Ungültiger Dateiname")
+
     with open(save_path, "wb") as buffer:
-        buffer.write(await file.read())
+        buffer.write(data)
 
     return {"location": f"/uploads/{filename}"}

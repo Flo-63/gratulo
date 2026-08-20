@@ -38,6 +38,15 @@ REDIS_URL = os.getenv("REDIS_URL")
 if not REDIS_URL:
     REDIS_URL = "redis://redis:6379"
 
+# Anzahl vertrauenswürdiger Reverse-Proxies vor der App (z. B. Traefik = 1).
+# Bestimmt, an welcher Position in X-Forwarded-For die echte Client-IP steht,
+# und verhindert, dass ein Client die IP-basierte Rate-Limit-Zählung per
+# gefälschtem X-Forwarded-For-Header umgeht.
+try:
+    TRUSTED_PROXY_COUNT = max(1, int(os.getenv("TRUSTED_PROXY_COUNT", "1")))
+except ValueError:
+    TRUSTED_PROXY_COUNT = 1
+
 
 # Einstellungen für Rate Limiter im Mailing
 RATE_LIMIT_MAILS = int(os.getenv("MAILER_RATE_LIMIT", 40))       # max. Mails pro Minute

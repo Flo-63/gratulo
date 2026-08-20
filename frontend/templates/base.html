@@ -104,14 +104,15 @@
     </div>
   </div>
 
-<script src="{{ url_for('static', path='js/htmx.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/htmx.min.js') }}" defer nonce="{{ request.state.csp_nonce }}"></script>
 
-<script src="{{ url_for('static', path='js/alpine.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/alpine.min.js') }}" defer nonce="{{ request.state.csp_nonce }}"></script>
 
-<script src="{{ url_for('static', path='js/mail_queue_status.js') }}"  nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/mail_queue_status.js') }}"  nonce="{{ request.state.csp_nonce }}"></script>
 
-<script type="module" src="{{ url_for('static', path='js/htmx_alpine_init.js') }}" nonce="{{ csp_nonce }}"></script>
-<script type="module" src="{{ url_for('static', path='js/htmx-confirmation.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/csp_handlers.js') }}" defer nonce="{{ request.state.csp_nonce }}"></script>
+<script type="module" src="{{ url_for('static', path='js/htmx_alpine_init.js') }}" nonce="{{ request.state.csp_nonce }}"></script>
+<script type="module" src="{{ url_for('static', path='js/htmx-confirmation.js') }}" defer nonce="{{ request.state.csp_nonce }}"></script>
 
 </body>
 </html>

@@ -26,6 +26,7 @@ from starlette.responses import Response
 
 # Initialize logger for CSP-related events
 from app.core.logging import get_csp_logger
+from app.core.encryption import HTTPS_ONLY
 csp_logger = get_csp_logger()
 
 class CSPMiddleware(BaseHTTPMiddleware):
@@ -163,6 +164,18 @@ class CSPMiddleware(BaseHTTPMiddleware):
 
         header_name = "Content-Security-Policy-Report-Only" if self.report_only else "Content-Security-Policy"
         response.headers[header_name] = csp_header_value
+
+        # Additional hardening headers (always enforced, independent of CSP mode).
+        # X-Frame-Options is set explicitly because frame-ancestors is not enforced
+        # while CSP runs in report-only mode. nosniff prevents content-type sniffing
+        # of user-supplied uploads.
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        if HTTPS_ONLY:
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=63072000; includeSubDomains"
+            )
 
         # Log CSP application for debugging
         csp_logger.debug(f"CSP applied with nonce={csp_nonce} to {request.url.path}")

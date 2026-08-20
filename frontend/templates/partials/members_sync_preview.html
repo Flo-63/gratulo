@@ -108,8 +108,7 @@ Purpose   : Shows preview of member synchronization (deletions and additions)
               </td>
               <td class="px-3 py-2">
                 <select name="add[{{i}}][group_id]"
-                        class="w-full border border-gray-300 rounded px-2 py-1 text-xs"
-                        onchange="this.closest('tr').querySelector('input[name=\'add[{{i}}][group_name]\']').value = this.options[this.selectedIndex].textContent.trim();">
+                        class="js-group-select w-full border border-gray-300 rounded px-2 py-1 text-xs">
                   {% for g in GROUPS %}
                     <option value="{{ g.id }}"
                             {% if row.group_id and (row.group_id|int == g.id or row.group_id == g.id) %}selected{% endif %}>

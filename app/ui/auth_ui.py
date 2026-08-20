@@ -13,9 +13,13 @@ Purpose   : This module provides authentication-related user interface (UI) endp
 """
 
 
+import secrets
+
 from fastapi import APIRouter, Request, Depends
-from fastapi_limiter.depends import RateLimiter
 from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.concurrency import run_in_threadpool
+
+from app.core.rate_limit import rate_limit
 
 from fastapi import Form
 
@@ -24,6 +28,7 @@ from app.core.deps import jinja_templates, context
 from app.core.database import get_db
 from app.core.models import MailerConfig, AdminUser
 from app.services.auth_service import verify_login, make_user, verify_2fa_token
+from app.services import oauth_service
 from app.core.constants import INITIAL_ADMIN_USER, INITIAL_PASSWORD
 
 auth_ui_router = APIRouter(include_in_schema=False)
@@ -79,7 +84,7 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
     )
 
 
-@auth_ui_router.post("/login", dependencies=[Depends(RateLimiter(times=5, seconds=600))])
+@auth_ui_router.post("/login", dependencies=[Depends(rate_limit(times=5, seconds=600))])
 async def login_submit(
     request: Request,
     db: Session = Depends(get_db),
@@ -159,46 +164,97 @@ async def logout(request: Request):
     return RedirectResponse("/login", status_code=303)
 
 # ---------------------------
-# OAuth (Start/Callback)
+# OAuth (Start/Callback) – Google OpenID Connect, Authorization Code flow
 # ---------------------------
 @auth_ui_router.get("/oauth/start")
-async def oauth_start():
+async def oauth_start(request: Request, db: Session = Depends(get_db)):
     """
-    Handles the initiation of OAuth authentication and redirects to the callback URL.
+    Starts the OAuth login by redirecting the user to the provider.
+
+    Generates a per-request CSRF ``state`` value, stores it in the session, and
+    redirects to the provider's authorization endpoint. If OAuth is not
+    configured (no client id/secret), the flow is refused instead of silently
+    granting access.
+
+    Args:
+        request (Request): The incoming HTTP request (session holder).
+        db (Session): The database session used to load the mailer config.
 
     Returns:
-        RedirectResponse: A redirection response to the OAuth callback URL.
+        Response: A redirect to the provider, or a 400 page if OAuth is not
+        configured.
     """
-    return RedirectResponse("/oauth/callback")
+    config = db.query(MailerConfig).first()
+    if not oauth_service.is_configured(config):
+        return HTMLResponse("❌ OAuth ist nicht konfiguriert.", status_code=400)
+
+    state = secrets.token_urlsafe(32)
+    request.session["oauth_state"] = state
+    return RedirectResponse(
+        oauth_service.build_authorization_url(config, state), status_code=303
+    )
 
 
 @auth_ui_router.get("/oauth/callback")
-async def oauth_callback(request: Request, db: Session = Depends(get_db)):
+async def oauth_callback(
+    request: Request,
+    db: Session = Depends(get_db),
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+):
     """
-    Handles the OAuth callback for user authentication and authorization.
+    Completes the OAuth login: verifies state, exchanges the code, authorizes.
 
-    This function processes the OAuth callback, performing user email validation
-    against a stored list of allowed admin emails. If the email is not found in
-    the allowed list, access will be denied. Otherwise, the user session is
-    established, and the user is redirected to the admin panel.
+    The provider-supplied ``state`` is compared against the value stored in the
+    session (CSRF protection). The authorization code is then exchanged for an
+    access token server-to-server, the verified e-mail is read from the
+    provider's userinfo endpoint, and access is granted only if that e-mail is
+    verified and present on the ``admin_emails`` allow-list.
 
     Args:
-        request (Request): The incoming HTTP request containing session data.
-        db (Session): The database session for querying stored configuration data.
+        request (Request): The incoming HTTP request (session holder).
+        db (Session): The database session used to load the mailer config.
+        code (str | None): The authorization code from the provider.
+        state (str | None): The state value echoed back by the provider.
+        error (str | None): An error code from the provider, if any.
 
     Returns:
-        Response: An HTML response denying access with a 403 status code if the
-        user email is not authorized, or a redirect response to the admin panel
-        with a 303 status code upon successful authentication.
+        Response: A redirect to the admin panel on success, or an error page
+        (400/403) on any failure.
     """
+    if error:
+        return HTMLResponse(f"❌ OAuth-Fehler: {error}", status_code=400)
+
+    # CSRF: the state must match the one we issued in /oauth/start (single use).
+    expected_state = request.session.pop("oauth_state", None)
+    if not expected_state or not state or not secrets.compare_digest(state, expected_state):
+        return HTMLResponse("❌ Ungültiger OAuth-State (CSRF-Schutz).", status_code=400)
+
+    if not code:
+        return HTMLResponse("❌ Kein Autorisierungscode erhalten.", status_code=400)
+
     config = db.query(MailerConfig).first()
-    user_email = "florian@radtreffcampus.de"
+    if not oauth_service.is_configured(config):
+        return HTMLResponse("❌ OAuth ist nicht konfiguriert.", status_code=400)
 
-    allowed_admins = (config.admin_emails or "").split(",") if config else []
-    if user_email not in [m.strip() for m in allowed_admins]:
-        return HTMLResponse("❌ Zugriff verweigert", status_code=403)
+    # Blocking HTTP calls to the provider run off the event loop.
+    try:
+        userinfo = await run_in_threadpool(oauth_service.fetch_userinfo, config, code)
+    except oauth_service.OAuthError as e:
+        return HTMLResponse(f"❌ OAuth-Anmeldung fehlgeschlagen: {e}", status_code=400)
 
-    request.session["user"] = user_email
+    email = (userinfo.get("email") or "").strip().lower()
+    if not email or not oauth_service.is_email_verified(userinfo):
+        return HTMLResponse("❌ E-Mail-Adresse ist nicht verifiziert.", status_code=403)
+
+    if not oauth_service.is_admin_email(config, email):
+        return HTMLResponse(
+            "❌ Zugriff verweigert: E-Mail ist nicht als Admin hinterlegt.", status_code=403
+        )
+
+    # Authenticated by the provider, authorized via the allow-list.
+    request.session["user"] = {**make_user(email, is_admin=True), "is_oauth": True}
     return RedirectResponse("/admin", status_code=303)
 
 

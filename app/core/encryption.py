@@ -13,9 +13,15 @@ Purpose   : This module provides encryption functionality for the Gratulo applic
 """
 
 
+import logging
 import os
+import secrets as _secrets
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy.types import TypeDecorator, LargeBinary
+
+from app.core.constants import ENABLE_REST_API
+
+logger = logging.getLogger(__name__)
 
 try:
     SESSION_LIFETIME = int(os.getenv("SESSION_LIFETIME", 480))  # Default: 8 Stunden = 480 Minuten
@@ -42,11 +48,63 @@ if not SECRET_KEY:
 
 fernet = Fernet(SECRET_KEY.encode() if isinstance(SECRET_KEY, str) else SECRET_KEY)
 
-API_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "changeme")
+# ---------------------------------------------------------------------------
+# REST-API-Secrets (JWT-Signaturschlüssel und Service-Passwort)
+# ---------------------------------------------------------------------------
+# Diese Werte dürfen NIE still auf eine bekannte Konstante zurückfallen – ein
+# vorhersehbarer JWT-Schlüssel erlaubt gefälschte Tokens, ein bekanntes
+# Service-Passwort einen direkten Login.
+
+# Ausdrücklicher Dev-Notausgang: erzeugt zufällige Werte pro Prozess, statt
+# beim Fehlen der Secrets abzubrechen. Niemals in Produktion aktivieren.
+ALLOW_INSECURE_DEV_SECRETS = os.getenv("GRATULO_DEV_INSECURE_SECRETS", "false").lower() in ("true", "1", "yes")
+
+
+def _require_api_secret(name: str, env_value: str | None) -> str:
+    """
+    Resolve a security-critical API secret without a known-constant fallback.
+
+    Args:
+        name (str): The environment variable name (for messages).
+        env_value (str | None): The raw value read from the environment.
+
+    Returns:
+        str: The configured secret, or a random per-process value in the cases
+        described below.
+
+    Raises:
+        RuntimeError: If the secret is missing while the REST API is enabled and
+        the dev escape hatch is off.
+    """
+    if env_value:
+        return env_value
+
+    if ALLOW_INSECURE_DEV_SECRETS:
+        logger.warning(
+            "%s is not set – generating a random per-process value because "
+            "GRATULO_DEV_INSECURE_SECRETS is enabled. Do NOT use this in production.",
+            name,
+        )
+        return _secrets.token_urlsafe(48)
+
+    if ENABLE_REST_API:
+        raise RuntimeError(
+            f"{name} is not set but the REST API is enabled (ENABLE_REST_API=true). "
+            f"Set {name} to a strong random value, or set "
+            f"GRATULO_DEV_INSECURE_SECRETS=true for local development."
+        )
+
+    # REST API disabled: the secret is never reachable via a registered route.
+    # Use a random per-process value so nothing depends on a known default.
+    logger.info("%s is not set; REST API is disabled – using a random per-process value.", name)
+    return _secrets.token_urlsafe(48)
+
+
+API_SECRET_KEY = _require_api_secret("JWT_SECRET_KEY", os.getenv("JWT_SECRET_KEY"))
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 SERVICE_USER = os.getenv("SERVICE_USER_NAME", "service_api")
-SERVICE_PASSWORD = os.getenv("SERVICE_USER_PASSWORD", "supersecret")
+SERVICE_PASSWORD = _require_api_secret("SERVICE_USER_PASSWORD", os.getenv("SERVICE_USER_PASSWORD"))
 
 
 

@@ -20,6 +20,15 @@ document.body.addEventListener("htmx:responseError", function (evt) {
   showNotification(msg, "error");
 });
 
+// Server-getriggerte Benachrichtigungen via HX-Trigger: {"notify": {...}}
+document.body.addEventListener("notify", function (evt) {
+  const d = evt.detail || {};
+  showNotification(d.message || "", d.type || "info");
+  if (d.reload) {
+    setTimeout(() => window.location.reload(), d.reloadDelay || 2500);
+  }
+});
+
 // Erfolgsmeldungen
 document.body.addEventListener("htmx:afterRequest", function (evt) {
   if (evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {

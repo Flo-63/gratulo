@@ -273,5 +273,5 @@
   </form>
 </div>
 
-<script src="{{ url_for('static', path='js/job_editor_state.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/job_editor_state.js') }}" defer nonce="{{ request.state.csp_nonce }}"></script>
 {% endblock %}

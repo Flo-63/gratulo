@@ -13,6 +13,7 @@ Purpose   : This module provides HTMX endpoints for managing members.
 """
 
 
+import json
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, UploadFile, File
@@ -724,7 +725,10 @@ def wipe_member_htmx(
         if not success:
             print(f"⚠️ Member {member_id} nicht gefunden.")
     except Exception as e:
-        return Response(content=f"<script>alert('Fehler: {str(e)}');</script>", status_code=200)
+        # CSP-safe error notification (no inline script; message is JSON-encoded,
+        # so it cannot break out into markup or script).
+        trigger = json.dumps({"notify": {"message": f"Fehler beim Löschen: {e}", "type": "error"}})
+        return Response(status_code=200, headers={"HX-Trigger": trigger, "HX-Reswap": "none"})
 
     # 2. Liste neu laden (Parameter weiterreichen)
     # Da wir deleted jetzt korrekt aus dem Body gefischt haben,

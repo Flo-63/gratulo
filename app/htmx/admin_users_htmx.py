@@ -20,6 +20,7 @@ from datetime import datetime
 from passlib.hash import bcrypt
 
 from app.core.database import get_db
+from app.core.auth import require_admin
 from app.core.models import AdminUser
 from app.services.auth_service import (
     generate_2fa_secret,
@@ -31,7 +32,11 @@ from app.services.auth_service import (
 
 from app.core.deps import jinja_templates, context
 
-admin_users_router = APIRouter(prefix="/mailer-config/admin-users", tags=["Admin Users (HTMX)"])
+admin_users_router = APIRouter(
+    prefix="/mailer-config/admin-users",
+    tags=["Admin Users (HTMX)"],
+    dependencies=[Depends(require_admin)],
+)
 
 # -----------------------------------------------------------------------------
 # Helper

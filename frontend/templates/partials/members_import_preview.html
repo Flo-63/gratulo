@@ -60,15 +60,8 @@ Purpose   : Dynamic template used to show the preview of the imported members
     {% if error_count > 0 or warning_count > 0 %}
     <div class="mb-3">
       <label class="flex items-center gap-2 text-sm font-medium text-gray-700">
-        <input type="checkbox" id="show-only-errors" class="rounded border-gray-300" checked
-               onchange="document.querySelectorAll('#import-form tbody tr').forEach(tr => { 
-                 if (this.checked) {
-                   tr.style.display = (tr.classList.contains('bg-red-50') || tr.classList.contains('bg-yellow-50')) ? '' : 'none';
-                 } else {
-                   tr.style.display = '';
-                 }
-               })">
-        Nur Zeilen mit Fehlern/Warnungen anzeigen 
+        <input type="checkbox" id="show-only-errors" class="rounded border-gray-300" checked>
+        Nur Zeilen mit Fehlern/Warnungen anzeigen
         ({{ error_count }} Fehler, {{ warning_count }} Warnungen von {{ rows|length }} Zeilen)
       </label>
     </div>
@@ -162,11 +155,7 @@ Purpose   : Dynamic template used to show the preview of the imported members
                   <!-- Auswahlfeld für group_id -->
                   <select
                       name="rows[{{i}}][group_id]"
-                      class="w-full border p-1 text-xs {% if e.get('group_name') %}border-red-500 bg-red-50{% else %}border-gray-300{% endif %}"
-                      onchange="
-                          const name = this.options[this.selectedIndex].textContent.trim();
-                          this.parentElement.querySelector('input[name=\'rows[{{i}}][group_name]\']').value = name;
-                      "
+                      class="js-group-select w-full border p-1 text-xs {% if e.get('group_name') %}border-red-500 bg-red-50{% else %}border-gray-300{% endif %}"
                   >
                       <option value="">– keine –</option>
                       {% for g in GROUPS %}

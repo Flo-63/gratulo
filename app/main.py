@@ -69,6 +69,13 @@ class ForwardedProtoMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(ForwardedProtoMiddleware)
 
+# Content-Security-Policy + hardening headers.
+# Defaults to report-only so violations are logged to /csp-report without breaking
+# the UI (some templates still use inline event handlers). Set CSP_REPORT_ONLY=false
+# to enforce once those inline handlers have been migrated to nonce'd scripts.
+CSP_REPORT_ONLY = os.getenv("CSP_REPORT_ONLY", "true").lower() in ("true", "1", "yes")
+app.add_middleware(CSPMiddleware, report_only=CSP_REPORT_ONLY)
+
 # Static mount
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
@@ -151,7 +158,8 @@ async def startup_event():
     try:
         r = await redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
         await r.ping()
-        await FastAPILimiter.init(r)
+        from app.core.rate_limit import client_identifier
+        await FastAPILimiter.init(r, identifier=client_identifier)
         logger.info(f"✅ Redis connected successfully ({redis_url})")
     except Exception as e:
         logger.error(f"❌ Redis connection failed: {e}")

@@ -47,10 +47,10 @@ Purpose   : Provides WYSIWYG editor for templates (TinyMCE)
 </div>
 
 <!-- TinyMCE lokal -->
-<script src="{{ url_for('static', path='js/tinymce/tinymce.min.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/tinymce/tinymce.min.js') }}" defer nonce="{{ request.state.csp_nonce }}"></script>
 
 <!-- CSP-konformer Label-Kontext -->
-<script nonce="{{ csp_nonce }}">
+<script nonce="{{ request.state.csp_nonce }}">
     window.GRATULO_LABEL_DATE1 = {{ LABELS_DISPLAY.date1 | tojson }};
     window.GRATULO_LABEL_DATE1_TYPE = {{ LABELS_DISPLAY.date1_type | tojson }};
     window.GRATULO_LABEL_DATE2 = {{ LABELS_DISPLAY.date2 | tojson }};
@@ -58,6 +58,6 @@ Purpose   : Provides WYSIWYG editor for templates (TinyMCE)
     window.GRATULO_LABEL_ENTITY_SINGULAR = {{ LABELS_DISPLAY.entity_singular | tojson }};
 </script>
 
-<script src="{{ url_for('static', path='js/tinymce_init.js') }}" type="module" defer nonce="{{ csp_nonce }}"></script>
-<script src="{{ url_for('static', path='js/template_editor.js') }}" defer nonce="{{ csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/tinymce_init.js') }}" type="module" defer nonce="{{ request.state.csp_nonce }}"></script>
+<script src="{{ url_for('static', path='js/template_editor.js') }}" defer nonce="{{ request.state.csp_nonce }}"></script>
 {% endblock %}

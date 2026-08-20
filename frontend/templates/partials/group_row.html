@@ -43,9 +43,9 @@ Purpose   : Dynamic template used to show a group row in the group list
   </td>
 
   <td class="px-2 py-1 text-right">
-    <button class="btn btn-blue"
-            onclick="document.getElementById('group-name-{{ g.id }}').classList.add('hidden');
-                     document.getElementById('edit-form-{{ g.id }}').classList.remove('hidden');">
+    <button class="btn btn-blue js-toggle"
+            data-hide="group-name-{{ g.id }}"
+            data-show="edit-form-{{ g.id }}">
       Bearbeiten
     </button>
     <button class="btn btn-red"
